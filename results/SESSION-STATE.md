@@ -23,6 +23,8 @@ project-specific belongs here — see the placement rule below.
 | `agents\solution-analyst.md` | Agent | Reads an unfamiliar solution/repo, drafts `ai/context/<slug>-context.md`. CREATE/UPDATE mode-aware (multi-candidate ambiguity handled). First action reads `~\.claude\CONSTITUTION.md` if present. Tools: `Read, Grep, Glob, Bash, Write, AskUserQuestion` — deliberately no `Edit`, no `Task`. |
 | `commands\scaffold-context.md` | Command | `/scaffold-context [path]` — thin dispatcher to `solution-analyst`. |
 | `commands\agent-builder.md` | Command | `/agent-builder` — interactively drafts new agents/commands per this repo's conventions (classifies generic-vs-project, executor-vs-reviewer; consults `CONSTITUTION.md`/both baselines; applies naming/placement/body-style rules; self-checks tag balance). Deliberately a command, not an agent — see rationale below. |
+| `dev-framework\PRINCIPLES.md` | Doctrine | Added in a separate thread (2026-08-07): binding shared protocol for the `dev-*` family. State-file root amended same day from `.dev\` (reference framework's convention) to `ai\dev\`, to group with the already-established `ai\context\`/`ai\prompts\`/`ai\reports\` convention rather than adding a new top-level dot-folder. `contracts\`/`ARCHITECTURE.md` clarified to point at a project's real, pre-existing sources of truth instead of being duplicated under `ai\dev\` when those already exist. |
+| `agents\dev-backend.md`, `agents\dev-frontend.md` | Agent | First two role-specialist `dev-*` agents. Generic, stack-agnostic; read `CONSTITUTION.md` → `dev-framework\PRINCIPLES.md` → the target project's `CLAUDE.md`/`ai\context\*.md`/`ai\dev\*` for everything project-specific. Drafted 2026-08-07 for the CampaignManager slice (see below); not yet copied anywhere, not yet live-tested end to end (only tag-balance-checked). |
 
 ## Git state
 
@@ -71,17 +73,39 @@ don't commit unless asked.**
 
 ## Outstanding / not yet done
 
-- **Never test-run.** `solution-analyst` has not been executed against a real folder. Planned dry runs:
-  `net8-migration` (UPDATE mode — exercises the multi-candidate ambiguity fix against the real
-  `scm-context.md` + `migration-context.md` pair) and a non-code project (CREATE mode — exercises the
-  output template's graceful-degrade behavior; Költségvetés was the original candidate for this but see
-  the exclusion rule above — pick a different non-code target, or confirm whether *running* the agent
-  against it, without any of its content landing in `_AI_GIT`, is actually fine — the exclusion is about
-  this repo's *content*, not about what `solution-analyst` is permitted to analyze elsewhere).
+- **`solution-analyst` CREATE mode now dry-run tested** (2026-08-07, against
+  `d:\_GEOMANT_GIT\CampaignManager` on its `staging` branch) — see the CampaignManager section below.
+  **UPDATE mode still untested** — `net8-migration` (real `scm-context.md` + `migration-context.md` pair,
+  exercises the multi-candidate ambiguity fix) remains the planned target.
+- **`dev-backend.md`/`dev-frontend.md` drafted but not live-tested end to end** — only checked for
+  frontmatter/section-skeleton compliance and XML tag balance. Real execution requires either a project-
+  local or global `.claude\agents\` copy (session-scoped agent discovery isn't hot-reloaded), or the same
+  "inline the role into a `general-purpose` agent call" technique used for `solution-analyst`'s dry run.
 - **Nothing copied to `~\.claude\` yet.**
 - **Untracked files not committed.**
 - **No `README.md` line yet stating the Költségvetés-exclusion rule explicitly** — was offered, not yet
   added; worth doing so a fresh session doesn't have to be told again.
+
+## CampaignManager slice (2026-08-07)
+
+First "generic global agent + project context + thin project-specific command" pass, built end-to-end
+against a real project per the approved plan in that session:
+- `d:\_GEOMANT_GIT\CampaignManager` was stale on `master` (~15k lines behind `origin/staging`, missing
+  `docs/ARCHITECTURE.md`/`ROADMAP.md`/ADRs entirely) — user checked out `staging` directly.
+- `solution-analyst` dry-run produced `ai/context/campaignmanager-context.md` there; confirmed the
+  EnsureCreated-vs-EF-migrations drift (ADR-0004) and an unresolved live conflict between
+  `docs/ARCHITECTURE.md` and `docs/ROADMAP.md` over which components are actually done vs. stubbed.
+- `ai/dev/STATE.md` + `ai/dev/config.json` scaffolded in CampaignManager itself (gates all `false`, no
+  wave/task orchestration adopted — `dev-backend`/`dev-frontend` run standalone).
+- `dev-backend.md`/`dev-frontend.md` drafted here in `_AI_GIT` (see inventory table above).
+- `d:\_GEOMANT_GIT\CampaignManager\.claude\commands\cm\dev.md` (`/cm:dev`) drafted directly in that
+  project's own repo — thin dispatcher, classifies backend/frontend/both, injects project context,
+  relays the dispatched agent's report verbatim. Not listed in this repo's own README, per the
+  generic/project-specific placement rule.
+- **Roadmap for the remaining three project needs** (net8-migration SCM dev-fix/devops conversion,
+  scm-stm-merge's read-only analysis agents as a justified project-specific-agent exception, and a
+  lightweight `req-analyst`/`solution-architect`/`project-estimator` SA pipeline with no gates) was
+  decided and documented in that session's plan file, not yet built.
 
 ## Related material outside this repo
 

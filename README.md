@@ -28,8 +28,9 @@ Project-specific agents, commands, and context belong in each project's own repo
 
 | Agent | Purpose |
 |---|---|
-| `agents\solution-analyst.md` | Reads an unfamiliar solution/repo and drafts a first-pass `ai/context/<slug>-context.md` for human review. CREATE/UPDATE mode-aware. Generic across stacks and solution types. |
-| `agents\dev-*.md` | Role-specialist dev agents (in progress) — bound by `dev-framework\PRINCIPLES.md`; must walk `AGENT-TEMPLATE-BASELINE.md` and `AGENT-CONDUCT-BASELINE.md` before drafting. |
+| `agents\solution-analyst.md` | Reads an unfamiliar solution/repo and drafts a first-pass `ai/context/<slug>-context.md` for human review. CREATE/UPDATE mode-aware. Generic across stacks and solution types. Dry-run tested 2026-08-07 (CREATE mode) against `d:\_GEOMANT_GIT\CampaignManager` — held up on a real, messy repo. UPDATE mode still untested. |
+| `agents\dev-backend.md` | Backend implementation specialist — generic across stacks. Bound by `dev-framework\PRINCIPLES.md`. Reads a project's `CLAUDE.md`/`ai/context/*.md`/`ai/dev/*` for everything project-specific. |
+| `agents\dev-frontend.md` | Frontend implementation specialist — generic across stacks. Same shape/binding as `dev-backend.md`. |
 
 | Command | Purpose |
 |---|---|
@@ -51,7 +52,10 @@ Project-specific agents, commands, and context belong in each project's own repo
    text contain a fact that only makes sense inside one repo (an absolute path, an org name, a stack
    fact)? If yes, it belongs in that project's own `.claude\`, not here. See
    `d:\WORK\AI\results\claude-prompting-system-review.md §10` for the full decision rule and naming
-   conventions (§13) — not duplicated in this repo to avoid the two drifting out of sync.
+   conventions (§13) — not duplicated in this repo to avoid the two drifting out of sync. Concretely: a
+   generic role like `dev-backend` lives here; a thin dispatcher like CampaignManager's
+   `/cm:dev` — which only makes sense next to that one repo's own `ai/context/`, `ai/dev/`, and branch
+   facts — lives in that project's own `.claude\commands\`, never here.
 5. If the agent/command is a **gate or reviewer** (produces a PASS/FAIL-style verdict another command or
    human must act on), follow `AGENT-CONDUCT-BASELINE.md` B7/B9 for the verdict-block and freshness-hash
    conventions — don't invent a new verdict shape per agent.

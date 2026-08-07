@@ -25,6 +25,8 @@ project-specific belongs here — see the placement rule below.
 | `commands\agent-builder.md` | Command | `/agent-builder` — interactively drafts new agents/commands per this repo's conventions (classifies generic-vs-project, executor-vs-reviewer; consults `CONSTITUTION.md`/both baselines; applies naming/placement/body-style rules; self-checks tag balance). Deliberately a command, not an agent — see rationale below. |
 | `dev-framework\PRINCIPLES.md` | Doctrine | Added in a separate thread (2026-08-07): binding shared protocol for the `dev-*` family. State-file root amended same day from `.dev\` (reference framework's convention) to `ai\dev\`, to group with the already-established `ai\context\`/`ai\prompts\`/`ai\reports\` convention rather than adding a new top-level dot-folder. `contracts\`/`ARCHITECTURE.md` clarified to point at a project's real, pre-existing sources of truth instead of being duplicated under `ai\dev\` when those already exist. |
 | `agents\dev-backend.md`, `agents\dev-frontend.md` | Agent | First two role-specialist `dev-*` agents. Generic, stack-agnostic; read `CONSTITUTION.md` → `dev-framework\PRINCIPLES.md` → the target project's `CLAUDE.md`/`ai\context\*.md`/`ai\dev\*` for everything project-specific. Drafted 2026-08-07 for the CampaignManager slice (see below); not yet copied anywhere, not yet live-tested end to end (only tag-balance-checked). |
+| `agents\dev-reviewer.md` | Agent | Read-only reviewer, generic. Fixed `<review_dimensions>` (8, ranked); concrete checks per dimension come from the target project's own `ai/context/*.md` — none baked in here. Ends with a B7 verdict block. Tools: `Read, Bash, Grep, Glob, Write` — no `Edit`. Drafted 2026-08-07 for the net8-migration (SCM) slice; not yet live-tested. |
+| `agents\dev-browser-tester.md` | Agent | Browser smoke-test specialist, generic, via the `playwright` MCP. Never fixes anything (no `Edit`, no `Task`/`Agent`) — a verification role only. Drafted 2026-08-07 for the SCM slice's `/scm:test`; not yet live-tested. |
 
 ## Git state
 
@@ -105,7 +107,108 @@ against a real project per the approved plan in that session:
 - **Roadmap for the remaining three project needs** (net8-migration SCM dev-fix/devops conversion,
   scm-stm-merge's read-only analysis agents as a justified project-specific-agent exception, and a
   lightweight `req-analyst`/`solution-architect`/`project-estimator` SA pipeline with no gates) was
-  decided and documented in that session's plan file, not yet built.
+  decided and documented in that session's plan file. The first of these (net8-migration) was built next
+  — see below.
+
+## net8-migration (SCM) slice (2026-08-07)
+
+Second slice, same conversation. Converted the hand-rolled `ai/prompts/scm-dev-fix/` (FIX/REQ/TEST/REVIEW
+modes, v1.4.0) and `ai/prompts/scm-devops/` (ASK/CHANGE modes, v1.0.0) prompt collections into generic
+`dev-*` agents + six thin, SCM-specific `/scm:*` commands. Originals left in place, not deleted.
+
+- Two new generic agents added here (see inventory table above): `dev-reviewer.md`, `dev-browser-tester.md`
+  — the third new role decided conversationally with the user (`dev-browser-tester`, deliberately not
+  named `dev-qa` to avoid colliding with the reference framework's broader dual-mode `dev-qa` role if
+  that's ever adopted later).
+- `ai/dev/STATE.md` + `ai/dev/config.json` scaffolded directly in `d:\_SCM_GIT\net8-migration` (gates all
+  `false`; monolith, so `contracts_path` is explicitly N/A rather than forced into a microservice shape).
+- Two new project-specific context files added directly in that repo (not here — pure project fact, not
+  mode-specific mechanics): `ai/context/scm-quick-reference.md` (namespace map, session abstractions, DI
+  chain, file-path resolution, error recognition, version-bump project map, and the code-review checklist
+  mapped onto `dev-reviewer`'s 8 generic dimensions) and `ai/context/scm-devops-quick-reference.md`
+  (hosting environment snapshot, known-issues table, symptom recognition table — `IIS-PRODUCTION-CONFIG.md`
+  remains authoritative over both).
+- Six commands drafted directly in `d:\_SCM_GIT\net8-migration\.claude\commands\scm\`: `fix.md`, `req.md`,
+  `review.md`, `devops-ask.md`, `devops-change.md`, `test.md`, plus `help.md` (static reference, per the
+  namespace-help convention — six commands is "more than a handful").
+- **Design decisions worth remembering if this pattern gets extended to another project:**
+  - `devops-ask` and `devops-change` were kept as two separate commands, not merged, specifically so
+    ASK's read-only guarantee is enforced by the tool grant itself (no `Agent`/`Write`-to-existing-file/
+    `Edit` at all) rather than by instruction alone — matches `AGENT-CONDUCT-BASELINE.md` A6/B1.
+  - `req.md`/`devops-change.md` implement the phased-approval gate (Understand → Design → Plan → approve →
+    Implement → Report) as **two sequential `Agent` dispatches within one command invocation**, with the
+    command itself doing the human approval step via `AskUserQuestion` in between — not a second command
+    invocation, since a command runs inline in the current conversation and can pause for input, unlike an
+    isolated single-shot subagent.
+  - ADO/version-bump/commit-message/never-commit mechanics live in the commands, not in `dev-backend` —
+    keeps that agent reusable on non-SCM, non-Azure-DevOps projects.
+  - `scm-refactor`, `design-architect`, `new-ui-design-upgrade`, `performance-review`,
+    `repository-query-review` prompt folders exist in that repo too but were explicitly out of scope for
+    this pass.
+- **Not yet done**: none of the six new commands or two new agents have been live-tested end to end (same
+  "session-scoped agent discovery isn't hot-reloaded" constraint as the CampaignManager slice).
+
+## scm-stm-merge slice (2026-08-07)
+
+Third slice, same conversation — the roadmap's one deliberate exception to "generic agent + thin command."
+**Nothing was added to `_AI_GIT` for this slice** — every artifact lives entirely in
+`d:\_SCM_GIT\scm-stm-merge`, because the reasoning content (STM↔SCM entity/enum collision mapping,
+ServiceType/TournamentType alignment, SSO-bridge removal inventory) is one-time domain knowledge for this
+single merge effort, not a reusable role. This entry exists purely so the decision and its outcome aren't
+lost from this repo's own continuity log.
+
+- Converted the never-yet-run `ai/prompts/scm-stm-merge-analysis/` prompt collection (v2.0.0, 4 analysis
+  phases + orchestrator) into 4 project-specific read-only agents in
+  `scm-stm-merge\.claude\agents\`: `stm-merge-requirements-analyst`, `stm-merge-db-analyst` (has the
+  `mcp__scm-db__*`/`mcp__stm-db__*` MCP tool grants), `stm-merge-functional-analyst`,
+  `stm-merge-code-analyst`. None have `Edit` — pure planning system, no agent here ever implements code.
+- 5 commands in `scm-stm-merge\.claude\commands\merge\`: `requirements.md`, `db.md`, `functional.md`,
+  `code.md` (one per phase, each independently runnable), plus `full-analysis.md` (orchestrator — fixed
+  order, mid-run checkpoints, writes a consolidated executive summary) and `help.md`.
+- `ai/merge/STATE.md` scaffolded (not `ai/dev/` — these aren't part of the `dev-*` family) tracking which
+  of the 4 phases have run.
+- **Confirmed via user discussion, worth remembering if this exception pattern recurs elsewhere:** even
+  when full project-specific agents are justified, still build *both* an orchestrator and individual
+  per-phase entry points if the original system had both — report-chaining already makes each phase
+  independently re-runnable, so only building the orchestrator would be a real regression in flexibility
+  for no savings (each phase command is just "dispatch + relay," near-zero marginal cost).
+
+## SA / REQ-CR pipeline slice (2026-08-07)
+
+Fourth and final roadmap slice, same conversation. Global, generic (per user choice: lightweight, no
+gates) — the recurring "analyze a new REQ/CR, produce a design and an estimate, generate documentation"
+need, decoupled from any single project.
+
+- Three new generic agents added here (see inventory table above): `req-analyst.md`, `req-architect.md`,
+  `req-estimator.md`. **Deliberately renamed from the roadmap's original `solution-architect`/
+  `project-estimator`** — both names collide with domain-specific (CCaaS/Buzzeasy) agents of the same name
+  already used in `agentic-dev-framework`; renaming now avoids a forced rename later if both frameworks'
+  agents ever get installed to `~/.claude/` together. Same reasoning already applied once before to
+  `dev-browser-tester` (vs. the framework's broader `dev-qa`).
+- Five commands added here in `commands\sa\`: `clarify.md`, `design.md`, `estimate.md`, `doc.md` (no agent
+  dispatch — consolidation is squarely a command's own job), `help.md`.
+- **Artifacts are slugged per-topic** (`ai/sa/<slug>/requirements.md`/`architecture.md`/`estimation.md`/
+  `package.md`), not a single fixed path — this pipeline is explicitly meant to be run repeatedly over time
+  on different REQ/CRs within the same project, so a fixed path would let one overwrite another.
+  `/sa:design`/`/sa:estimate`/`/sa:doc` resolve the slug from an explicit argument or by globbing
+  `ai/sa/*/` and asking if ambiguous.
+- No `ai/sa/STATE.md` — each slug's folder is self-contained (unlike `ai/dev/`/`ai/merge/`, there's no
+  cross-cutting "current phase" to track across a single project; multiple independent REQ/CRs can be
+  in-flight at once).
+- `req-estimator` never invents a rate card: looks for `ai/sa/rates.yaml`/`ai/context/rates.yaml` then
+  `~/.claude/estimation-data/rates.yaml`; if none found, produces effort-only output and says so explicitly
+  (Constitution Article IV — truthfulness).
+- **Fixed a latent bug in this repo's own `README.md` rollout instructions while here**: the
+  `Copy-Item commands\*.md ... -Force` step (no `-Recurse`) would have silently skipped the new
+  `commands\sa\` subfolder (and `commands\cm\`/`commands\scm\`/`commands\merge\` in the project repos,
+  though those were never meant to be copied from here anyway). Changed to
+  `Copy-Item commands\* ... -Recurse -Force`.
+- **Not yet done**: none of the three new agents or five new commands have been live-tested end to end
+  (same constraint as every prior slice this session).
+
+This closes out all four roadmap items from this session's original architecture plan (CampaignManager,
+net8-migration, scm-stm-merge, SA/REQ-CR). Nothing has been copied to `~/.claude/` yet — still deferred
+until explicitly requested.
 
 ## Related material outside this repo
 

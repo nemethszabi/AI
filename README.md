@@ -31,10 +31,18 @@ Project-specific agents, commands, and context belong in each project's own repo
 | `agents\solution-analyst.md` | Reads an unfamiliar solution/repo and drafts a first-pass `ai/context/<slug>-context.md` for human review. CREATE/UPDATE mode-aware. Generic across stacks and solution types. Dry-run tested 2026-08-07 (CREATE mode) against `d:\_GEOMANT_GIT\CampaignManager` — held up on a real, messy repo. UPDATE mode still untested. |
 | `agents\dev-backend.md` | Backend implementation specialist — generic across stacks. Bound by `dev-framework\PRINCIPLES.md`. Reads a project's `CLAUDE.md`/`ai/context/*.md`/`ai/dev/*` for everything project-specific. |
 | `agents\dev-frontend.md` | Frontend implementation specialist — generic across stacks. Same shape/binding as `dev-backend.md`. |
+| `agents\dev-reviewer.md` | Independent, read-only code reviewer — generic across stacks. Cold `git diff` read, fixed review dimensions (concrete checks come from the target project's own `ai/context/*.md`), ends with an `AGENT-CONDUCT-BASELINE.md` B7 verdict block. No `Edit`. |
+| `agents\dev-browser-tester.md` | Browser-driven smoke-test specialist — generic across web projects. Drives a running app via the `playwright` MCP: navigate, log in, execute a scenario, screenshot, watch console errors, PASS/FAIL report. Never fixes anything; no `Edit`. |
+| `agents\req-analyst.md` | Clarifies a free-form requirement/change request into a structured, reviewable requirements list (`REQ-ID`/priority/status/source). Narrative markdown, no formal gates. Generic across domains. |
+| `agents\req-architect.md` | Design/architecture proposal from a clarified requirements list — approach, alternatives, components, risks. Named `req-architect`, not `solution-architect`, to avoid colliding with domain-specific agents of that name in other frameworks. |
+| `agents\req-estimator.md` | Three-point effort estimate from requirements + design. Never invents a rate card — effort-only if none found. Named `req-estimator`, not `project-estimator`, same collision-avoidance reason. |
+| `agents\mermaid-diagram-maker.md` | Writes `.mmd` diagrams (architecture/sequence/flowchart/class/state/deployment/ER) and renders `.png` via `mmdc`. Generic, `memory: user` for cross-project styling conventions only — never project-specific component/service names. Adapted from `agentic-dev-framework`, not copy-pasted: fixed a memory-boundary violation in the source (it told the agent to save component/service names globally) and added a no-silent-overwrite rule. |
 
 | Command | Purpose |
 |---|---|
 | `commands\scaffold-context.md` | `/scaffold-context [path]` — thin dispatcher to `solution-analyst` |
+| `commands\diagram.md` | `/diagram [what to diagram]` — thin dispatcher to `mermaid-diagram-maker` |
+| `commands\sa\clarify.md`, `design.md`, `estimate.md`, `doc.md`, `help.md` | `/sa:*` — lightweight, generic REQ/CR pipeline (clarify → design → estimate → doc), no formal gates. Dispatches to `req-analyst`/`req-architect`/`req-estimator`; `doc` consolidates directly. Artifacts slugged per-topic under `ai/sa/<slug>/` so repeated use doesn't collide. |
 
 ---
 
@@ -73,8 +81,8 @@ Project-specific agents, commands, and context belong in each project's own repo
 2. Manual review.
 3. Copy to global:
    ```powershell
-   Copy-Item agents\*.md    "$env:USERPROFILE\.claude\agents\"   -Force
-   Copy-Item commands\*.md  "$env:USERPROFILE\.claude\commands\" -Force
+   Copy-Item agents\*.md  "$env:USERPROFILE\.claude\agents\"   -Force
+   Copy-Item commands\*   "$env:USERPROFILE\.claude\commands\" -Recurse -Force
    Copy-Item *-BASELINE.md  "$env:USERPROFILE\.claude\"          -Force
    Copy-Item CONSTITUTION.md "$env:USERPROFILE\.claude\"         -Force
    Copy-Item dev-framework  "$env:USERPROFILE\.claude\" -Recurse -Force

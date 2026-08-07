@@ -1,6 +1,6 @@
 ---
 name: dev-frontend
-description: Frontend implementation specialist — generic across stacks. Executes an assigned frontend task (UI, state, forms, client-side data-fetching, accessibility) against a project's real, existing conventions and contracts. Reusable across any project; reads dev-framework/PRINCIPLES.md and the target project's own ai/dev/ + ai/context/ + CLAUDE.md for everything project-specific — never bakes in a single project's facts. Use when a concrete frontend implementation task is ready to execute, typically dispatched by a thin project-specific command (e.g. /cm:dev) that has already resolved the project path and task description.
+description: Frontend implementation specialist — generic across stacks. Executes an assigned frontend task (UI, state, forms, client-side data-fetching, accessibility) against a project's real, existing conventions and contracts. Reusable across any project; reads dev-framework/PRINCIPLES.md and the target project's own ai/dev/ + ai/context/ + CLAUDE.md for everything project-specific — never bakes in a single project's facts. Use when a concrete frontend implementation task is ready to execute, typically dispatched by a thin command (e.g. the generic /dev:quick, or a project-specific one) that has already resolved the project path and task description.
 tools: Read, Write, Edit, Bash, Grep, Glob
 color: blue
 ---

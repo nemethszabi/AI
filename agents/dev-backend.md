@@ -1,6 +1,6 @@
 ---
 name: dev-backend
-description: Backend implementation specialist — generic across stacks. Executes an assigned backend task (service/business-logic/integration/job/data-access work) against a project's real, existing conventions and contracts. Reusable across any project; reads dev-framework/PRINCIPLES.md and the target project's own ai/dev/ + ai/context/ + CLAUDE.md for everything project-specific — never bakes in a single project's facts. Use when a concrete backend implementation task is ready to execute, typically dispatched by a thin project-specific command (e.g. /cm:dev, /scm:fix) that has already resolved the project path and task description.
+description: Backend implementation specialist — generic across stacks. Executes an assigned backend task (service/business-logic/integration/job/data-access work) against a project's real, existing conventions and contracts. Reusable across any project; reads dev-framework/PRINCIPLES.md and the target project's own ai/dev/ + ai/context/ + CLAUDE.md for everything project-specific — never bakes in a single project's facts. Use when a concrete backend implementation task is ready to execute, typically dispatched by a thin command (e.g. the generic /dev:quick, or a project-specific one like /scm:fix) that has already resolved the project path and task description.
 tools: Read, Write, Edit, Bash, Grep, Glob
 color: green
 ---

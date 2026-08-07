@@ -60,8 +60,13 @@ don't commit unless asked.**
 7. **Költségvetés exclusion**: nothing from `d:\WORK\Private\Költségvetés\` may appear in this repo's
    content, ever — audited clean as of 2026-08-07 (full grep across every `.md` file, zero hits). Keep it
    that way; re-audit if anything gets copy-pasted from that project into a draft here.
-8. **Copy-to-global is deferred, on purpose** — user will request it explicitly once everything here is
-   finished, not per-file. Don't copy anything to `~\.claude\` without being asked.
+8. **Copy-to-global happened 2026-08-07** — user explicitly requested it after all five slices were done.
+   `~/.claude/` was completely empty of agents/commands/doctrine beforehand (verified, zero collision
+   risk), so this was a plain copy, not a merge, including `CLAUDE.md` (written fresh — no prior file to
+   preserve). This repo remains the source of truth: **after any future edit here, re-copy the
+   corresponding file(s) to `~/.claude/` manually** — nothing auto-syncs. `docs/` deliberately stayed
+   local to this repo (not copied); `~/.claude/CLAUDE.md` points back at
+   `d:\_AI_GIT\docs\GETTING-STARTED.md`/`USAGE.md`/`SETUP.md` by absolute path instead.
 
 ## Known gotchas — don't get fooled by these again
 
@@ -85,8 +90,8 @@ don't commit unless asked.**
   "inline the role into a `general-purpose` agent call" technique used for `solution-analyst`'s dry run.
 - **Nothing copied to `~\.claude\` yet.**
 - **Untracked files not committed.**
-- **No `README.md` line yet stating the Költségvetés-exclusion rule explicitly** — was offered, not yet
-  added; worth doing so a fresh session doesn't have to be told again.
+- ~~No `README.md` line yet stating the Költségvetés-exclusion rule explicitly~~ — **added 2026-08-07**,
+  closing an item that had been left open since the first session.
 
 ## CampaignManager slice (2026-08-07)
 

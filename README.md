@@ -9,6 +9,9 @@ Project-specific agents, commands, and context belong in each project's own repo
 `ai\context\`), never here — see `DESIGN-PRINCIPLES-BASELINE.md`'s and `AGENT-CONDUCT-BASELINE.md`'s own
 "how to use" sections for how generic and project-specific artifacts connect.
 
+**Exclusion**: nothing from `d:\WORK\Private\Költségvetés\` may appear in this repo's content, ever — that
+project's material never informs, and is never cited by, anything drafted here.
+
 ---
 
 ## Repository layout
@@ -24,7 +27,7 @@ Project-specific agents, commands, and context belong in each project's own repo
 | `dev-framework\DESIGN.md` | Rationale for the `dev-*` family — why it's deliberately lighter than the reference framework's full wave/gate pipeline, the canonical `ai/dev/` state-file schema, explicit non-goals, and the trigger condition for revisiting them. Read when deciding whether to extend this family, not at runtime. |
 | `agents\` | Generic agent definitions, one file per agent, copied to `~\.claude\agents\` |
 | `commands\` | Generic slash-command definitions, copied to `~\.claude\commands\` |
-| `docs\` | Reference documentation that stays in this repo (not copied to `~\.claude\`) — `SETUP.md` (install/verify/troubleshoot) and `USAGE.md` (cross-repo "which entry point when" map, since commands now span four different project repos). |
+| `docs\` | Reference documentation that stays in this repo (not copied to `~\.claude\`) — `GETTING-STARTED.md` (first-time walkthrough for someone new to agentic work), `SETUP.md` (install/verify/troubleshoot), and `USAGE.md` (cross-repo "which entry point when" map, since commands now span four different project repos). |
 
 ## Current inventory
 

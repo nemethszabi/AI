@@ -68,8 +68,9 @@ something you actually read — a file, a grep hit, a README line — not an inf
 
 <step name="ambiguity-check">
 Use `AskUserQuestion` only for genuine ambiguity — e.g. multiple candidate entry-point projects in a
-monorepo, or an unclear solution root. Do not ask for confirmation on things you already found
-unambiguous evidence for. Skip this step entirely for a single, clear repo.
+monorepo, an unclear solution root, or multiple existing context-file candidates flagged by
+`mode_detection`. Do not ask for confirmation on things you already found unambiguous evidence for. Skip
+this step entirely for a single, clear repo with at most one context-file candidate.
 </step>
 
 <step name="draft">

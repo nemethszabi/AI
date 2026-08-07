@@ -210,6 +210,36 @@ This closes out all four roadmap items from this session's original architecture
 net8-migration, scm-stm-merge, SA/REQ-CR). Nothing has been copied to `~/.claude/` yet — still deferred
 until explicitly requested.
 
+## docs/ + dev-framework/DESIGN.md + commands/dev/ slice (2026-08-07)
+
+Fifth slice, same conversation, prompted by re-examining `agentic-dev-framework`'s `docs\`,
+`dev-framework\DESIGN.md`, and `commands\dev\`/`commands\sa\` separation now that the four roadmap slices
+existed to compare against.
+
+- **`dev-framework\DESIGN.md`** (new) — consolidates reasoning that was previously scattered across this
+  file's own slice write-ups and an ephemeral plan file: why this `dev-*` family is deliberately lighter
+  than the reference framework's wave/gate pipeline, the **canonical `ai/dev/` schema**
+  (`STATE.md`'s 4 fixed sections; `config.json`'s core field set), explicit non-goals, and a concrete
+  amendment trigger (backlog too big to track by memory, or two dispatches that could plausibly touch the
+  same file) rather than "revisit eventually."
+- **`docs\SETUP.md`** and **`docs\USAGE.md`** (new, stay in this repo — not copied to `~/.claude\`).
+  SETUP's troubleshooting section captures the "agent/command lists aren't hot-reloaded mid-session" gotcha
+  that had previously only been noted inline, once per slice, in this very file. USAGE is the cross-repo
+  "which entry point when" map — genuinely necessary now that commands span four different repos
+  (CampaignManager, net8-migration, scm-stm-merge, plus this repo's own globals).
+- **`commands\dev\` namespace** (new): `init.md`, `status.md`, `quick.md`, `help.md` — the `ai/dev/`
+  scaffolding step that had been hand-written identically for both CampaignManager and net8-migration is
+  now a reusable command instead of manual repetition for a third project.
+- **`/cm:dev` retired** (CampaignManager) in favor of the new generic `/dev:quick` — on review, `/cm:dev`
+  never actually contained any CampaignManager-specific logic (unlike `/scm:fix`'s real Azure DevOps/
+  version-bump mechanics), so building it as a project-specific command in the first place was the wrong
+  call. `README.md`'s "generic vs. project-specific" guidance (item 4) now states the test explicitly:
+  "does this command's own `<process>` contain anything that wouldn't apply verbatim to a different
+  project?" CampaignManager's `ai/dev/config.json` updated to add the missing `build_command` core field
+  and to stop referencing the retired command.
+- **Not yet done**: none of the 4 new commands or `/dev:quick`'s generalized dispatch have been
+  live-tested end to end (same constraint as every prior slice).
+
 ## Related material outside this repo
 
 - `d:\WORK\AI\results\claude-prompting-system-review.md` — the original deep-dive: naming conventions

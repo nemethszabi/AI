@@ -21,8 +21,10 @@ Project-specific agents, commands, and context belong in each project's own repo
 | `AGENT-CONDUCT-BASELINE.md` | Checklist for drafting a **new agent's own** `<rules>` section — how an agent should behave while working (executor discipline), while reviewing others' work (reviewer discipline), or while using persistent memory (memory conduct). Not code-architecture rules — see the table in this file for the distinction. |
 | `AGENT-TEMPLATE-BASELINE.md` | Checklist for a new agent/command's **file structure** — frontmatter fields, section skeleton, tone. Governs shape, not behavior — pairs with `AGENT-CONDUCT-BASELINE.md`, doesn't replace it. |
 | `dev-framework\PRINCIPLES.md` | **Binding** shared protocol for the `dev-*` role-specialist agent family (state loading, lane discipline, contract discipline, commit/report format, blocked protocol). Scoped to that one family — not global like `CONSTITUTION.md`, not a checklist like the `*-BASELINE.md` files. |
+| `dev-framework\DESIGN.md` | Rationale for the `dev-*` family — why it's deliberately lighter than the reference framework's full wave/gate pipeline, the canonical `ai/dev/` state-file schema, explicit non-goals, and the trigger condition for revisiting them. Read when deciding whether to extend this family, not at runtime. |
 | `agents\` | Generic agent definitions, one file per agent, copied to `~\.claude\agents\` |
 | `commands\` | Generic slash-command definitions, copied to `~\.claude\commands\` |
+| `docs\` | Reference documentation that stays in this repo (not copied to `~\.claude\`) — `SETUP.md` (install/verify/troubleshoot) and `USAGE.md` (cross-repo "which entry point when" map, since commands now span four different project repos). |
 
 ## Current inventory
 
@@ -43,6 +45,7 @@ Project-specific agents, commands, and context belong in each project's own repo
 | `commands\scaffold-context.md` | `/scaffold-context [path]` — thin dispatcher to `solution-analyst` |
 | `commands\diagram.md` | `/diagram [what to diagram]` — thin dispatcher to `mermaid-diagram-maker` |
 | `commands\sa\clarify.md`, `design.md`, `estimate.md`, `doc.md`, `help.md` | `/sa:*` — lightweight, generic REQ/CR pipeline (clarify → design → estimate → doc), no formal gates. Dispatches to `req-analyst`/`req-architect`/`req-estimator`; `doc` consolidates directly. Artifacts slugged per-topic under `ai/sa/<slug>/` so repeated use doesn't collide. |
+| `commands\dev\init.md`, `status.md`, `quick.md`, `help.md` | `/dev:*` — generic, cross-project scaffold/status/dispatch for the `ai/dev/` convention. `/dev:quick` is the generic form of a project dispatcher for projects with no process of their own to enforce (see the `/cm:dev` retirement note below). |
 
 ---
 
@@ -58,12 +61,16 @@ Project-specific agents, commands, and context belong in each project's own repo
    relevant instances directly into the new agent's own `<rules>`/`<memory>` section.
 4. Decide **generic vs. project-specific** before deciding where the file lives: does the agent's own
    text contain a fact that only makes sense inside one repo (an absolute path, an org name, a stack
-   fact)? If yes, it belongs in that project's own `.claude\`, not here. See
+   fact), or a *process* that genuinely differs per project (an approval gate, an issue-tracker
+   integration, a release discipline)? If yes, it belongs in that project's own `.claude\`, not here. See
    `d:\WORK\AI\results\claude-prompting-system-review.md §10` for the full decision rule and naming
-   conventions (§13) — not duplicated in this repo to avoid the two drifting out of sync. Concretely: a
-   generic role like `dev-backend` lives here; a thin dispatcher like CampaignManager's
-   `/cm:dev` — which only makes sense next to that one repo's own `ai/context/`, `ai/dev/`, and branch
-   facts — lives in that project's own `.claude\commands\`, never here.
+   conventions (§13) — not duplicated in this repo to avoid the two drifting out of sync. Concretely: SCM's
+   `/scm:fix` earns its project-specific home (Azure DevOps org rule, version-bump discipline — real
+   process differences); a thin dispatcher with **no** such differences doesn't — CampaignManager's
+   `/cm:dev` was exactly this mistake, retired 2026-08-07 in favor of the generic `/dev:quick` once it
+   became clear it carried no CampaignManager-specific logic at all. When in doubt, ask "does this
+   command's own `<process>` contain anything that wouldn't apply verbatim to a different project?" — if
+   no, it belongs here as a generic command, not there as a bespoke one.
 5. If the agent/command is a **gate or reviewer** (produces a PASS/FAIL-style verdict another command or
    human must act on), follow `AGENT-CONDUCT-BASELINE.md` B7/B9 for the verdict-block and freshness-hash
    conventions — don't invent a new verdict shape per agent.

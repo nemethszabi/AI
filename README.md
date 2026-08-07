@@ -18,7 +18,9 @@ Project-specific agents, commands, and context belong in each project's own repo
 | `CLAUDE.md` | Thin, always-loaded pointer block — merge into `~\.claude\CLAUDE.md` manually (never blind-overwrite; you may already have personal notes there). Points at the doctrine files below, doesn't inline them. |
 | `CONSTITUTION.md` | **Binding**, global hard rules (secrets, destructive actions, gates, scope, tool permissions). Every generic agent reads this first. Not a checklist like the two below — this one is live doctrine. |
 | `DESIGN-PRINCIPLES-BASELINE.md` | Checklist for drafting a **project's own** `ai/context/design-principles.md` — code/architecture principles (layering, DI, DTOs, isolation boundaries). Not itself binding on any project. |
-| `AGENT-CONDUCT-BASELINE.md` | Checklist for drafting a **new agent's own** `<rules>` section — how an agent should behave while working (executor discipline) or while reviewing others' work (reviewer discipline). Not code-architecture rules — see the table in this file for the distinction. |
+| `AGENT-CONDUCT-BASELINE.md` | Checklist for drafting a **new agent's own** `<rules>` section — how an agent should behave while working (executor discipline), while reviewing others' work (reviewer discipline), or while using persistent memory (memory conduct). Not code-architecture rules — see the table in this file for the distinction. |
+| `AGENT-TEMPLATE-BASELINE.md` | Checklist for a new agent/command's **file structure** — frontmatter fields, section skeleton, tone. Governs shape, not behavior — pairs with `AGENT-CONDUCT-BASELINE.md`, doesn't replace it. |
+| `dev-framework\PRINCIPLES.md` | **Binding** shared protocol for the `dev-*` role-specialist agent family (state loading, lane discipline, contract discipline, commit/report format, blocked protocol). Scoped to that one family — not global like `CONSTITUTION.md`, not a checklist like the `*-BASELINE.md` files. |
 | `agents\` | Generic agent definitions, one file per agent, copied to `~\.claude\agents\` |
 | `commands\` | Generic slash-command definitions, copied to `~\.claude\commands\` |
 
@@ -27,6 +29,7 @@ Project-specific agents, commands, and context belong in each project's own repo
 | Agent | Purpose |
 |---|---|
 | `agents\solution-analyst.md` | Reads an unfamiliar solution/repo and drafts a first-pass `ai/context/<slug>-context.md` for human review. CREATE/UPDATE mode-aware. Generic across stacks and solution types. |
+| `agents\dev-*.md` | Role-specialist dev agents (in progress) — bound by `dev-framework\PRINCIPLES.md`; must walk `AGENT-TEMPLATE-BASELINE.md` and `AGENT-CONDUCT-BASELINE.md` before drafting. |
 
 | Command | Purpose |
 |---|---|
@@ -36,25 +39,29 @@ Project-specific agents, commands, and context belong in each project's own repo
 
 ## When authoring a new agent or command
 
-1. If it touches how a **target codebase** should be structured → walk `DESIGN-PRINCIPLES-BASELINE.md`
+1. Walk `AGENT-TEMPLATE-BASELINE.md` first — frontmatter fields, section skeleton, tone — before writing
+   a line of the agent/command itself, so structure doesn't drift file to file.
+2. If it touches how a **target codebase** should be structured → walk `DESIGN-PRINCIPLES-BASELINE.md`
    against the project (informed by `solution-analyst`'s "Conventions Observed" output, if available) to
    produce that project's `ai/context/design-principles.md`.
-2. Walk `AGENT-CONDUCT-BASELINE.md` — Executor section for an agent that does work, Reviewer section for
-   an agent that checks others' work — and write the relevant instances directly into the new agent's
-   own `<rules>` section.
-3. Decide **generic vs. project-specific** before deciding where the file lives: does the agent's own
+3. Walk `AGENT-CONDUCT-BASELINE.md` — Executor section for an agent that does work, Reviewer section for
+   an agent that checks others' work, Memory section (§C) if it sets `memory: user` — and write the
+   relevant instances directly into the new agent's own `<rules>`/`<memory>` section.
+4. Decide **generic vs. project-specific** before deciding where the file lives: does the agent's own
    text contain a fact that only makes sense inside one repo (an absolute path, an org name, a stack
    fact)? If yes, it belongs in that project's own `.claude\`, not here. See
    `d:\WORK\AI\results\claude-prompting-system-review.md §10` for the full decision rule and naming
    conventions (§13) — not duplicated in this repo to avoid the two drifting out of sync.
-4. If the agent/command is a **gate or reviewer** (produces a PASS/FAIL-style verdict another command or
+5. If the agent/command is a **gate or reviewer** (produces a PASS/FAIL-style verdict another command or
    human must act on), follow `AGENT-CONDUCT-BASELINE.md` B7/B9 for the verdict-block and freshness-hash
    conventions — don't invent a new verdict shape per agent.
-5. Once a command namespace (a `commands\<prefix>\` folder) accumulates more than a handful of commands,
+6. Once a command namespace (a `commands\<prefix>\` folder) accumulates more than a handful of commands,
    add a `<prefix>:help` command whose only job is to print a static reference of that namespace — no
    live analysis, no project context, just the reference (mirrors the sample framework's
    `commands/sa/help.md`). Not needed yet at one command; noted here so it isn't forgotten once
    `commands\` grows.
+7. Any agent named `dev-*` reads `dev-framework\PRINCIPLES.md` first (after `CONSTITUTION.md`) — that's
+   where the family's shared operational rules live; don't restate them in the agent's own `<rules>`.
 
 ## Rollout
 
@@ -66,6 +73,7 @@ Project-specific agents, commands, and context belong in each project's own repo
    Copy-Item commands\*.md  "$env:USERPROFILE\.claude\commands\" -Force
    Copy-Item *-BASELINE.md  "$env:USERPROFILE\.claude\"          -Force
    Copy-Item CONSTITUTION.md "$env:USERPROFILE\.claude\"         -Force
+   Copy-Item dev-framework  "$env:USERPROFILE\.claude\" -Recurse -Force
    ```
 4. Merge `CLAUDE.md` into `~\.claude\CLAUDE.md` by hand (create it if missing) — do **not** blind-copy
    with `-Force`, since a real global `CLAUDE.md` may already carry personal notes this would clobber.

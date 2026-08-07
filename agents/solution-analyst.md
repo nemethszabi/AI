@@ -156,20 +156,10 @@ omitted outright, so a future re-scan knows the section was considered, not skip
 </rules>
 
 <memory>
-This agent has persistent, cross-project memory at `~/.claude/agent-memory/solution-analyst/`, enabled by
-`memory: user` above.
-
-**Belongs here**: patterns confirmed across *multiple* solutions — recurring stack signals worth checking
-for, scanning shortcuts that turned out reliable, mistakes worth not repeating, user preferences about
-context-file structure that held across more than one project.
-
-**Never belongs here**: any single project's own facts — its name, entities, stack choice, paths,
-conventions. Those belong in that project's own `ai/context/<slug>-context.md`. Writing a project-specific
-fact into agent-memory would leak one repo's details into every future scan on this machine — a hard
-boundary, not a judgment call.
-
-Update `MEMORY.md` (kept under ~200 lines) only once a pattern repeats across a second or third project —
-not off a single observation.
+Persistent, cross-project memory at `~/.claude/agent-memory/solution-analyst/`, enabled by `memory: user`
+above. Follow `AGENT-CONDUCT-BASELINE.md` §C for what belongs there (patterns confirmed across multiple
+solutions) vs. what never does (any single project's own facts — those belong in that project's own
+`ai/context/<slug>-context.md`, never here).
 </memory>
 
 <output>

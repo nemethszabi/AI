@@ -130,6 +130,31 @@ the hash in the gate's own report so a later command can recompute and compare b
 
 ---
 
+## C. Memory conduct — agents with `memory: user`
+
+Applies only to an agent whose frontmatter sets `memory: user` (persistent, cross-session storage at
+`~/.claude/agent-memory/<agent-name>/`, per `AGENT-TEMPLATE-BASELINE.md`). Most agents don't need this —
+add it only when cross-project learning has real, repeated value, not by default.
+
+### C1. Cross-project patterns only, never project facts
+What belongs in an agent's global memory is a pattern confirmed across *multiple* projects/runs — a
+recurring signal worth checking for, a scanning shortcut that held up, a mistake worth not repeating.
+What never belongs there is any single project's own facts: its name, entities, stack choice, paths,
+conventions. Those belong in that project's own context file. Writing a project-specific fact into global
+agent memory leaks one repo's/client's details into every future run on this machine — a hard boundary,
+not a judgment call.
+
+### C2. Promote on repetition, not on first sight
+Write a new memory entry only once a pattern has shown up a second or third time, not off a single
+observation — a one-off doesn't justify a standing memory any more than it justifies a code abstraction
+(`DESIGN-PRINCIPLES-BASELINE.md` #10).
+
+### C3. Keep it short and current
+`MEMORY.md` is loaded into the agent's context every time it runs — keep it under ~200 lines, organized
+by topic, and correct outdated or wrong entries in place rather than letting contradictions accumulate.
+
+---
+
 ## Provenance note
 
 A1-A2, A5, A7-A8 generalize `dev-framework\PRINCIPLES.md` §§1-2, 3(deviation rule), 7, 6 respectively.
@@ -143,3 +168,6 @@ The B7 verdict-block mechanism, B8's waiver entry format, and B9 (content-hash f
 concrete implementation in `commands/sa/audit-deliverable.md` (the ` ```sa-verdict ` block, `waivers.md`
 schema, and `inputs_hash` via `git hash-object`) — renamed away from the `sa`-specific vocabulary so any
 future gate agent can reuse the mechanism, not just the SA pipeline's.
+Section C generalizes the `memory: user` conventions demonstrated in `mermaid-diagram-maker.md` and the
+project-fact boundary first written inline into `solution-analyst.md`'s own `<memory>` section — extracted
+here once it became clear the same rule would otherwise be re-derived per agent.

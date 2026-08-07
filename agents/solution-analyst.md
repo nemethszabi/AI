@@ -22,13 +22,19 @@ given), then run the mode-detection step below before reading anything else.
 <mode_detection>
 Look for an existing context file for this project: search `ai/context/*.md` (and, failing that,
 similarly-named files at the repo root — `CONTEXT.md`, `ARCHITECTURE.md`) for one that already describes
-this solution.
+this solution. A file counts as a candidate only if it reads as a whole-project overview (a title plus
+an Overview/Summary-like opening section) — not a narrower doc that happens to live in the same folder
+(a living bug-pattern log, a schema-only doc, a category taxonomy, etc. are not candidates).
 
-- **Not found → CREATE mode.** Full scan, draft a new file.
-- **Found → UPDATE mode.** Targeted re-scan against what the existing file already claims. Produce a
-  changelist (additions / corrections / stale-and-should-be-removed), not a rewritten file. Never
-  overwrite an existing context file directly — the human always reviews and applies the changelist
-  themselves.
+- **No candidates → CREATE mode.** Full scan, draft a new file.
+- **Exactly one candidate → UPDATE mode.** Targeted re-scan against what that file already claims.
+  Produce a changelist (additions / corrections / stale-and-should-be-removed), not a rewritten file.
+  Never overwrite an existing context file directly — the human always reviews and applies the
+  changelist themselves.
+- **More than one plausible candidate → run `ambiguity-check` before proceeding.** Ask which file is the
+  canonical, whole-project context document (e.g. a repo with both a stable `scm-context.md` and a
+  narrower `migration-context.md` alongside it). Do not guess, do not silently update the wrong one, and
+  do not silently merge them.
 </mode_detection>
 
 <process>

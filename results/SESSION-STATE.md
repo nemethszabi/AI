@@ -420,6 +420,37 @@ project facts in its actual code.
 - `tool-candidates.md` (the `d:\WORK\AI` knowledge-base file that proposed this) updated to remove the
   now-built entry per its own "move it once adopted" rule, rather than leaving a stale duplicate.
 
+## Critical rollout fix — three config destinations, not one (2026-08-10, discovered via a live failure)
+
+A real `/scm:fix` run in `net8-migration` failed with `Agent type 'dev-backend' not found` despite
+`dev-backend.md` being correctly present in `~\.claude\agents\` and `check-sync.ps1` reporting IN SYNC.
+Root cause: this machine has **three independent Claude Code config roots**, not one — the default/legacy
+`$env:USERPROFILE\.claude\` **and** two profiles (`claude-scm`, `claude-nsz`, under `$env:LOCALAPPDATA\`),
+each fully redirected via `CLAUDE_CONFIG_DIR` with **no fallback** to the default. Every rollout done all
+day had only ever targeted the default location — confirmed by direct check: neither profile had an
+`agents\`/`skills\`/`commands\` folder **at all**, not just today's additions, everything, the entire
+framework, was missing from both real profiles the whole time. `check-sync.ps1` had the identical blind
+spot — it only ever compared against the one location nobody's real sessions actually use.
+
+**Fixed properly, not patched around**:
+- `_scripts\check-sync.ps1` rewritten to check all three destinations every run, reporting drift
+  per-destination rather than one pass/fail.
+- `README.md` Rollout step 3 rewritten to loop over all three destinations (same
+  pre-create-directories-first fix from earlier still applies, per-destination).
+- Actually executed the corrected rollout — all three destinations now confirmed IN SYNC.
+- `CLAUDE.md`: neither profile had one at all (no merge-conflict risk, straightforward create) — used the
+  live default location's copy, which had drifted slightly ahead of this repo's own source (extra lines
+  on `AGENT-TEMPLATE-BASELINE.md`, the `dev-*` family, and the docs pointers) — copied that more-complete
+  version to both profiles **and back-ported it into this repo's own `CLAUDE.md`**, so the source of truth
+  isn't left permanently behind the live state again.
+- Documented in `d:\WORK\AI\knowledge-base\mcp-reference.md`'s Accounts & Profiles section (the natural
+  home for this fact) with an explicit warning for the next time an agent goes "not found" unexpectedly.
+
+**Immediate unblock used for the live session that hit this**: the general-purpose-agent-with-inlined-role
+workaround (same one used throughout today for testing `agent-reviewer` before it was live) — no file
+changes needed to finish that specific run; a fresh session was still required afterward to pick up the
+real fix (agent discovery isn't hot-reloaded, same rule as everywhere else today).
+
 ## Related material outside this repo
 
 - `d:\WORK\AI\results\claude-prompting-system-review.md` — the original deep-dive: naming conventions

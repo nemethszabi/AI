@@ -104,32 +104,49 @@ interactively and stays current as they evolve; this section is the reference, n
 
 1. Draft under `agents\`, `skills\`, or `commands\` here.
 2. Manual review.
-3. Copy to global:
+3. Copy to **every** live config location — not just one. This machine has **three independent Claude
+   Code config roots**, discovered the hard way on 2026-08-10 when `dev-backend` was "not found" in a
+   real session despite being correctly rolled out to `~\.claude\`: the default/legacy location
+   (`$env:USERPROFILE\.claude\`) **and** two profiles (`claude-scm`, `claude-nsz`, under
+   `$env:LOCALAPPDATA\`), each fully redirected via `CLAUDE_CONFIG_DIR` and **not** falling back to the
+   default. Real sessions run under a profile — rolling out to only the default silently leaves both real
+   profiles without any of this.
    ```powershell
    # Pre-create destination folders first — Copy-Item with -Recurse onto a not-yet-existing destination
    # can silently mis-create it as a copy of the *first* source item's contents instead of a proper
    # container (hit this for real on 2026-08-10 with skills\ — left a stray SKILL.md sitting loose in
-   # ~\.claude\skills\ instead of in its own subfolder). Always ensure the target exists as a real
+   # the destination instead of in its own subfolder). Always ensure the target exists as a real
    # directory first, every time, not just the first time a new subfolder type appears.
-   New-Item -ItemType Directory -Path "$env:USERPROFILE\.claude\agents"   -Force | Out-Null
-   New-Item -ItemType Directory -Path "$env:USERPROFILE\.claude\skills"   -Force | Out-Null
-   New-Item -ItemType Directory -Path "$env:USERPROFILE\.claude\commands" -Force | Out-Null
+   $destinations = @(
+       "$env:USERPROFILE\.claude",
+       "$env:LOCALAPPDATA\claude-scm",
+       "$env:LOCALAPPDATA\claude-nsz"
+   )
+   foreach ($dest in $destinations) {
+       New-Item -ItemType Directory -Path "$dest\agents"   -Force | Out-Null
+       New-Item -ItemType Directory -Path "$dest\skills"   -Force | Out-Null
+       New-Item -ItemType Directory -Path "$dest\commands" -Force | Out-Null
 
-   Copy-Item agents\*.md  "$env:USERPROFILE\.claude\agents\"   -Force
-   Copy-Item skills\*     "$env:USERPROFILE\.claude\skills\"   -Recurse -Force
-   Copy-Item commands\*   "$env:USERPROFILE\.claude\commands\" -Recurse -Force
-   Copy-Item *-BASELINE.md  "$env:USERPROFILE\.claude\"          -Force
-   Copy-Item CONSTITUTION.md "$env:USERPROFILE\.claude\"         -Force
-   Copy-Item dev-framework  "$env:USERPROFILE\.claude\" -Recurse -Force
+       Copy-Item agents\*.md     "$dest\agents\"   -Force
+       Copy-Item skills\*        "$dest\skills\"   -Recurse -Force
+       Copy-Item commands\*      "$dest\commands\" -Recurse -Force
+       Copy-Item *-BASELINE.md   "$dest\"          -Force
+       Copy-Item CONSTITUTION.md "$dest\"          -Force
+       Copy-Item dev-framework   "$dest\" -Recurse -Force
+   }
    ```
-4. Merge `CLAUDE.md` into `~\.claude\CLAUDE.md` by hand (create it if missing) — do **not** blind-copy
-   with `-Force`, since a real global `CLAUDE.md` may already carry personal notes this would clobber.
-5. After any future edit here, re-run step 3 (and re-check step 4) so `~\.claude\` picks up the change —
-   this repo is the source of truth, `~\.claude\` is a copy of it, not the other way around.
+4. Merge `CLAUDE.md` into **each** destination's own `CLAUDE.md` by hand (create it if missing) — do
+   **not** blind-copy with `-Force`, since a real `CLAUDE.md` at any of the three may already carry
+   personal notes this would clobber.
+5. After any future edit here, re-run step 3 (and re-check step 4) so every destination picks up the
+   change — this repo is the source of truth, none of the three destinations are, individually or
+   together.
 6. Run `powershell -File _scripts\check-sync.ps1` to confirm — reports anything staged here that's
-   missing or stale in `~\.claude\`. This caught a real gap on 2026-08-10 (the `skills\*` copy step
-   didn't exist in step 3 until that day, so nothing had ever reached `~\.claude\skills\`) — run it after
-   every rollout, not just when something seems off.
+   missing or stale, **per destination**, all three checked every run. This caught two real gaps on
+   2026-08-10: the `skills\*` copy step didn't exist in step 3 at first (nothing reached any
+   `skills\` folder), and step 3 only ever targeted the default location, silently leaving both real
+   profiles completely empty the entire time — run it after every rollout, not just when something
+   seems off, and don't assume "in sync" for one destination means any of the others are too.
 
 **One-time setup**: run `powershell -File _scripts\install-hooks.ps1` once (and again after a fresh
 clone, or after pulling a change to `_scripts\hooks\`) — installs a `post-commit` hook that auto-runs

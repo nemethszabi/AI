@@ -1,14 +1,26 @@
 <#
-Checks whether ~\.claude\ (live) actually matches this repo's staged agents\/skills\/commands\/doctrine
-files. This repo is the source of truth; drift means the Rollout step (README.md) was missed or a file
-changed only on one side. Run after any edit here, before assuming ~\.claude\ picked it up.
+Checks whether every live Claude Code config location actually matches this repo's staged
+agents\/skills\/commands\/doctrine files. This repo is the source of truth; drift means the Rollout step
+(README.md) was missed or a file changed only on one side.
+
+IMPORTANT (added 2026-08-10, after a real dev-backend-not-found failure): this machine has THREE
+independent Claude Code config locations, not one - $env:USERPROFILE\.claude\ (default/legacy, "avoid for
+new work" per mcp-reference.md) plus two active profiles (claude-scm, claude-nsz), each fully redirected
+via CLAUDE_CONFIG_DIR and NOT falling back to the default location. Rolling out to only one of the three
+silently leaves the other two without dev-backend/agent-reviewer/etc. - exactly what happened before this
+fix. Checks all three every time, not just the default.
 
 Usage: powershell -File _scripts\check-sync.ps1
 #>
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$globalRoot = Join-Path $env:USERPROFILE '.claude'
+
+$destinations = @(
+    @{ Name = 'default (~\.claude, legacy)'; Root = (Join-Path $env:USERPROFILE '.claude') },
+    @{ Name = 'claude-scm profile';          Root = (Join-Path $env:LOCALAPPDATA 'claude-scm') },
+    @{ Name = 'claude-nsz profile';          Root = (Join-Path $env:LOCALAPPDATA 'claude-nsz') }
+)
 
 function Get-Sha256($path) {
     $sha = [System.Security.Cryptography.SHA256]::Create()
@@ -34,54 +46,71 @@ function Get-FileHashMap($root, $relativeDirs) {
 }
 
 $staged = Get-FileHashMap $repoRoot @('agents', 'skills', 'commands')
-$live = Get-FileHashMap $globalRoot @('agents', 'skills', 'commands')
-
-# Doctrine files copied flat to global root, not into a subfolder
 $doctrineFiles = @('CONSTITUTION.md', 'AGENT-CONDUCT-BASELINE.md', 'AGENT-TEMPLATE-BASELINE.md', 'DESIGN-PRINCIPLES-BASELINE.md')
 foreach ($f in $doctrineFiles) {
     $stagedPath = Join-Path $repoRoot $f
-    $livePath = Join-Path $globalRoot $f
     if (Test-Path $stagedPath) { $staged[$f] = Get-Sha256 $stagedPath }
-    if (Test-Path $livePath) { $live[$f] = Get-Sha256 $livePath }
 }
 
-$missingInGlobal = @()
-$staleInGlobal = @()
-$extraInGlobal = @()
+$anyDrift = $false
 
-foreach ($key in $staged.Keys) {
-    if (-not $live.ContainsKey($key)) {
-        $missingInGlobal += $key
-    } elseif ($live[$key] -ne $staged[$key]) {
-        $staleInGlobal += $key
+foreach ($dest in $destinations) {
+    $destName = $dest.Name
+    $destRoot = $dest.Root
+
+    Write-Host "=== $destName  ($destRoot) ===" -ForegroundColor Cyan
+
+    if (-not (Test-Path $destRoot)) {
+        Write-Host "  Root does not exist - skipping (not set up on this machine)." -ForegroundColor DarkGray
+        Write-Host ""
+        continue
     }
-}
-foreach ($key in $live.Keys) {
-    if (-not $staged.ContainsKey($key)) {
-        $extraInGlobal += $key
+
+    $live = Get-FileHashMap $destRoot @('agents', 'skills', 'commands')
+    foreach ($f in $doctrineFiles) {
+        $livePath = Join-Path $destRoot $f
+        if (Test-Path $livePath) { $live[$f] = Get-Sha256 $livePath }
     }
+
+    $missing = @()
+    $stale = @()
+    $extra = @()
+
+    foreach ($key in $staged.Keys) {
+        if (-not $live.ContainsKey($key)) {
+            $missing += $key
+        } elseif ($live[$key] -ne $staged[$key]) {
+            $stale += $key
+        }
+    }
+    foreach ($key in $live.Keys) {
+        if (-not $staged.ContainsKey($key)) {
+            $extra += $key
+        }
+    }
+
+    if ($missing.Count -eq 0 -and $stale.Count -eq 0 -and $extra.Count -eq 0) {
+        Write-Host "  IN SYNC" -ForegroundColor Green
+    } else {
+        $anyDrift = $true
+        if ($missing.Count -gt 0) {
+            Write-Host "  MISSING (staged here, never copied to this destination):" -ForegroundColor Yellow
+            $missing | ForEach-Object { Write-Host "    $_" }
+        }
+        if ($stale.Count -gt 0) {
+            Write-Host "  STALE (content differs - re-copy needed):" -ForegroundColor Yellow
+            $stale | ForEach-Object { Write-Host "    $_" }
+        }
+        if ($extra.Count -gt 0) {
+            Write-Host "  EXTRA (not staged here - check if intentional):" -ForegroundColor DarkYellow
+            $extra | ForEach-Object { Write-Host "    $_" }
+        }
+    }
+    Write-Host ""
 }
 
-Write-Host "=== Sync check: $repoRoot  vs  $globalRoot ===" -ForegroundColor Cyan
-Write-Host ""
-
-if ($missingInGlobal.Count -eq 0 -and $staleInGlobal.Count -eq 0 -and $extraInGlobal.Count -eq 0) {
-    Write-Host "IN SYNC - every staged file matches global, nothing extra." -ForegroundColor Green
+if ($anyDrift) {
+    Write-Host "Run the Rollout Copy-Item steps in README.md (all three destinations) to fix." -ForegroundColor Cyan
 } else {
-    if ($missingInGlobal.Count -gt 0) {
-        Write-Host "MISSING in global (staged here, never copied):" -ForegroundColor Yellow
-        $missingInGlobal | ForEach-Object { Write-Host "  $_" }
-        Write-Host ""
-    }
-    if ($staleInGlobal.Count -gt 0) {
-        Write-Host "STALE in global (content differs - re-copy needed):" -ForegroundColor Yellow
-        $staleInGlobal | ForEach-Object { Write-Host "  $_" }
-        Write-Host ""
-    }
-    if ($extraInGlobal.Count -gt 0) {
-        Write-Host "EXTRA in global (not staged here - check if intentional):" -ForegroundColor DarkYellow
-        $extraInGlobal | ForEach-Object { Write-Host "  $_" }
-        Write-Host ""
-    }
-    Write-Host "Run the Rollout Copy-Item steps in README.md to fix MISSING/STALE." -ForegroundColor Cyan
+    Write-Host "All destinations fully in sync." -ForegroundColor Green
 }

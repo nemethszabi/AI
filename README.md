@@ -49,6 +49,7 @@ project's material never informs, and is never cited by, anything drafted here.
 |---|---|
 | `skills\prompt-builder\SKILL.md` | Drafts a new one-time/occasional-use prompt (`ai/prompts/<topic>/`) with proper context-loading, optional runtime parameters, and an approval gate if the task has real blast radius. Lighter-weight than `agent-builder` — no tool grant, no scope classification, no self-check machinery — and checks first whether the request is genuinely one-time rather than a recurring need in disguise, redirecting to `agent-builder` if not. First entry in this repo's `skills\` folder (2026-08-10). |
 | `skills\review-agent\SKILL.md` | Thin dispatcher to `agent-reviewer` — invoke after `agent-builder`/`prompt-builder` produces something, or before trusting/copying anything to global. |
+| `skills\office-doc-builder\SKILL.md` | Reusable Excel/Word/PowerPoint formatting helpers (`lib\excel_helpers.py`, `word_helpers.py`, `pptx_helpers.py` — openpyxl/python-docx/python-pptx). A library, not a workflow — other skills with document-generation needs (e.g. `travel-planner`) import from it instead of rewriting styling boilerplate. Added 2026-08-10. |
 
 | Command | Purpose |
 |---|---|

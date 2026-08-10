@@ -393,6 +393,33 @@ Q31, not duplicated here); added `CONSTITUTION.md` Article IX (repository purpos
 `~\.claude\`; `agent-builder.md`'s own `classify` step updated with an explicit check for this case so the
 tool itself catches it next time, not just doctrine (version 1.0.1 → 1.0.2). Saved as a standing memory.
 
+## `office-doc-builder` skill (2026-08-10, later same day)
+
+Built the generic Excel/Word/PowerPoint formatting library proposed after a tooling survey (full context
+in `d:\WORK\AI\results\ai-framework-consolidation-qa-20260810.md`). Correctly placed in `_AI_GIT` this
+time (unlike `travel-planner` earlier the same day) — genuinely generic dev/work tooling, no personal/
+project facts in its actual code.
+
+- `skills\office-doc-builder\SKILL.md` + `lib\{excel_helpers,word_helpers,pptx_helpers}.py`. A library,
+  not a workflow — other skills (e.g. `travel-planner`) are meant to import from it rather than duplicate
+  styling boilerplate.
+- Every function tested directly before trusting it (openpyxl formulas/fills, python-docx's TOC field
+  XML structure verified correct, python-pptx slide generation) — `python-docx` had to be installed first
+  (wasn't present; `python-pptx`/`openpyxl` already were).
+- Independent review (same workaround as the rest of today) found a real, legitimate issue: three
+  docstring comments (not code/behavior) hardcoded personal-life references — a `travel-planner` file
+  path, the Hungarian "Tényleges" convention name, "Tanzania trip" — directly violating this skill's own
+  stated "Generic only" rule. Fixed (reworded to domain-neutral phrasing), re-verified clean by grep and
+  by re-running the full test suite.
+- Cleaned up stray `__pycache__\` left by testing; added `.gitignore` entries for it (`_AI_GIT` didn't
+  previously need this — first Python code in the repo).
+- **Process fix caught mid-rollout**: copied `README.md` to `~\.claude\` by habit — wrong, `README.md`/
+  `docs\` have never been part of the rollout set (deliberately local-only per this file's own 2026-08-07
+  entry). Caught and reverted before it could cause confusion.
+- Rolled out, `check-sync.ps1` confirms fully in sync.
+- `tool-candidates.md` (the `d:\WORK\AI` knowledge-base file that proposed this) updated to remove the
+  now-built entry per its own "move it once adopted" rule, rather than leaving a stale duplicate.
+
 ## Related material outside this repo
 
 - `d:\WORK\AI\results\claude-prompting-system-review.md` — the original deep-dive: naming conventions

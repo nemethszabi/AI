@@ -1,2 +1,4 @@
 # Runtime state, not repo content
 _scripts/sync-check.log
+__pycache__/
+*.pyc

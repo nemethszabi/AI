@@ -10,8 +10,9 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-> Version: 1.0.1 — patch: added the Command-vs-Skill self-consistency note below (`agent-reviewer`
-> finding). 1.0.0 was the first tracked version, coinciding with today's Skill-awareness update.
+> Version: 1.0.2 — patch: added the Article IX personal-vs-generic classify check (real mistake caught
+> live — `travel-planner` was first drafted into `_AI_GIT` before being corrected). 1.0.1 added the
+> Command-vs-Skill self-consistency note (`agent-reviewer` finding). 1.0.0 was the first tracked version.
 
 <objective>
 Draft a new, correctly-structured agent (`.claude\agents\*.md`), skill (`.claude\skills\*\SKILL.md`),
@@ -60,8 +61,14 @@ description:
   contain a fact that only makes sense in one repo — an absolute path, an org name, a stack fact, a
   build command? If yes → project-specific. If it only discovers facts at runtime from wherever it's
   invoked → generic. If genuinely unclear, ask directly rather than guessing.
+  **Personal-life content (travel, health, finance, hobbies, or similar — anything not dev/work) is
+  always project-specific to `d:\WORK\AI`, never generic, even if it looks reusable/global in shape** —
+  `CONSTITUTION.md` Article IX. Check this *before* defaulting to "generic" just because there's only one
+  user of the whole framework; that reasoning applies to *scope* (global-feeling, personal), not to
+  *placement* (still never `_AI_GIT`).
 - **If project-specific**: which project/repo? Its own `.claude\agents\` / `.claude\skills\` /
-  `.claude\commands\` is the target, not this repo.
+  `.claude\commands\` is the target, not this repo — including `d:\WORK\AI\.claude\` for personal-life
+  output, per the rule above.
 - **Executor or reviewer role?** (agents only) An executor does work (reads, analyzes, drafts, sometimes
   writes). A reviewer checks someone else's work and should be read-only by tool permissions, not just
   by instruction.

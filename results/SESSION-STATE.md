@@ -380,6 +380,19 @@ that ran the commit, nothing persists." Fixed: `_scripts\hooks\post-commit` now 
 `_scripts\sync-check.log` (timestamped, tagged with the commit hash) as well as the terminal — gitignored
 (new `.gitignore`, first one this repo has had), re-installed, verified logging works cleanly.
 
+**Correction, later same day — new `CONSTITUTION.md` Article IX**: a personal-life skill (`travel-planner`,
+family trip planning) was mistakenly drafted directly into `_AI_GIT\skills\`, reasoned as "global" because
+the whole framework has one user. User corrected this explicitly: `_AI_GIT`/`~\.claude\` is dev/work
+tooling only — personal-life content belongs in `d:\WORK\AI\.claude\` instead, its own project-like scope,
+never staged here. This also exposed a real misapplication of this repo's *own* existing placement test
+(does the artifact reference a fact — an absolute path — that only makes sense for one target? Personal
+artifacts referencing `d:\WORK\AI\...` directly already fail that test toward "project-specific," "only
+one user" was never license to call them generic). Fixed: `travel-planner` moved out entirely (now lives
+in `d:\WORK\AI\.claude\skills\`, full detail in `d:\WORK\AI\results\ai-framework-consolidation-qa-20260810.md`
+Q31, not duplicated here); added `CONSTITUTION.md` Article IX (repository purpose boundary) and copied to
+`~\.claude\`; `agent-builder.md`'s own `classify` step updated with an explicit check for this case so the
+tool itself catches it next time, not just doctrine (version 1.0.1 → 1.0.2). Saved as a standing memory.
+
 ## Related material outside this repo
 
 - `d:\WORK\AI\results\claude-prompting-system-review.md` — the original deep-dive: naming conventions

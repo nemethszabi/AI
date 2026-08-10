@@ -245,6 +245,35 @@ existed to compare against.
 - **Not yet done**: none of the 4 new commands or `/dev:quick`'s generalized dispatch have been
   live-tested end to end (same constraint as every prior slice).
 
+## Skills adoption slice (2026-08-10)
+
+Sixth slice, a different conversation (rooted in `d:\WORK\AI`, not this repo). Triggered by discovering
+mid-session that Anthropic has folded slash commands into a new **Skills** artifact type
+(`.claude\skills\*\SKILL.md` — auto-triggering via its `description` field, progressive-disclosure
+context cost, portable beyond just Claude Code) that this repo predates entirely. Full reasoning trail is
+in `d:\WORK\AI\results\ai-framework-consolidation-qa-20260810.md`, not duplicated here.
+
+- **`commands\agent-builder.md` updated, not replaced** — added Skill as a first-class classify option
+  (default recommendation over legacy Command), folded in the Skill-specific conventions directly (no
+  XML tags — hard spec constraint, not style; `description`-is-the-trigger; folder shape;
+  `name`/`description`-only required frontmatter) rather than spinning up a new `SKILL-BASELINE.md` this
+  early — same "extract once duplicated 3+ times" threshold already applied to every other doctrine file
+  here. `design-summary`/`draft`/`self-check`/`report` steps all updated to handle three artifact types
+  instead of two.
+- **`skills\` folder created — first entry in it**: `skills\prompt-builder\SKILL.md`, a lighter-weight
+  sibling to `agent-builder` for one-time/occasional prompts (no tool grant, no scope classification, no
+  self-check machinery) that drafts to a target project's `ai\prompts\<topic>\`. Its first step is a
+  sanity check for whether the request is actually recurring (→ redirect to `agent-builder`) rather than
+  blindly complying.
+- **`README.md` updated**: repository-layout table gains a `skills\` row; rollout `Copy-Item` script
+  gained the missing `skills\*` → `~\.claude\skills\` step (didn't exist before — nothing would have
+  reached global without this); inventory tables gained a `Skill` section and a `commands\agent-builder.md`
+  row that had never actually been listed there; "When authoring..." section retitled and pointed at
+  `/agent-builder` as the primary workflow rather than the manual steps.
+- **Not yet done**: neither `agent-builder`'s Skill-handling nor `prompt-builder` has been live-tested end
+  to end. Nothing copied to `~\.claude\` yet from this slice specifically — same "copy is a separate,
+  explicit step" discipline as every prior slice.
+
 ## Related material outside this repo
 
 - `d:\WORK\AI\results\claude-prompting-system-review.md` — the original deep-dive: naming conventions

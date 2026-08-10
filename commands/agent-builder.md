@@ -1,7 +1,7 @@
 ---
 name: agent-builder
-description: Interactively draft a new Claude Code agent and/or its companion command, following this repo's established conventions (generic-vs-project placement, naming, tool-permission discipline, XML-vs-Markdown body style) and consulting CONSTITUTION.md / AGENT-CONDUCT-BASELINE.md / DESIGN-PRINCIPLES-BASELINE.md as applicable.
-argument-hint: [one-line description of the new agent/command's purpose — will ask if omitted]
+description: Interactively draft a new Claude Code agent, skill, and/or legacy command, following this repo's established conventions (generic-vs-project placement, naming, tool-permission discipline, XML-vs-Markdown body style, the no-XML-tags rule for Skills) and consulting CONSTITUTION.md / AGENT-CONDUCT-BASELINE.md / DESIGN-PRINCIPLES-BASELINE.md as applicable.
+argument-hint: [one-line description of the new agent/skill/command's purpose — will ask if omitted]
 allowed-tools:
   - Read
   - Write
@@ -11,34 +11,47 @@ allowed-tools:
 ---
 
 <objective>
-Draft a new, correctly-structured agent (`.claude\agents\*.md`) and/or command
-(`.claude\commands\*.md`), staying in this conversation rather than delegating to an isolated subagent —
-prompt-drafting is iterative (plan → draft → review → fix), and an isolated agent that reports once and
-disappears loses that loop. This command exists to make the house conventions built up in this repo
-mechanical to apply, not something to re-derive from memory each time.
+Draft a new, correctly-structured agent (`.claude\agents\*.md`), skill (`.claude\skills\*\SKILL.md`),
+and/or legacy command (`.claude\commands\*.md`), staying in this conversation rather than delegating to
+an isolated subagent — prompt-drafting is iterative (plan → draft → review → fix), and an isolated agent
+that reports once and disappears loses that loop. This command exists to make the house conventions built
+up in this repo mechanical to apply, not something to re-derive from memory each time.
+
+For a lighter-weight, non-repeating prompt that doesn't need any of this machinery — no tool grant, no
+scope classification, no self-check — use `skills\prompt-builder\SKILL.md` instead. This command is for
+things that will be invoked repeatedly as a named artifact.
 </objective>
 
 <process>
 
 <step name="intake">
-From `$ARGUMENTS`, or by asking if omitted: what is the new agent/command for? Get a one- or two-sentence
-description of its job before proceeding — do not start drafting from a vague request.
+From `$ARGUMENTS`, or by asking if omitted: what is the new agent/skill/command for? Get a one- or
+two-sentence description of its job before proceeding — do not start drafting from a vague request.
 </step>
 
 <step name="classify">
 Resolve, asking via `AskUserQuestion` only for whichever of these aren't already obvious from the intake
 description:
 
-- **Agent, command, or both?** A read-and-report job with real internal process (like
-  `solution-analyst`) is an agent. A thin dispatcher, or something that only makes sense typed by name
-  (`/scaffold-context`), is a command. Many real cases are both — an agent plus a thin command that
-  invokes it, same shape as `solution-analyst` + `scaffold-context`.
+- **Agent, skill, or command?**
+  - **Agent**: needs an isolated context window (bias avoidance / fresh-eyes review), enforced tool
+    restriction beyond what a single conversation turn provides, autonomous multi-step tool use, or
+    proactive auto-delegation matched by its own `description`.
+  - **Skill** (default for anything that isn't an agent): explicit `/name` invocation, optionally also
+    auto-triggered by its own `description`, runs inline in the current conversation unless authored to
+    dispatch into a subagent. This is the canonical form for new work going forward — commands are a
+    legacy path Claude Code still runs but isn't developing further.
+  - **Command** (legacy — rare, don't default here out of habit): only for something small enough that a
+    skill's folder structure is pure overhead, and you're confident it will never need bundled resources
+    or auto-triggering.
+  - Many real cases are both — an agent plus a thin skill/command that invokes it, same shape as
+    `solution-analyst` + `scaffold-context`.
 - **Generic or project-specific?** Apply the tell from the review doc (§10): does the draft need to
   contain a fact that only makes sense in one repo — an absolute path, an org name, a stack fact, a
   build command? If yes → project-specific. If it only discovers facts at runtime from wherever it's
   invoked → generic. If genuinely unclear, ask directly rather than guessing.
-- **If project-specific**: which project/repo? Its own `.claude\agents\` / `.claude\commands\` is the
-  target, not this repo.
+- **If project-specific**: which project/repo? Its own `.claude\agents\` / `.claude\skills\` /
+  `.claude\commands\` is the target, not this repo.
 - **Executor or reviewer role?** (agents only) An executor does work (reads, analyzes, drafts, sometimes
   writes). A reviewer checks someone else's work and should be read-only by tool permissions, not just
   by instruction.
@@ -55,9 +68,15 @@ final report rather than failing):
 2. `AGENT-CONDUCT-BASELINE.md` (this repo's root) — always. Use the Executor section or the Reviewer
    section per the `classify` step's answer, not both.
 3. `DESIGN-PRINCIPLES-BASELINE.md` (this repo's root) — only if `classify` flagged architecture-touching.
-4. `d:\WORK\AI\results\claude-prompting-system-review.md` §10 (generic/specific decision rule), §13
+4. `d:\WORK\AI\knowledge-base\claude-prompting-kb.md` §1–2 (artifact-type decision tree) and
+   `d:\WORK\AI\results\claude-prompting-system-review.md` §10 (generic/specific decision rule), §13
    (naming conventions table) — for placement and file-naming, not duplicated into this file to avoid
    drift between the two.
+
+No dedicated Skill baseline file exists yet — the conventions below are folded directly into this
+command's own `draft` step. Only worth extracting to its own `*-BASELINE.md` once the same skill-specific
+rule ends up duplicated across 3+ drafted skills (same threshold already applied to every other doctrine
+file in this repo).
 </step>
 
 <step name="design-summary">
@@ -68,14 +87,15 @@ exact loop):
 ```
 ## Draft plan: <name>
 
-Type: agent | command | both
+Type: agent | skill | command (legacy) | combination
 Scope: generic (~\.claude\) | project-specific (<repo>\.claude\)
 Role: executor | reviewer | dispatcher
 Tools: <list, with one-line justification for each — least privilege, not convenience>
 Conventions applied: <which of CONSTITUTION / AGENT-CONDUCT / DESIGN-PRINCIPLES sections, or "none — no
   code-architecture surface">
-Body style: XML | Markdown (state which, and why — XML only if the draft needs to embed example
-  Markdown output, per the collision rule already established in this repo)
+Body style: Markdown only if Skill (XML/angle-bracket tags are forbidden in SKILL.md — spec-level
+  prompt-injection constraint, not a style choice) | XML or Markdown if agent/command (XML only if the
+  draft needs to embed an example Markdown output block, per the collision rule already established here)
 ```
 
 Wait for explicit go-ahead before drafting. Skip this step only for something genuinely small and
@@ -85,30 +105,62 @@ unambiguous (the user should be able to tell when a plan step is overkill; when 
 <step name="draft">
 Write the file(s):
 
-- **Naming**: kebab-case. Generic agent → `<role>.md`, no project prefix. Project agent →
-  `<project-prefix>-<role>.md`. Commands mirror the same rule, optionally namespaced under a subfolder
-  (`commands\<namespace>\<verb>.md` → `/namespace:verb`) once there's more than one command in a related
-  family — a single standalone command stays flat.
-- **Frontmatter**: agents use `tools:` (comma list). Commands use `allowed-tools:` (YAML list). Match
-  whichever file type is being written — they are not interchangeable keys.
+- **Naming**: kebab-case throughout.
+  - Generic agent → `agents\<role>.md`, no project prefix. Project agent →
+    `<repo>\.claude\agents\<project-prefix>-<role>.md`.
+  - Generic skill → `skills\<role>\SKILL.md` (a folder, not a flat file — the folder name matches the
+    skill's own `name:` frontmatter field). Project skill →
+    `<repo>\.claude\skills\<project-prefix>-<role>\SKILL.md`.
+  - Legacy commands mirror the agent naming rule, optionally namespaced under a subfolder
+    (`commands\<namespace>\<verb>.md` → `/namespace:verb`) once there's more than one command in a
+    related family — a single standalone command stays flat.
+- **Frontmatter**:
+  - Agents use `tools:` (comma list).
+  - Commands use `allowed-tools:` (YAML list).
+  - Skills' `SKILL.md` requires only `name` + `description` — everything else (tool restrictions, model,
+    execution environment) is optional per the open Agent Skills spec; verify current optional field
+    names against Anthropic's own skill docs at draft time rather than assuming a specific key here.
+  - These are not interchangeable — match whichever file type is actually being written.
+- **The `description` field is the actual trigger for a Skill** — not the name, not the slash form. Write
+  it to describe *when this should fire*, not just what it does; a vague description is the most common
+  reason a skill silently never auto-triggers. Commands' `description` is documentation only, no such
+  requirement.
+- **No XML/angle-bracket tags anywhere in a Skill's body** — hard spec constraint (prompt-injection
+  risk if untrusted tags could inject instructions before the skill loads), not a style preference like
+  the XML-vs-Markdown choice for agents/commands. Plain Markdown headers only.
+- **Bundled resources** (Skills only): if the skill's job benefits from scripts, templates, or reference
+  docs loaded on demand rather than always in context, put them in the same folder alongside `SKILL.md`
+  and reference them by relative path — this is the progressive-disclosure mechanism the folder shape
+  exists for. Don't inline something long into `SKILL.md` itself if it's only needed in a minority of
+  invocations.
 - **Tool list**: minimum the role actually needs. No `Edit` unless the agent modifies existing files. No
-  `Task`/`Agent` on a leaf-level specialist — orchestration belongs in the calling command, not a
-  leaf agent, unless the whole point of this one is to orchestrate others.
-- **Body**: Markdown headers by default. Switch to XML tags only if the draft embeds an example Markdown
-  output block (avoids the outer/inner heading collision) — state this decision in the design summary
-  above, don't silently pick one.
-- **Placement**: generic → this repo's `agents\` or `commands\` (staged, not live until copied to
-  `~\.claude\` — say so in the report). Project-specific → the target repo's own `.claude\agents\` or
-  `.claude\commands\` directly (no staging step for those — they're only ever relevant to that one repo).
+  `Task`/`Agent` on a leaf-level specialist — orchestration belongs in the calling skill/command, not a
+  leaf agent, unless the whole point of this one is to orchestrate others (and note: this repo's own
+  `CONSTITUTION.md` Article VI.2 forbids an agent spawning another agent regardless — orchestration must
+  live in the skill/command layer, never inside an agent's own definition).
+- **Body**: Markdown headers by default for everything; XML tags remain an option for agent/command
+  bodies only, and only if the draft embeds an example Markdown output block (avoids the outer/inner
+  heading collision) — state this decision in the design summary above, don't silently pick one. Never
+  XML for a Skill body, no exception.
+- **Placement**: generic → this repo's `agents\`, `skills\`, or `commands\` (staged, not live until
+  copied to `~\.claude\` — say so in the report). Project-specific → the target repo's own
+  `.claude\agents\`, `.claude\skills\`, or `.claude\commands\` directly (no staging step for those —
+  they're only ever relevant to that one repo).
 </step>
 
 <step name="self-check">
 Before reporting done:
-- If XML tags were used, verify every opening tag has exactly one matching closing tag (a stray or
-  missing tag is a real, previously-caught defect class in this repo — check with a tool-assisted count,
-  not by eye).
-- Frontmatter key correctness (`tools:` vs `allowed-tools:`) matches the file type actually written.
-- Naming matches the convention for its generic/project-specific classification.
+- If XML tags were used (agent/command only), verify every opening tag has exactly one matching closing
+  tag (a stray or missing tag is a real, previously-caught defect class in this repo — check with a
+  tool-assisted count, not by eye).
+- If a Skill was drafted: grep `SKILL.md`'s body for any `<` outside of a fenced code block or Markdown
+  table — zero should remain. This is a hard constraint, not a judgment call.
+- If a Skill was drafted: re-read its `description` field and confirm it states *when* to trigger, not
+  just what the skill does.
+- Frontmatter key correctness (`tools:` vs `allowed-tools:` vs Skill's `name`+`description`) matches the
+  file type actually written.
+- Naming matches the convention for its generic/project-specific classification, and a Skill's folder
+  name matches its own `name:` field.
 </step>
 
 <step name="report">
@@ -116,12 +168,13 @@ Before reporting done:
 ## Built: <name>
 
 Files: <path(s) written>
-Type: agent | command | both
+Type: agent | skill | command (legacy) | combination
 Scope: generic (staged in this repo — not live until copied to ~\.claude\) | project-specific (already
   live in its own repo's .claude\)
 Conventions consulted: <list; note explicitly if CONSTITUTION.md was skipped because it doesn't exist
   yet>
-Still needs: <manual review; copy-to-global step if generic; a test run if this is meant to be invoked
+Still needs: <manual review; copy-to-global step if generic (skills copy to ~\.claude\skills\, same as
+  agents/commands — see this repo's README Rollout section); a test run if this is meant to be invoked
   soon>
 ```
 </step>

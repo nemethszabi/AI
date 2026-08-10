@@ -3,6 +3,16 @@
 # happened by the time this runs) and never auto-copies anything to ~/.claude; that stays a deliberate,
 # explicit step (Rollout step 3 in README.md). This just makes sure you notice drift instead of
 # discovering it the next time something in ~/.claude silently doesn't behave as expected.
+#
+# Output goes to both the terminal (same as before) and a log file, since the terminal output alone
+# disappears once the shell scrolls away or closes and there was previously no way to check after the
+# fact whether/when this last ran (gitignored — runtime state, not repo content).
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-powershell -File "$REPO_ROOT/_scripts/check-sync.ps1"
+LOG_FILE="$REPO_ROOT/_scripts/sync-check.log"
+
+{
+    echo "=== $(date '+%Y-%m-%d %H:%M:%S') — commit $(git rev-parse --short HEAD) ==="
+    powershell -File "$REPO_ROOT/_scripts/check-sync.ps1"
+    echo ""
+} | tee -a "$LOG_FILE"

@@ -135,3 +135,8 @@ clone, or after pulling a change to `_scripts\hooks\`) — installs a `post-comm
 step 6 after every commit, so drift surfaces immediately instead of whenever someone remembers to check.
 Informational only: it never blocks a commit and never auto-copies to `~\.claude\` — step 3 stays a
 deliberate, explicit action.
+
+Every hook run also appends its output to `_scripts\sync-check.log` (gitignored — runtime state, not
+repo content), timestamped and tagged with the commit it ran after — check that file if you want to
+confirm the hook actually fired and what it found, rather than relying on having seen it scroll by live
+in the terminal.

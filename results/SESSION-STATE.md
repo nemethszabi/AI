@@ -374,6 +374,12 @@ item." Cleaned up, fixed by pre-creating all three destination folders with `New
 before every `Copy-Item` — **`README.md`'s Rollout step 3 updated accordingly**, not just fixed ad hoc, so
 this can't silently recur on the next new folder type. `check-sync.ps1` confirms **fully in sync** after.
 
+**Addendum**: user made the first real commit of the session (`e9b278a`, all 13 today-touched files) and
+asked how to verify the `post-commit` hook actually fired — answer was "only ever printed to the terminal
+that ran the commit, nothing persists." Fixed: `_scripts\hooks\post-commit` now tees its output to
+`_scripts\sync-check.log` (timestamped, tagged with the commit hash) as well as the terminal — gitignored
+(new `.gitignore`, first one this repo has had), re-installed, verified logging works cleanly.
+
 ## Related material outside this repo
 
 - `d:\WORK\AI\results\claude-prompting-system-review.md` — the original deep-dive: naming conventions

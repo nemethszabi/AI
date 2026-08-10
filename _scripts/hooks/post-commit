@@ -1,0 +1,8 @@
+#!/bin/sh
+# Runs after every commit in this repo. Informational only — never blocks the commit (it already
+# happened by the time this runs) and never auto-copies anything to ~/.claude; that stays a deliberate,
+# explicit step (Rollout step 3 in README.md). This just makes sure you notice drift instead of
+# discovering it the next time something in ~/.claude silently doesn't behave as expected.
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+powershell -File "$REPO_ROOT/_scripts/check-sync.ps1"

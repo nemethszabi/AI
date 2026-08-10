@@ -274,6 +274,106 @@ in `d:\WORK\AI\results\ai-framework-consolidation-qa-20260810.md`, not duplicate
   to end. Nothing copied to `~\.claude\` yet from this slice specifically — same "copy is a separate,
   explicit step" discipline as every prior slice.
 
+**Continued same day** — closing gaps identified by a maturity self-assessment (full reasoning in
+`d:\WORK\AI\results\ai-framework-consolidation-qa-20260810.md`, not duplicated here):
+
+- **`agents\agent-reviewer.md`** — independent, read-only reviewer for agent/skill/command/one-time-prompt
+  files, built specifically because `agent-builder`'s own `self-check` step isn't independent (same
+  session reviewing its own output, exactly the anchoring risk `dev-reviewer` was built to avoid for code
+  — this closes the equivalent gap for meta-artifacts). Grounded directly in `AGENT-CONDUCT-BASELINE.md`
+  B7 (verdict-block format) and `dev-reviewer.md`'s own shape, not invented fresh. Tools: `Read, Grep,
+  Glob, Write` — no `Edit`, same pattern as `dev-reviewer`.
+- **`skills\review-agent\SKILL.md`** — thin dispatcher to it, same shape as `scaffold-context`.
+- **Versioning convention introduced**: a `> Version: X.Y.Z` line near the top of the body (agents/
+  skills/commands, not one-time prompts) — chosen over a new YAML frontmatter key specifically to reuse
+  the already-proven `Version: 1.0` pattern from the legacy `ai/prompts/` core files rather than invent
+  something with uncertain parser support, especially for Skills where optional frontmatter fields beyond
+  `name`/`description` aren't fully confirmed. Folded into `agent-builder.md`'s own `draft`/`self-check`
+  steps and retrofitted onto every file touched today (`agent-builder.md` itself, `prompt-builder`,
+  `review-agent`, `agent-reviewer`).
+- **`_scripts\check-sync.ps1`** — compares this repo's staged `agents\`/`skills\`/`commands\`/doctrine
+  files against `~\.claude\` by content hash (SHA256 via raw .NET, not `Get-FileHash` — that cmdlet
+  turned out to be unavailable on this machine's PowerShell 5.1 install, a module-loading issue not worth
+  chasing down for a script this size). First real run immediately confirmed the exact drift expected:
+  today's three new files missing from global, `agent-builder.md` stale. Added as Rollout step 6.
+- Self-check caught one real defect immediately on first use: `prompt-builder\SKILL.md` had angle-bracket
+  placeholders (`<topic-slug>`), violating the no-XML-tags rule it was drafted under — fixed by switching
+  to `{topic-slug}`-style curly braces (also better matching the framework's existing `{REPO_ROOT}`
+  convention). Confirms the reviewer/self-check machinery has real teeth, not just documentation weight.
+- **Not yet done**: `agent-reviewer` has not yet reviewed anything other than the artifacts built in this
+  same slice (not a fully independent first run — the next real test is running it against something from
+  a *prior* slice, e.g. `solution-analyst` or `dev-reviewer` itself, cold). Nothing copied to `~\.claude\`
+  yet.
+
+**Continued further same day** — validated the staging-repo-vs-symlink architecture decision explicitly
+(kept staging+copy over symlinking `~\.claude\` directly into this repo — a symlink would make every
+edit here instantly live with no chance for `agent-reviewer` to catch a problem first; copy-with-an-
+enforced-check preserves that gate, it just needed the check automated). Added:
+- **`_scripts\hooks\post-commit`** (tracked hook source — `.git\hooks\` itself isn't version-controlled)
+  + **`_scripts\install-hooks.ps1`** (copies tracked hooks into `.git\hooks\`, re-run after a fresh clone
+  or a hook-source change). Installed and verified working by direct invocation (not via an actual commit
+  — commits stay user-initiated only, per standing instruction). Deliberately informational-only: never
+  blocks a commit, never auto-copies to `~\.claude\` — Rollout step 3 stays a deliberate human action, the
+  hook just makes drift impossible to miss instead of automating away the promotion gate itself.
+- README.md Rollout section gained step 6 (`check-sync.ps1`) and a "One-time setup" note for
+  `install-hooks.ps1`.
+
+**First independent validation round, same day** — `agent-reviewer` had only reviewed its own slice's
+output until now; ran it (via the inline-role-into-general-purpose-agent workaround, since session-scoped
+agent discovery isn't hot-reloaded and nothing's copied to `~\.claude\` yet) cold against 4 pre-existing
+agents in parallel: `solution-analyst`, `dev-reviewer`, `mermaid-diagram-maker`, `dev-browser-tester`.
+
+- **3× APPROVED WITH FIXES** (`solution-analyst`, `dev-reviewer`, `mermaid-diagram-maker`) — each missing
+  a `Version:` line, fixed directly in each review (confirmed by direct read after, not just trusted).
+  `dev-reviewer` additionally got a WARN for its unscoped `Bash` grant vs. B1.
+- **1× REJECTED — `dev-browser-tester`, two real BLOCKING findings, not nitpicks**: an unjustified `Write`
+  grant contradicting `CONSTITUTION.md` Article VI.1 (its own `<rules>` claimed zero fix authority but the
+  frontmatter still carried `Write`, unlike `dev-reviewer.md`'s `Write`, which has a documented exception
+  for it), and a missing B7 fenced verdict block (it invented its own `### Result: [PASS/FAIL]` heading
+  instead) — this repo's own `README.md` rule 5 explicitly requires the real block for any gate/reviewer
+  agent. **Both fixed** on user request: `Write` removed from `tools:`, a `gate: browser-test` / `verdict:
+  PASS | FAIL` block added to `<output>`, version bumped 1.0.0 → 1.1.0 (not just a patch — a grant removal
+  + a new required output contract).
+- **Meta-finding about the reviewer itself, not the targets**: two independent cold runs disagreed on
+  whether unscoped `Bash` warrants a WARN — the `dev-reviewer` run flagged it, the `solution-analyst` run
+  explicitly declined ("matches the established convention across every Bash-using agent in this repo").
+  Real calibration inconsistency on dimension 5, not yet resolved — the rule should probably state
+  explicitly whether "already the repo's own convention" is an exemption or not, rather than leaving it to
+  per-run judgment. Flagged, not fixed this round.
+- **Confirms the review mechanism has real teeth**: this is the second genuine defect it's caught today
+  (after `prompt-builder`'s XML-tag violation) — both were pre-existing/newly-introduced problems a human
+  skim could plausibly have missed, not manufactured findings.
+
+**Second independent validation round + first real rollout, same day** — reviewed the 3 remaining
+today-touched files before promoting anything (`agent-builder.md`, `prompt-builder`, `review-agent`),
+since only the 4 agents above had been independently checked; these 3 had only ever been self-checked
+(same-session, not independent) — inconsistent with the discipline just established.
+
+- `review-agent`: **APPROVED**, clean — correct `Task(...)` dispatch, no inline review logic, zero XML
+  tags confirmed by direct grep. One cosmetic-only note: named `review-agent` but dispatches to
+  `agent-reviewer` — inverted word order, harmless now, worth a glance as more artifacts accumulate.
+- `prompt-builder`: **APPROVED WITH FIXES** — actually no fix needed; flagged whether `1.0.0` should've
+  bumped for the earlier XML-tag fix, correctly couldn't resolve from the file alone. Resolved with
+  certainty from session context: the fix landed before the file was ever live/copied, so `1.0.0` is
+  correct as the true first version.
+- `agent-builder.md`: **APPROVED WITH FIXES** — one real, legitimate WARN: its own `&lt;objective&gt;`
+  rationale for staying a Command only argues against being an Agent, never addresses Command-vs-**Skill**
+  against its own `classify` step's criteria (which already default to Skill). Fixed honestly — added a
+  note in `&lt;objective&gt;` stating plainly there's no principled reason, just history (predates Skills,
+  updated in place rather than converted); converting it to a Skill itself is flagged as a reasonable
+  future step, not done this round. Version bumped 1.0.0 → 1.0.1 (patch — clarification, not new
+  capability).
+
+**Rollout executed** — all 8 today-touched files (`agent-reviewer`, `review-agent`, `prompt-builder`,
+`agent-builder`, `solution-analyst`, `dev-reviewer`, `mermaid-diagram-maker`, `dev-browser-tester`) copied
+to `~\.claude\`. Hit a real `Copy-Item` bug during this, not user error: copying `skills\*` with
+`-Recurse` onto a not-yet-existing `~\.claude\skills\` mis-created the destination as a copy of the first
+source item's *contents* (a stray `SKILL.md` sitting loose in `skills\`, no subfolder) instead of a proper
+container, which then broke the second folder's copy with "container cannot be copied onto existing leaf
+item." Cleaned up, fixed by pre-creating all three destination folders with `New-Item -ItemType Directory`
+before every `Copy-Item` — **`README.md`'s Rollout step 3 updated accordingly**, not just fixed ad hoc, so
+this can't silently recur on the next new folder type. `check-sync.ps1` confirms **fully in sync** after.
+
 ## Related material outside this repo
 
 - `d:\WORK\AI\results\claude-prompting-system-review.md` — the original deep-dive: naming conventions

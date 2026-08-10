@@ -10,12 +10,22 @@ allowed-tools:
   - AskUserQuestion
 ---
 
+> Version: 1.0.1 — patch: added the Command-vs-Skill self-consistency note below (`agent-reviewer`
+> finding). 1.0.0 was the first tracked version, coinciding with today's Skill-awareness update.
+
 <objective>
 Draft a new, correctly-structured agent (`.claude\agents\*.md`), skill (`.claude\skills\*\SKILL.md`),
 and/or legacy command (`.claude\commands\*.md`), staying in this conversation rather than delegating to
 an isolated subagent — prompt-drafting is iterative (plan → draft → review → fix), and an isolated agent
 that reports once and disappears loses that loop. This command exists to make the house conventions built
 up in this repo mechanical to apply, not something to re-derive from memory each time.
+
+This file itself remains a legacy Command, not a Skill, purely because it predates Skills and was updated
+in place rather than converted — a Skill would preserve the same inline-iteration property equally well
+(per this file's own `classify` step), so there's no principled Command-vs-Skill argument here, just
+history. Converting it is a reasonable future step, not yet done — noted honestly rather than inventing a
+rationale that doesn't hold up against this file's own stated criteria (`agent-reviewer` finding,
+2026-08-10).
 
 For a lighter-weight, non-repeating prompt that doesn't need any of this machinery — no tool grant, no
 scope classification, no self-check — use `skills\prompt-builder\SKILL.md` instead. This command is for
@@ -146,6 +156,11 @@ Write the file(s):
   copied to `~\.claude\` — say so in the report). Project-specific → the target repo's own
   `.claude\agents\`, `.claude\skills\`, or `.claude\commands\` directly (no staging step for those —
   they're only ever relevant to that one repo).
+- **Versioning**: add a `> Version: 1.0.0` line near the top of the body (right after frontmatter) for
+  agents, skills, and commands — not needed for one-time prompts (`prompt-builder`'s territory). On an
+  edit to an existing file rather than a first draft, bump it: patch for wording/quality fixes, minor for
+  new steps/capabilities, major for a structural rewrite. No separate changelog file — the version number
+  plus this repo's own `results\SESSION-STATE.md` dated entries are enough at this scale.
 </step>
 
 <step name="self-check">
@@ -157,6 +172,7 @@ Before reporting done:
   table — zero should remain. This is a hard constraint, not a judgment call.
 - If a Skill was drafted: re-read its `description` field and confirm it states *when* to trigger, not
   just what the skill does.
+- A `> Version: 1.0.0` line is present (or correctly bumped, if this was an edit).
 - Frontmatter key correctness (`tools:` vs `allowed-tools:` vs Skill's `name`+`description`) matches the
   file type actually written.
 - Naming matches the convention for its generic/project-specific classification, and a Skill's folder
@@ -173,9 +189,9 @@ Scope: generic (staged in this repo — not live until copied to ~\.claude\) | p
   live in its own repo's .claude\)
 Conventions consulted: <list; note explicitly if CONSTITUTION.md was skipped because it doesn't exist
   yet>
-Still needs: <manual review; copy-to-global step if generic (skills copy to ~\.claude\skills\, same as
-  agents/commands — see this repo's README Rollout section); a test run if this is meant to be invoked
-  soon>
+Still needs: <a review-agent pass before trusting/copying (dispatch skills\review-agent\SKILL.md);
+  copy-to-global step if generic (skills copy to ~\.claude\skills\, same as agents/commands — see this
+  repo's README Rollout section); a test run if this is meant to be invoked soon>
 ```
 </step>
 

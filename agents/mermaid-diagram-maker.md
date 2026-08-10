@@ -6,6 +6,8 @@ color: blue
 memory: user
 ---
 
+> Version: 1.0.0
+
 ## Role
 
 You are a diagram specialist: clear, accurate, visually effective Mermaid diagrams for software

@@ -43,10 +43,12 @@ project's material never informs, and is never cited by, anything drafted here.
 | `agents\req-architect.md` | Design/architecture proposal from a clarified requirements list — approach, alternatives, components, risks. Named `req-architect`, not `solution-architect`, to avoid colliding with domain-specific agents of that name in other frameworks. |
 | `agents\req-estimator.md` | Three-point effort estimate from requirements + design. Never invents a rate card — effort-only if none found. Named `req-estimator`, not `project-estimator`, same collision-avoidance reason. |
 | `agents\mermaid-diagram-maker.md` | Writes `.mmd` diagrams (architecture/sequence/flowchart/class/state/deployment/ER) and renders `.png` via `mmdc`. Generic, `memory: user` for cross-project styling conventions only — never project-specific component/service names. Adapted from `agentic-dev-framework`, not copy-pasted: fixed a memory-boundary violation in the source (it told the agent to save component/service names globally) and added a no-silent-overwrite rule. |
+| `agents\agent-reviewer.md` | Independent, read-only reviewer for a drafted/edited agent, skill, command, or one-time prompt — the meta-level counterpart to `dev-reviewer` (reviews customization artifacts, not application code). Reads cold, never the drafting session's own reasoning. Ends with an `AGENT-CONDUCT-BASELINE.md` B7 verdict block. No `Edit` beyond narrow, unambiguous mechanical fixes. Added 2026-08-10 specifically because `agent-builder`'s own self-check isn't independent (same session checking its own work) — closes that gap. |
 
 | Skill | Purpose |
 |---|---|
 | `skills\prompt-builder\SKILL.md` | Drafts a new one-time/occasional-use prompt (`ai/prompts/<topic>/`) with proper context-loading, optional runtime parameters, and an approval gate if the task has real blast radius. Lighter-weight than `agent-builder` — no tool grant, no scope classification, no self-check machinery — and checks first whether the request is genuinely one-time rather than a recurring need in disguise, redirecting to `agent-builder` if not. First entry in this repo's `skills\` folder (2026-08-10). |
+| `skills\review-agent\SKILL.md` | Thin dispatcher to `agent-reviewer` — invoke after `agent-builder`/`prompt-builder` produces something, or before trusting/copying anything to global. |
 
 | Command | Purpose |
 |---|---|
@@ -103,6 +105,15 @@ interactively and stays current as they evolve; this section is the reference, n
 2. Manual review.
 3. Copy to global:
    ```powershell
+   # Pre-create destination folders first — Copy-Item with -Recurse onto a not-yet-existing destination
+   # can silently mis-create it as a copy of the *first* source item's contents instead of a proper
+   # container (hit this for real on 2026-08-10 with skills\ — left a stray SKILL.md sitting loose in
+   # ~\.claude\skills\ instead of in its own subfolder). Always ensure the target exists as a real
+   # directory first, every time, not just the first time a new subfolder type appears.
+   New-Item -ItemType Directory -Path "$env:USERPROFILE\.claude\agents"   -Force | Out-Null
+   New-Item -ItemType Directory -Path "$env:USERPROFILE\.claude\skills"   -Force | Out-Null
+   New-Item -ItemType Directory -Path "$env:USERPROFILE\.claude\commands" -Force | Out-Null
+
    Copy-Item agents\*.md  "$env:USERPROFILE\.claude\agents\"   -Force
    Copy-Item skills\*     "$env:USERPROFILE\.claude\skills\"   -Recurse -Force
    Copy-Item commands\*   "$env:USERPROFILE\.claude\commands\" -Recurse -Force
@@ -114,3 +125,13 @@ interactively and stays current as they evolve; this section is the reference, n
    with `-Force`, since a real global `CLAUDE.md` may already carry personal notes this would clobber.
 5. After any future edit here, re-run step 3 (and re-check step 4) so `~\.claude\` picks up the change —
    this repo is the source of truth, `~\.claude\` is a copy of it, not the other way around.
+6. Run `powershell -File _scripts\check-sync.ps1` to confirm — reports anything staged here that's
+   missing or stale in `~\.claude\`. This caught a real gap on 2026-08-10 (the `skills\*` copy step
+   didn't exist in step 3 until that day, so nothing had ever reached `~\.claude\skills\`) — run it after
+   every rollout, not just when something seems off.
+
+**One-time setup**: run `powershell -File _scripts\install-hooks.ps1` once (and again after a fresh
+clone, or after pulling a change to `_scripts\hooks\`) — installs a `post-commit` hook that auto-runs
+step 6 after every commit, so drift surfaces immediately instead of whenever someone remembers to check.
+Informational only: it never blocks a commit and never auto-copies to `~\.claude\` — step 3 stays a
+deliberate, explicit action.

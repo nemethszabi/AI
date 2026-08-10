@@ -3,6 +3,8 @@ name: prompt-builder
 description: Draft a new one-time or occasional-use prompt with proper context-loading and structure, saved under a project's ai/prompts/{topic}/ folder for future reuse. Use when the user wants to save a prompt for reuse later, or asks to "make this a reusable prompt", "draft a one-time prompt for X", "save this as a prompt I can run again". Do NOT use for anything that will actually recur often, or that needs isolation/tool-restriction/autonomy/proactive-triggering — that's agent-builder's job (this skill checks for that and redirects rather than complying blindly).
 ---
 
+> Version: 1.0.0
+
 # Prompt Builder
 
 Draft a new, well-structured one-time/occasional-use prompt file — the lighter-weight artifact type

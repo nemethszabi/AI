@@ -51,6 +51,19 @@ data goes where, project-specific rules) — build that as its own skill with it
 way `travel-planner` does, and have *that* script import from this library for the low-level formatting
 only. This skill is deliberately generic — it should never accumulate project- or domain-specific facts.
 
+## Escalation path — when this isn't enough
+
+Start here for a straight from-scratch generation — no plugin install, no network fetch, zero-dependency
+beyond `openpyxl`/`python-docx`/`python-pptx` already present in this environment.
+
+If the task genuinely needs something this library doesn't do — **editing an existing document in place
+with tracked changes preserved** (this library only ever writes fresh files, never patches one), **native
+Excel charts/pivot tables**, or **PowerPoint theme-based/master-layout generation** — check whether the
+`document-skills` plugin (`anthropic-agent-skills` marketplace, skills `docx`/`xlsx`/`pptx`) is installed
+and use its matching skill for that specific need. Same trade-off as `office-doc-reader`'s escalation path:
+heavier, source-available-not-open-source, worth it for that specific capability gap, not a default
+replacement for this library.
+
 ## Rules
 
 - Generic only — never add a hardcoded personal/project fact to any module here (a name, a path, a

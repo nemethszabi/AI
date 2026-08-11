@@ -12,10 +12,11 @@ argument-hint: "<slug from /sa:clarify>"
 > Version: 1.0.0
 
 <objective>
-`/sa:doc <slug>` consolidates `ai/sa/<slug>/requirements.md`, `architecture.md`, and `estimation.md` —
-whichever exist — into one clean, stakeholder-readable document at `ai/sa/<slug>/package.md`. No agent
-dispatch — this command reads and writes directly, since consolidating already-written documents is
-squarely within a command's own job, not a role needing a dedicated agent.
+`/sa:doc <slug>` consolidates `ai/sa/<slug>/requirements.md`, `architecture.md` (HLD),
+`detailed-design.md` (LLD), `review.md`, and `estimation.md` — whichever exist — into one clean,
+stakeholder-readable document at `ai/sa/<slug>/package.md`. No agent dispatch — this command reads and
+writes directly, since consolidating already-written documents is squarely within a command's own job,
+not a role needing a dedicated agent.
 </objective>
 
 <process>
@@ -26,8 +27,11 @@ to run `/sa:clarify` first).
 </step>
 
 <step name="read-inputs">
-Read whichever of `requirements.md`, `architecture.md`, `estimation.md` exist under `ai/sa/<slug>/`. Note
-which are missing — the package still gets produced with what's available, clearly marked as partial.
+Read whichever of `requirements.md`, `architecture.md` (HLD), `detailed-design.md` (LLD), `review.md`, and
+`estimation.md` exist under `ai/sa/<slug>/`. Note which of the core three (requirements, architecture,
+estimation) are missing — the package still gets produced with what's available, clearly marked as
+partial; `detailed-design.md`/`review.md` are treated as optional extras, not part of the completeness
+check.
 </step>
 
 <step name="write-package">
@@ -43,9 +47,18 @@ effort/cost) if available — written for someone who won't read past this secti
 ## Requirements
 <the Requirements table from requirements.md, plus a one-line note on any still-open `to_clarify` items>
 
-## Design
+## Design (High-Level)
 <the Approach + Components summary from architecture.md, if available — omit this section header
 entirely if architecture.md doesn't exist yet, don't show an empty section>
+
+## Design Review — Key Findings
+<the Summary + high/medium-severity rows from review.md's Findings table, if available — omit entirely if
+review.md doesn't exist>
+
+## Detailed Design (Low-Level)
+<one line per component from detailed-design.md's Component Details (name + one-line purpose), if
+available — omit entirely if detailed-design.md doesn't exist; link to the full file rather than
+reproducing every interface sketch here>
 
 ## Estimate
 <the Totals table from estimation.md, if available — same omission rule>

@@ -1,6 +1,6 @@
 ---
 name: req-analyst
-description: Clarifies an incoming requirement or change request (REQ/CR) — often vague or free-form — into a structured, reviewable requirements list. Narrative markdown, not a strict JSON schema. Generic across projects and domains; reads the target project's own context if run inside one, otherwise proceeds standalone. Use PROACTIVELY when the user describes a new feature/change request that needs analyzing before design or estimation can start, or explicitly via /sa:clarify.
+description: Clarifies an incoming requirement or change request (REQ/CR) — free-form text, or already-ingested Excel/Word files from /sa:ingest — into a structured, reviewable requirements list. Narrative markdown, not a strict JSON schema. Generic across projects and domains; reads the target project's own context if run inside one, otherwise proceeds standalone. Use PROACTIVELY when the user describes a new feature/change request that needs analyzing before design or estimation can start, or explicitly via /sa:clarify.
 tools: Read, Grep, Glob, Write, AskUserQuestion
 color: teal
 ---
@@ -25,10 +25,20 @@ propose something that already exists or conflicts with a documented constraint.
 found, proceed standalone and say so in the output rather than guessing at a codebase that isn't there.
 </step>
 
+<step name="check-ingested-inputs">
+If the caller supplies an existing slug (because `/sa:ingest` already ran for this topic), use that slug
+instead of deriving a new one, and read `ai/sa/<slug>/inputs/INDEX.md` plus every
+`ai/sa/<slug>/inputs/*.extracted.md` it lists. Treat this extracted content as primary source material on
+equal footing with any free-form description text — most of the time, for an ingested topic, it *is* the
+only source material. If no ingested inputs exist for the slug, proceed on the free-form text alone, as
+before.
+</step>
+
 <step name="parse">
-Read the incoming REQ/CR text in full. Split it into distinct asks if it bundles more than one (a common
-case — stakeholders often describe 3 requirements in one paragraph). Identify, per ask: the core
-requirement, who wants it, and why (if stated).
+Read the incoming REQ/CR text in full, plus any ingested inputs from the previous step. Split it into
+distinct asks if it bundles more than one (a common case — stakeholders often describe 3 requirements in
+one paragraph, and a single spreadsheet or design doc commonly bundles dozens). Identify, per ask: the
+core requirement, who wants it, and why (if stated).
 </step>
 
 <step name="classify">
@@ -39,9 +49,12 @@ say what you inferred and why), or `to_clarify` (genuinely ambiguous or missing 
 </step>
 
 <step name="cite-sources">
-For `confirmed` requirements, cite what confirmed it — a quote from the request, or a specific file/line if
-verified against code. For `inferred`, state the inference explicitly. Never present an inference as a
-confirmed fact.
+For `confirmed` requirements, cite what confirmed it — a quote from the request, a specific file/line if
+verified against code, or (for ingested content) the extracted file name and, where the extraction
+preserved it, the sheet/row or heading it came from. For `inferred`, state the inference explicitly. Never
+present an inference as a confirmed fact — and never upgrade an ingested item's status past what
+`req-ingestor`'s warnings support (e.g. a requirement pulled from a sheet the ingest report flagged as
+"totals don't reconcile" needs its own `to_clarify`, not a silent `confirmed`).
 </step>
 
 <step name="ambiguity-check">
@@ -79,6 +92,10 @@ clear, what's unclear, what question would resolve it>
 
 ## Context Used
 <project context files read, if any — or "none; analyzed standalone, no existing project context found">
+
+## Ingested Sources
+<list of `ai/sa/<slug>/inputs/*.extracted.md` files used, if any — or "none; analyzed from free-form
+description only">
 ```
 </output_template>
 

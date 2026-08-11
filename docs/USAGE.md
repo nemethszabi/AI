@@ -12,6 +12,9 @@ lighter than a full wave/gate system.
 | Unfamiliar/new project, no `ai/context/` yet | `/scaffold-context [path]` | Global |
 | Need an architecture/sequence/flowchart diagram | `/diagram [what]` | Global |
 | New REQ/CR to analyze, in any project or standalone | `/sa:clarify` → `/sa:design` → `/sa:estimate` → `/sa:doc` | Global |
+| Starting from an existing Excel/Word/PDF (RFP, estimate sheet, design doc) | `/sa:ingest <slug> <path>` first, then `/sa:clarify <slug>` | Global |
+| Sanity-check a design before going deeper/committing to it | `/sa:review <slug>` (after `/sa:design`, before `/sa:design-detail`) | Global |
+| Need interface/data-model/deployment-level detail, not just the HLD | `/sa:design-detail <slug>` (after `/sa:design`) | Global |
 | A project has no `ai/dev/` yet | `/dev:init [path]` | Global |
 | Check a project's current dev-pipeline state | `/dev:status [path]` | Global |
 | One-off backend/frontend task, no special process | `/dev:quick <task>` | Global |
@@ -20,6 +23,8 @@ lighter than a full wave/gate system.
 | Draft a new one-time/occasional-use prompt | `prompt-builder` skill | Global |
 | Independent check on a drafted agent/skill/command before trusting/copying it | `review-agent` skill (dispatches `agent-reviewer`) | Global |
 | Generate/reformat an Excel/Word/PowerPoint document | `office-doc-builder` skill (library, imported by other skills) | Global |
+| Read/extract content from an existing Excel/Word file | `office-doc-reader` skill (backs `req-ingestor`; `.pdf` — use the built-in `Read` tool directly) | Global |
+| Extraction/generation genuinely needs OCR, patch-editing, or native charts/pivots — beyond what the lightweight skills above do | `document-skills@anthropic-agent-skills` plugin (installed 2026-08-11, user scope — see `SETUP.md` for the per-profile install gotcha) | Plugin, not this repo |
 | net8-migration (SCM): bug fix | `/scm:fix [#ID] <bug>` | net8-migration |
 | net8-migration (SCM): new requirement | `/scm:req [#ID] <requirement>` | net8-migration |
 | net8-migration (SCM): review recent changes | `/scm:review [#ID]` | net8-migration |
@@ -37,7 +42,8 @@ namespaces.
 ## The shape underneath, in one paragraph
 
 One generic agent per role (`dev-backend`, `dev-frontend`, `dev-reviewer`, `dev-browser-tester`,
-`solution-analyst`, `mermaid-diagram-maker`, `req-analyst`, `req-architect`, `req-estimator`,
+`solution-analyst`, `mermaid-diagram-maker`, `req-ingestor`, `req-analyst`, `req-architect`,
+`req-reviewer`, `req-detailer`, `req-estimator`,
 `agent-reviewer` — the meta-level counterpart to `dev-reviewer`, reviewing agent/skill/command/prompt
 artifacts themselves rather than application code) — reused
 verbatim across every project, never hardcoding a stack fact or project name. Project specificity lives in
@@ -62,7 +68,14 @@ not a reusable role.
   continuity, paste the relevant `REQ-ID`/requirement text into the `/dev:quick`/`/scm:req` task
   description yourself.
 - **`/sa:*` artifacts are slugged per-topic** (`ai/sa/<slug>/`) specifically so you can have several
-  REQ/CRs in flight in the same project without them overwriting each other.
+  REQ/CRs in flight in the same project without them overwriting each other. The slug is just a folder
+  name you choose (or `req-analyst` derives one) — every `.md` file under it (`requirements.md`,
+  `architecture.md`, `review.md`, `detailed-design.md`, `estimation.md`, `package.md`) is a generated
+  *output*, never something you hand-write as input. The only real inputs are free-form text (to
+  `/sa:clarify`) or raw files (`.xlsx`/`.docx`/`.pdf`, to `/sa:ingest`).
+- **No step in `/sa:*` blocks the next one**, including `/sa:review` — it produces findings, not a
+  pass/fail gate. `/sa:estimate` will run even if you skip `/sa:review` entirely. Skip whichever steps a
+  small topic doesn't need (most CRs don't need `/sa:ingest` or a separate LLD pass at all).
 - **Never commit is enforced only where a command says so** (SCM's `/scm:fix`/`/scm:req`/
   `/scm:devops-change`). The generic `dev-*` agents and `/dev:quick` have no opinion on commits — that's a
   project-specific mechanic, not a global rule.

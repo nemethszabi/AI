@@ -13,8 +13,9 @@ argument-hint: "<slug from /sa:clarify>"
 > Version: 1.0.0
 
 <objective>
-`/sa:design <slug>` produces a design/architecture proposal from `ai/sa/<slug>/requirements.md` via
-`req-architect`, writing `ai/sa/<slug>/architecture.md`.
+`/sa:design <slug>` produces a High-Level Design (HLD) from `ai/sa/<slug>/requirements.md` via
+`req-architect`, writing `ai/sa/<slug>/architecture.md`. For interface/data-model/deployment-level detail
+(the LLD), run `/sa:review` against this HLD first, then `/sa:design-detail`.
 </objective>
 
 <process>
@@ -30,7 +31,7 @@ Dispatch to `req-architect` via `Agent`. Give it the resolved slug and project p
 
 <step name="relay">
 Return the agent's summary (chosen approach, component count, any unaddressed `must`-priority requirement)
-and the file path written.
+and the file path written. Mention `/sa:review` as the recommended next step before `/sa:design-detail`.
 </step>
 </process>
 

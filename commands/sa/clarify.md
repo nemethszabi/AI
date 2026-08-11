@@ -1,6 +1,6 @@
 ---
 name: sa:clarify
-description: Clarify an incoming requirement/change request into a structured, reviewable requirements list, via req-analyst.
+description: Clarify an incoming requirement/change request — free-form text or files already ingested via /sa:ingest — into a structured, reviewable requirements list, via req-analyst.
 allowed-tools:
   - Read
   - Grep
@@ -20,12 +20,18 @@ clarify → design → estimate → doc pipeline.
 
 <process>
 <step name="resolve-input">
-Take `$ARGUMENTS` as the REQ/CR description. If empty, ask the user to describe it directly.
+If `$ARGUMENTS` names an existing `ai/sa/<slug>/inputs/` folder (i.e. `/sa:ingest` already ran for this
+slug), treat it as that slug — the ingested files are the source material, no free-form description
+required (though one may still be given alongside, e.g. extra verbal context on top of the ingested
+files). Otherwise take `$ARGUMENTS` as a free-form REQ/CR description. If empty and no ingested slug is
+found, ask the user to describe it directly, or point them at `/sa:ingest` if they meant to start from
+files.
 </step>
 
 <step name="dispatch">
-Dispatch to `req-analyst` via `Agent`. Give it the description and the current working directory as the
-target project (it detects project context itself, or proceeds standalone if none exists).
+Dispatch to `req-analyst` via `Agent`. Give it the description and/or the resolved slug, and the current
+working directory as the target project (it detects project context itself, or proceeds standalone if
+none exists).
 </step>
 
 <step name="relay">

@@ -467,3 +467,97 @@ real fix (agent discovery isn't hot-reloaded, same rule as everywhere else today
 - `d:\_SCM_GIT\net8-migration\` — real project used as the other grounding source (`ai\context\
   scm-context.md`, `ai\prompts\design-architect\design-architect.md`) and as the planned test target for
   `solution-analyst`'s UPDATE mode.
+
+## `sa:` pipeline extension — ingestion, HLD/LLD split, model overrides (2026-08-11)
+
+Seventh slice, later session, prompted by a real request: analyze Excel/Word files, draft a High-Level
+Design, review it, move to Low-Level Design. Compared against a colleague's heavier `agentic-dev-framework`
+and deliberately extended the existing lightweight `sa:` pipeline instead of adopting the heavy one — full
+reasoning lives in that conversation, not duplicated here.
+
+**New agents**: `agents\req-ingestor.md` (mechanical Excel/Word/PDF/text extraction into
+`ai/sa/<slug>/inputs/*.extracted.md`, via the new `office-doc-reader` skill for xlsx/docx or the built-in
+`Read` tool for pdf; folder scans are non-recursive by default, `--recursive` opts in — a subfolder is
+reported, never silently entered); `agents\req-reviewer.md` (narrative-only HLD/LLD critique, no
+PASS/BLOCKING gate — deliberate, matches the whole pipeline's no-gates philosophy; findings require a
+citation column and an anti-softening rule, both added after an independent `agent-reviewer` pass flagged
+the first draft as too thin); `agents\req-detailer.md` (the LLD pass — per-component interface/contract
+sketch, data model, key flow, config/deployment, from a reviewed HLD; never re-litigates the HLD's
+approach, flags disagreement in Open Questions instead).
+
+**New skill**: `skills\office-doc-reader\` — `lib\excel_reader.py`/`word_reader.py`, CLI-runnable and
+importable, sibling to the write-only `office-doc-builder`. Tested against real files during the build.
+`.pdf` deliberately out of scope — the built-in `Read` tool already parses it.
+
+**New commands**: `sa\ingest.md`, `sa\review.md`, `sa\design-detail.md`; `sa\help.md`/`sa\design.md`/
+`sa\clarify.md`/`sa\doc.md` updated. Full pipeline now: `/sa:ingest → /sa:clarify → /sa:design (HLD) →
+/sa:review → /sa:design-detail (LLD) → /sa:estimate → /sa:doc`. Every step optional/skippable, no gates.
+
+**Independent review**: all three new agents + the new skill reviewed via `agent-reviewer`.
+`office-doc-reader`: APPROVED, clean. The three agents: APPROVED WITH FIXES each — a stray duplicate
+`</output>` closing tag, turned out to be a pre-existing defect in `req-architect.md`/`req-analyst.md`/
+`req-estimator.md` too (all fixed).
+
+**Real-use fixes — found by actually running this against a live engagement in the same session**, not by
+review. First time in this repo's history a freshly-built pipeline got load-bearing real use immediately:
+- `req-analyst.md` had **no re-run/merge logic** (`Write`-only, nothing preserving `REQ-ID`s or existing
+  status upgrades on a second pass) — fixed with a `check-existing` step that merges and reports what
+  changed, instead of silently overwriting.
+- `req-ingestor.md`'s folder-scan recursion was undefined — fixed to non-recursive-by-default with an
+  explicit `--recursive` opt-in (both the agent and `/sa:ingest`), after a business folder's unrelated
+  subfolder (someone else's prior analysis) nearly got silently ingested.
+- `/sa:review` and `/sa:design` both gained an optional `--model` override, passed through to the `Agent`
+  tool's own model parameter, per-invocation only, never pinned in either agent's frontmatter.
+  **Syntax is inconsistent between the two and should be aligned later**: `/sa:review` uses
+  `--model=<name>`, `/sa:design` uses `--model <name>` (space-separated). Recommendation given: `opus` for
+  a high-stakes/client-facing pass, unset otherwise.
+
+**`document-skills@anthropic-agent-skills` plugin installed** — Anthropic's official docx/xlsx/pptx/pdf
+skills (`github.com/anthropics/skills`), as the documented escalation path beyond `office-doc-reader`/
+`office-doc-builder` (OCR, legacy `.doc`, tracked-changes patch-editing, native charts/pivots). Installed at
+**user scope under both `claude-nsz` and `claude-scm`** (plugins are per-profile — same gotcha class as the
+2026-08-10 three-config-root issue; confirmed by directly checking each profile's `plugins\marketplaces\`
+folder, not assumed). Escalation policy written directly into the prompts (`office-doc-reader`/
+`office-doc-builder` SKILL.md "Escalation path" sections, `req-ingestor.md`'s rules): try the lightweight
+custom skill first, name the plugin as the next step only when a real limitation is hit, never reach for it
+automatically — `req-ingestor` has no `Skill` tool access by design.
+
+**Docs updated**: `README.md`, `docs\USAGE.md`, `docs\SETUP.md` (per-profile plugin-install gotcha, exact
+`claude plugin marketplace add`/`claude plugin install` commands). `d:\WORK\AI\knowledge-base\
+system-overview.md` and `command-inventory.md` updated too (cross-repo, not duplicated here).
+
+**Rollout**: run multiple times this session; most recently confirmed **fully in sync across all three
+destinations** after the `--model` build. This `SESSION-STATE.md` entry itself needs no rollout — it's a
+`results\` doc, never copied to `~\.claude\`.
+
+**Outstanding / not yet done, this slice:**
+- **`--model` flag syntax mismatch** between `/sa:design` and `/sa:review` (see above) — align next time
+  either command is touched.
+- **Diagram generation is not wired into the pipeline at all.** `mermaid-diagram-maker`/`/diagram` exist
+  and work but are completely disconnected from `/sa:design`/`/sa:design-detail`. User explicitly requested
+  this be wired up; design already discussed but **not yet built** when this entry was written: dispatch
+  `mermaid-diagram-maker` as a second `Agent` call from the command, after `req-architect`/`req-detailer`
+  write their artifact, output to `ai/sa/<slug>/diagrams/` (not the agent's own default `docs/diagrams/`),
+  keep `req-architect`/`req-detailer` themselves unchanged (one-responsibility-per-agent still holds; they
+  have no `Bash` grant for `mmdc` anyway).
+- **A retrospective on `req-architect` + a real HLD it produced was requested and interrupted mid-read.**
+  User's concern: the HLD felt "too high level... like an extract of all the information." Diagnosis
+  already given in-conversation: correct by design for interface/data-model depth (that's `req-detailer`'s
+  job) and diagrams are a genuine, separate gap (above) — but whether the HLD's own narrative density is
+  well-calibrated had not been independently assessed against `req-architect.md`'s own template before this
+  was interrupted. The actual HLD produced (`d:\WORK\Geomant\CampaignManager\ai\sa\netrisk-cm-internal-design\
+  architecture.md`, 274 lines) reads as unusually dense and well-evidenced for a first run — 23 components,
+  5 alternatives, 14 risks, all cross-referenced to real file citations — which may mean the "too brief"
+  read is really about missing diagrams/LLD depth rather than the HLD text itself being thin. **Confirm by
+  reading the file, don't assume from this summary alone.**
+- Full detail on the real engagement this was built and fixed against — pipeline status, verified findings,
+  4 unaddressed High-severity review findings, next steps — lives in a dedicated handoff file at
+  `d:\WORK\Geomant\CampaignManager\ai\sa\netrisk-cm-internal-design\HANDOFF.md`, not duplicated here. Read
+  that file directly if picking up the Netrisk work specifically; read this entry if picking up the `sa:`
+  pipeline/tooling side.
+- **Account/credit constraint mid-session**: `-nsz` profile hit 100% usage; user switched to `-scm` for
+  `/sa:review`. Confirmed before switching: `-scm` was fully in sync (all agents/commands present); the
+  `document-skills` plugin was *not* yet on `-scm` at that point (installed later in this same slice) but
+  wasn't needed for review anyway. **If continuing on yet another account/profile, re-verify
+  `check-sync.ps1` and plugin presence before assuming either is available** — both are mutable, per-profile
+  state that can drift, not something to trust from this file.

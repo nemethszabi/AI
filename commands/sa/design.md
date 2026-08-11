@@ -7,10 +7,10 @@ allowed-tools:
   - Glob
   - Agent
   - AskUserQuestion
-argument-hint: "<slug from /sa:clarify>"
+argument-hint: "<slug from /sa:clarify> [--model <name>, optional — escalate for a genuinely novel/high-stakes design]"
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0
 
 <objective>
 `/sa:design <slug>` produces a High-Level Design (HLD) from `ai/sa/<slug>/requirements.md` via
@@ -19,14 +19,22 @@ argument-hint: "<slug from /sa:clarify>"
 </objective>
 
 <process>
+<step name="parse-model-override">
+If `$ARGUMENTS` contains `--model <name>`, extract it and strip it from the remaining arguments before
+slug resolution. This is optional — omit it and the dispatch inherits whatever model the calling session
+is running under. Reach for it only when the design is genuinely novel or high-stakes (no close precedent
+in the codebase, or the cost of a wrong recommendation is high) — not as a default.
+</step>
+
 <step name="resolve-slug">
-If `$ARGUMENTS` names an existing `ai/sa/<slug>/requirements.md`, use it. Otherwise glob
+If the remaining `$ARGUMENTS` names an existing `ai/sa/<slug>/requirements.md`, use it. Otherwise glob
 `ai/sa/*/requirements.md`: exactly one match → use it; more than one → ask via `AskUserQuestion` which
 topic; none → tell the user to run `/sa:clarify` first.
 </step>
 
 <step name="dispatch">
-Dispatch to `req-architect` via `Agent`. Give it the resolved slug and project path.
+Dispatch to `req-architect` via `Agent`. Give it the resolved slug and project path. If a model override
+was parsed above, pass it as the `Agent` tool's `model` parameter for this dispatch.
 </step>
 
 <step name="relay">

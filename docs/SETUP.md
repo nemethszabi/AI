@@ -56,6 +56,25 @@ copy step above stays a deliberate, explicit action, never automatic.
 4. If a project has its own namespace (e.g. `/scm:help` in net8-migration), run it and confirm it prints
    that project's command reference.
 
+## Optional: the `document-skills` plugin (docx/xlsx/pptx/pdf)
+
+Not part of this repo's own install — a separate, optional escalation path for `office-doc-reader`/
+`office-doc-builder` (OCR on scanned PDFs, legacy `.doc`, tracked-changes patch-editing, native Excel
+charts/pivots, PPTX theme generation). Installed via:
+
+```
+claude plugin marketplace add anthropics/skills
+claude plugin install document-skills@anthropic-agent-skills --scope user
+```
+
+**This is per-profile, same gotcha as the three config roots above.** `claude plugin install --scope user`
+writes under that profile's own `$env:LOCALAPPDATA\claude-<profile>\plugins\` (or
+`$env:USERPROFILE\.claude\plugins\` for the default) — there is no shared/global plugin location across
+the three roots. Installing it once under `claude-nsz` does **not** make it available under `claude-scm`
+or the default profile; repeat both commands under each profile you actually use `/sa:ingest` from.
+Source-available, not open-source (Anthropic's own README) — a real dependency to trust deliberately, not
+a default reach.
+
 ## Troubleshooting
 
 **A command isn't found (`/dev:status` etc. don't autocomplete or error out).**

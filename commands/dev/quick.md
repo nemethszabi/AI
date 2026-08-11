@@ -10,6 +10,8 @@ allowed-tools:
 argument-hint: "[project path, optional - defaults to current directory] <task description>"
 ---
 
+> Version: 1.0.0
+
 <objective>
 `/dev:quick <task>` executes one concrete implementation task by dispatching to the generic `dev-backend`
 and/or `dev-frontend` agents against the current project. This is the generic form of what a

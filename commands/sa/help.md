@@ -4,6 +4,8 @@ description: Static reference for the sa: command namespace. No live analysis, n
 allowed-tools: []
 ---
 
+> Version: 1.0.0
+
 <reference>
 # `sa:` commands — lightweight Solution-Architect / REQ-CR pipeline
 

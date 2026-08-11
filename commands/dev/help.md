@@ -4,6 +4,8 @@ description: Static reference for the dev: command namespace. No live analysis, 
 allowed-tools: []
 ---
 
+> Version: 1.0.0
+
 <reference>
 # `dev:` commands — generic, cross-project dev pipeline
 

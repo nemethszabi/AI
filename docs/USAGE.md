@@ -16,12 +16,17 @@ lighter than a full wave/gate system.
 | Check a project's current dev-pipeline state | `/dev:status [path]` | Global |
 | One-off backend/frontend task, no special process | `/dev:quick <task>` | Global |
 | CampaignManager: backend/frontend task | `/dev:quick <task>` (run from that repo) | Global |
+| Draft a new agent/skill/legacy-command | `/agent-builder` | Global |
+| Draft a new one-time/occasional-use prompt | `prompt-builder` skill | Global |
+| Independent check on a drafted agent/skill/command before trusting/copying it | `review-agent` skill (dispatches `agent-reviewer`) | Global |
+| Generate/reformat an Excel/Word/PowerPoint document | `office-doc-builder` skill (library, imported by other skills) | Global |
 | net8-migration (SCM): bug fix | `/scm:fix [#ID] <bug>` | net8-migration |
 | net8-migration (SCM): new requirement | `/scm:req [#ID] <requirement>` | net8-migration |
 | net8-migration (SCM): review recent changes | `/scm:review [#ID]` | net8-migration |
 | net8-migration (SCM): hosting/IIS question | `/scm:devops-ask <question>` | net8-migration |
 | net8-migration (SCM): hosting/config/perf change | `/scm:devops-change <request>` | net8-migration |
 | net8-migration (SCM): browser smoke test | `/scm:test [URL] <scenario>` | net8-migration |
+| net8-migration (SCM): triage recent `dbo.Logs` errors for a site | `/scm:errors-triage <site> [from-date]` | net8-migration |
 | scm-stm-merge: first full analysis pass | `/merge:full-analysis [path]` | scm-stm-merge |
 | scm-stm-merge: re-run one phase only | `/merge:requirements` / `db` / `functional` / `code` | scm-stm-merge |
 
@@ -32,7 +37,9 @@ namespaces.
 ## The shape underneath, in one paragraph
 
 One generic agent per role (`dev-backend`, `dev-frontend`, `dev-reviewer`, `dev-browser-tester`,
-`solution-analyst`, `mermaid-diagram-maker`, `req-analyst`, `req-architect`, `req-estimator`) — reused
+`solution-analyst`, `mermaid-diagram-maker`, `req-analyst`, `req-architect`, `req-estimator`,
+`agent-reviewer` — the meta-level counterpart to `dev-reviewer`, reviewing agent/skill/command/prompt
+artifacts themselves rather than application code) — reused
 verbatim across every project, never hardcoding a stack fact or project name. Project specificity lives in
 two places: the project's own `ai/context/*.md` (facts the agent reads fresh every run) and, where the
 *process itself* genuinely differs per project (SCM's Azure DevOps org rule and version-bump discipline;

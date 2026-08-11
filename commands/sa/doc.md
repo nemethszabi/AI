@@ -9,6 +9,8 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify>"
 ---
 
+> Version: 1.0.0
+
 <objective>
 `/sa:doc <slug>` consolidates `ai/sa/<slug>/requirements.md`, `architecture.md`, and `estimation.md` —
 whichever exist — into one clean, stakeholder-readable document at `ai/sa/<slug>/package.md`. No agent

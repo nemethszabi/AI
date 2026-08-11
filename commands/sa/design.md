@@ -10,6 +10,8 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify>"
 ---
 
+> Version: 1.0.0
+
 <objective>
 `/sa:design <slug>` produces a design/architecture proposal from `ai/sa/<slug>/requirements.md` via
 `req-architect`, writing `ai/sa/<slug>/architecture.md`.

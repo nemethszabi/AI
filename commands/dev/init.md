@@ -11,6 +11,8 @@ allowed-tools:
 argument-hint: "[path, optional - defaults to current directory]"
 ---
 
+> Version: 1.0.0
+
 <objective>
 `/dev:init [path]` scaffolds `ai/dev/STATE.md` + `ai/dev/config.json` for a project, following the
 canonical schema in `~/.claude/dev-framework/DESIGN.md`. This is mechanical, reusable scaffolding — the

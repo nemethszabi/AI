@@ -6,6 +6,8 @@ allowed-tools:
   - Task
 ---
 
+> Version: 1.0.0
+
 <objective>
 Bootstrap or refresh a project's `ai/context/` file by delegating to the `solution-analyst` agent — the
 generic, project-agnostic scanner that reads an unfamiliar solution and drafts a first-pass context

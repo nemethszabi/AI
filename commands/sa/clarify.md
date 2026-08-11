@@ -9,6 +9,8 @@ allowed-tools:
 argument-hint: "<requirement or change-request description>"
 ---
 
+> Version: 1.0.0
+
 <objective>
 `/sa:clarify <description>` turns a free-form requirement or change request into a structured requirements
 list via `req-analyst`, written to `ai/sa/<slug>/requirements.md` in the current project (or the current

@@ -10,6 +10,8 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify>"
 ---
 
+> Version: 1.0.0
+
 <objective>
 `/sa:estimate <slug>` produces a three-point effort estimate from `ai/sa/<slug>/requirements.md` and
 `ai/sa/<slug>/architecture.md` via `req-estimator`, writing `ai/sa/<slug>/estimation.md`.

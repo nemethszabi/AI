@@ -6,6 +6,8 @@ allowed-tools:
   - Task
 ---
 
+> Version: 1.0.0
+
 <objective>
 Create one or more Mermaid diagrams by delegating to the `mermaid-diagram-maker` agent — the generic,
 project-agnostic diagram specialist that writes `.mmd` files and renders them to `.png`.

@@ -8,6 +8,8 @@ allowed-tools:
 argument-hint: "[path, optional - defaults to current directory]"
 ---
 
+> Version: 1.0.0
+
 <objective>
 `/dev:status [path]` reads `ai/dev/STATE.md` + `config.json` for a project and reports where things stand,
 without requiring a human to open and parse the files themselves.

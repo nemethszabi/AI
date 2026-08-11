@@ -6,22 +6,49 @@ the specific problems worth knowing about before you hit them.
 
 ## Install
 
+This machine has **three independent Claude Code config roots** — the default/legacy location
+(`$env:USERPROFILE\.claude\`) and two profiles (`claude-scm`, `claude-nsz`, under `$env:LOCALAPPDATA\`),
+each fully redirected via `CLAUDE_CONFIG_DIR` with **no fallback** to the default. Real sessions run under
+a profile — installing to only the default silently leaves both real profiles without any of this (this
+happened for real on 2026-08-10: `dev-backend` was "not found" in a live session despite being correctly
+rolled out to `~\.claude\`). Always install to all three, every time:
+
 ```powershell
-# from this repo's root
-Copy-Item agents\*.md    "$env:USERPROFILE\.claude\agents\"   -Force
-Copy-Item commands\*     "$env:USERPROFILE\.claude\commands\" -Recurse -Force
-Copy-Item *-BASELINE.md  "$env:USERPROFILE\.claude\"          -Force
-Copy-Item CONSTITUTION.md "$env:USERPROFILE\.claude\"         -Force
-Copy-Item dev-framework  "$env:USERPROFILE\.claude\" -Recurse -Force
+# from this repo's root — pre-create destination folders first; Copy-Item -Recurse onto a
+# not-yet-existing destination can silently mis-create it (see README.md Rollout step 3 for the
+# skills\ incident this caused once)
+$destinations = @(
+    "$env:USERPROFILE\.claude",
+    "$env:LOCALAPPDATA\claude-scm",
+    "$env:LOCALAPPDATA\claude-nsz"
+)
+foreach ($dest in $destinations) {
+    New-Item -ItemType Directory -Path "$dest\agents"   -Force | Out-Null
+    New-Item -ItemType Directory -Path "$dest\skills"   -Force | Out-Null
+    New-Item -ItemType Directory -Path "$dest\commands" -Force | Out-Null
+
+    Copy-Item agents\*.md     "$dest\agents\"   -Force
+    Copy-Item skills\*        "$dest\skills\"   -Recurse -Force
+    Copy-Item commands\*      "$dest\commands\" -Recurse -Force
+    Copy-Item *-BASELINE.md   "$dest\"          -Force
+    Copy-Item CONSTITUTION.md "$dest\"          -Force
+    Copy-Item dev-framework   "$dest\" -Recurse -Force
+}
 ```
 
-Then merge `CLAUDE.md` into `~\.claude\CLAUDE.md` **by hand** — don't blind-copy with `-Force`, a real
-global `CLAUDE.md` may already carry personal notes this would clobber.
+Then merge `CLAUDE.md` into **each** destination's own `CLAUDE.md` **by hand** — don't blind-copy with
+`-Force`, a real `CLAUDE.md` at any of the three may already carry personal notes this would clobber.
+
+Run `powershell -File _scripts\check-sync.ps1` afterward to confirm all three destinations actually picked
+up the change — it reports anything staged here that's missing or stale, per destination. A `post-commit`
+hook (installed once via `_scripts\install-hooks.ps1`) runs this automatically after every commit, but the
+copy step above stays a deliberate, explicit action, never automatic.
 
 ## Verify
 
-1. **Start a brand-new Claude Code session** (agent/command lists load at session start — see the
-   restart gotcha below, this isn't optional).
+1. **Start a brand-new Claude Code session, under the profile you actually use** (`claude --profile scm`
+   or `claude --profile nsz` — agent/command lists load at session start, see the restart gotcha below,
+   and are per-profile, not shared with the default location).
 2. Run `/sa:help` — should print the `sa:` namespace reference, not an error.
 3. In any project with `ai/dev/STATE.md` already scaffolded, run `/dev:status` — should print that
    project's phase/gates, not "not initialized." In a project without one yet, run `/dev:init` and confirm

@@ -16,10 +16,10 @@ reviewed by you directly. Add rigor later only if it proves necessary.
 
 | Command | Purpose | Dispatches to |
 |---|---|---|
-| `/sa:ingest <slug> <path...>` | Extract inbound Excel/Word/PDF/text files into readable Markdown. Optional first step, when starting from files rather than prose. | `req-ingestor` |
+| `/sa:ingest <slug> <path...> [--recursive]` | Extract inbound Excel/Word/PDF/text files into readable Markdown. Optional first step, when starting from files rather than prose. Folder scans are one-level-deep by default — `--recursive` opts into walking every subfolder. | `req-ingestor` |
 | `/sa:clarify <description>` | Turn a free-form REQ/CR (or already-ingested files) into a structured requirements list. | `req-analyst` |
 | `/sa:design <slug>` | High-Level Design (HLD) — approach, components, integration points, phasing. | `req-architect` |
-| `/sa:review <slug>` | Narrative critique of the design (HLD, and LLD once it exists) against requirements — no gate. | `req-reviewer` |
+| `/sa:review <slug> [--model=opus\|sonnet\|haiku\|fable]` | Narrative critique of the design (HLD, and LLD once it exists) against requirements — no gate. `--model` is opt-in per-run; `opus` recommended for a high-stakes/client-facing pass, unset otherwise. | `req-reviewer` |
 | `/sa:design-detail <slug>` | Low-Level Design (LLD) — per-component interfaces, data model, key flows, deployment detail. | `req-detailer` |
 | `/sa:estimate <slug>` | Three-point effort estimate from requirements + design. | `req-estimator` |
 | `/sa:doc <slug>` | Consolidate whichever of the above exist into one package document. | none (direct) |

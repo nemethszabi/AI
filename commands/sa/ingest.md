@@ -6,13 +6,13 @@ allowed-tools:
   - Grep
   - Glob
   - Agent
-argument-hint: "<slug> <file-or-folder-path...>"
+argument-hint: "<slug> <file-or-folder-path...> [--recursive]"
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0
 
 <objective>
-`/sa:ingest <slug> <path...>` extracts one or more Excel/Word/PDF/text files into
+`/sa:ingest <slug> <path...> [--recursive]` extracts one or more Excel/Word/PDF/text files into
 `ai/sa/<slug>/inputs/*.extracted.md` via `req-ingestor`, so `/sa:clarify` has readable source material to
 cite instead of requiring a free-form text description. Use this when the starting point is real files
 (an RFP, an existing estimate spreadsheet, a design doc) rather than a paragraph of prose.
@@ -20,14 +20,20 @@ cite instead of requiring a free-form text description. Use this when the starti
 
 <process>
 <step name="resolve-input">
-Parse `$ARGUMENTS` as `<slug> <path...>`. The slug is a kebab-case topic name — it doesn't need to exist
-yet (this is often the *first* command run for a new topic). If `$ARGUMENTS` is empty or no slug is given,
-ask the user directly for a topic slug and the file(s)/folder to ingest. If only a slug is given with no
-path, default to `ai/sa/<slug>/inbound/` and tell the user to drop files there if it's empty.
+Parse `$ARGUMENTS` as `<slug> <path...> [--recursive]`. The slug is a kebab-case topic name — it doesn't
+need to exist yet (this is often the *first* command run for a new topic). If `$ARGUMENTS` is empty or no
+slug is given, ask the user directly for a topic slug and the file(s)/folder to ingest. If only a slug is
+given with no path, default to `ai/sa/<slug>/inbound/` and tell the user to drop files there if it's empty.
+
+`--recursive` is opt-in only — without it, any folder path is scanned one level deep, subfolders listed but
+not entered (see `req-ingestor`'s own rules for why: a subfolder can hold an unrelated prior analysis, and
+silently pulling it in has caused real confusion before). Pass `--recursive` when you genuinely want every
+file under a folder tree treated as source material, no exceptions.
 </step>
 
 <step name="dispatch">
-Dispatch to `req-ingestor` via `Agent`. Give it the slug and the resolved file/folder path(s).
+Dispatch to `req-ingestor` via `Agent`. Give it the slug, the resolved file/folder path(s), and whether
+`--recursive` was set.
 </step>
 
 <step name="relay">

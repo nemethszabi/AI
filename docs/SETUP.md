@@ -33,8 +33,13 @@ foreach ($dest in $destinations) {
     Copy-Item *-BASELINE.md   "$dest\"          -Force
     Copy-Item CONSTITUTION.md "$dest\"          -Force
     Copy-Item dev-framework   "$dest\" -Recurse -Force
+    Copy-Item sa-framework    "$dest\" -Recurse -Force
 }
 ```
+
+`sa-framework\` is **not optional** — every `req-*` agent reads `ARTIFACT-SCHEMAS.md` and
+`ESTIMATION-METHOD.md` at runtime and will misbehave without them, the same way `dev-*` agents depend on
+`dev-framework\PRINCIPLES.md`.
 
 Then merge `CLAUDE.md` into **each** destination's own `CLAUDE.md` **by hand** — don't blind-copy with
 `-Force`, a real `CLAUDE.md` at any of the three may already carry personal notes this would clobber.
@@ -49,12 +54,31 @@ copy step above stays a deliberate, explicit action, never automatic.
 1. **Start a brand-new Claude Code session, under the profile you actually use** (`claude --profile scm`
    or `claude --profile nsz` — agent/command lists load at session start, see the restart gotcha below,
    and are per-profile, not shared with the default location).
-2. Run `/sa:help` — should print the `sa:` namespace reference, not an error.
+2. Run `/sa:help` — should print the `sa:` namespace reference (16 commands), not an error.
 3. In any project with `ai/dev/STATE.md` already scaffolded, run `/dev:status` — should print that
    project's phase/gates, not "not initialized." In a project without one yet, run `/dev:init` and confirm
    it creates `ai/dev/STATE.md` + `config.json`.
 4. If a project has its own namespace (e.g. `/scm:help` in net8-migration), run it and confirm it prints
    that project's command reference.
+
+## Optional: the rate card (for priced offers)
+
+Without one, `/sa:estimate` produces **effort-only** output — deliberately, never an invented number
+(`sa-framework\ESTIMATION-METHOD.md §5`). To get cost figures:
+
+```powershell
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\estimation-data" | Out-Null
+Copy-Item estimation-data\rates.yaml.example `
+          "$env:USERPROFILE\.claude\estimation-data\rates.yaml"
+# then edit it — roles left at `rate: 0` are treated as a placeholder, i.e. still no rate card
+```
+
+Lives in `~\.claude\` only, never in this repo — a filled-in card is commercially sensitive and
+`.gitignore` excludes it. It is also never reproduced in a client-facing deliverable; only the arithmetic
+someone chose to show. A card whose `as_of` is more than ~6 months old is still used, but flagged stale.
+
+Per-engagement or per-project overrides can sit at `ai/sa/rates.yaml` or `ai/context/rates.yaml`; first
+hit wins.
 
 ## Optional: the `document-skills` plugin (docx/xlsx/pptx/pdf)
 

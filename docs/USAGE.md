@@ -11,10 +11,16 @@ lighter than a full wave/gate system.
 |---|---|---|
 | Unfamiliar/new project, no `ai/context/` yet | `/scaffold-context [path]` | Global |
 | Need an architecture/sequence/flowchart diagram | `/diagram [what]` | Global |
-| New REQ/CR to analyze, in any project or standalone | `/sa:clarify` → `/sa:design` → `/sa:estimate` → `/sa:doc` | Global |
-| Starting from an existing Excel/Word/PDF (RFP, estimate sheet, design doc) | `/sa:ingest <slug> <path>` first, then `/sa:clarify <slug>` | Global |
-| Sanity-check a design before going deeper/committing to it | `/sa:review <slug>` (after `/sa:design`, before `/sa:design-detail`) | Global |
-| Need interface/data-model/deployment-level detail, not just the HLD | `/sa:design-detail <slug>` (after `/sa:design`) | Global |
+| **A client document just landed and you need to understand it** | `/doc-brief <path>` (or `/sa:brief <slug>`) | Global |
+| **Inbound TSD/RFP → priced offer** | `/sa:triage` first, then follow the lane it picks | Global |
+| New REQ/CR to analyze, in any project or standalone | `/sa:triage` → `/sa:clarify` → … (see `SA-WORKFLOW.md`) | Global |
+| Starting from an existing Excel/Word/PDF (RFP, estimate sheet, design doc) | `/sa:ingest <slug> <path>` after `/sa:triage`, before `/sa:clarify` | Global |
+| Sanity-check a design before going deeper/committing to it | `/sa:review <slug>` (after `/sa:design`) | Global |
+| Need interface/data-model/deployment-level detail, not just the HLD | `/sa:design-detail <slug>` (`full-design` lane) | Global |
+| **Score risks + compliance obligations, and set contingency** | `/sa:risk <slug>` (before `/sa:estimate`) | Global |
+| **Independent critique of an estimate before it goes out** | `/sa:estimate-review <slug>` | Global |
+| **Write the client-facing offer** | `/sa:offer <slug>` → `/sa:audit` → `/sa:package` | Global |
+| **Lost track of where an engagement stands** | `/sa:status <slug>` — tells you the single next command | Global |
 | A project has no `ai/dev/` yet | `/dev:init [path]` | Global |
 | Check a project's current dev-pipeline state | `/dev:status [path]` | Global |
 | One-off backend/frontend task, no special process | `/dev:quick <task>` | Global |
@@ -39,11 +45,16 @@ Each project namespace also has its own `:help` (`/scm:help`, `/merge:help`) onc
 couple of commands — static reference, no live analysis. `/sa:help` and `/dev:help` cover the two global
 namespaces.
 
+**The `/sa:*` namespace is now 16 commands across three lanes** — too much for one table row. Its full
+walkthrough, design rationale, and a worked "inbound TSD → offer" example live in **`SA-WORKFLOW.md`**.
+Start there rather than here for any presales/bid work.
+
 ## The shape underneath, in one paragraph
 
 One generic agent per role (`dev-backend`, `dev-frontend`, `dev-reviewer`, `dev-browser-tester`,
-`solution-analyst`, `mermaid-diagram-maker`, `req-ingestor`, `req-analyst`, `req-architect`,
-`req-reviewer`, `req-detailer`, `req-estimator`,
+`solution-analyst`, `mermaid-diagram-maker`, `doc-briefer`, `req-ingestor`, `req-analyst`, `req-architect`,
+`req-reviewer`, `req-detailer`, `req-risk-officer`, `req-estimator`, `req-estimate-critic`, `req-offer`,
+`req-auditor`,
 `agent-reviewer` — the meta-level counterpart to `dev-reviewer`, reviewing agent/skill/command/prompt
 artifacts themselves rather than application code) — reused
 verbatim across every project, never hardcoding a stack fact or project name. Project specificity lives in
@@ -67,15 +78,25 @@ not a reusable role.
   carries over from `/sa:clarify` into a `dev-backend` dispatch automatically — if you want that
   continuity, paste the relevant `REQ-ID`/requirement text into the `/dev:quick`/`/scm:req` task
   description yourself.
-- **`/sa:*` artifacts are slugged per-topic** (`ai/sa/<slug>/`) specifically so you can have several
-  REQ/CRs in flight in the same project without them overwriting each other. The slug is just a folder
-  name you choose (or `req-analyst` derives one) — every `.md` file under it (`requirements.md`,
-  `architecture.md`, `review.md`, `detailed-design.md`, `estimation.md`, `package.md`) is a generated
-  *output*, never something you hand-write as input. The only real inputs are free-form text (to
-  `/sa:clarify`) or raw files (`.xlsx`/`.docx`/`.pdf`, to `/sa:ingest`).
-- **No step in `/sa:*` blocks the next one**, including `/sa:review` — it produces findings, not a
-  pass/fail gate. `/sa:estimate` will run even if you skip `/sa:review` entirely. Skip whichever steps a
-  small topic doesn't need (most CRs don't need `/sa:ingest` or a separate LLD pass at all).
+- **`/sa:*` artifacts are slugged per-topic** (`ai/sa/<slug>/`) so several REQ/CRs can be in flight in the
+  same project without overwriting each other. Every artifact is written **twice**: `<name>.json` is the
+  source of truth, `<name>.md` is the rendered version you read. **Never hand-edit a rendered `.md`** — the
+  next run regenerates it from the JSON. The only real inputs are free-form text (to `/sa:clarify`) or raw
+  files (`.xlsx`/`.docx`/`.pdf`, to `/sa:ingest`).
+- **`/sa:triage` picks a lane, and the lane decides the rest.** `rom` (hours, a number for a
+  conversation), `offer-sow` (days, a written priced offer — the default for an inbound TSD/RFP), or
+  `full-design` (weeks, HLD + LLD + pitch). Re-running triage changes the lane without destroying
+  anything. Run `/sa:status` any time to get the single next command for your lane.
+- **One step *does* block: `/sa:package` refuses without a fresh `/sa:audit` PASS.** This is the one
+  hard gate in the namespace and it is deliberate — it's the only command that produces something a client
+  sees. Freshness is checked by **content hash**, so changing any artifact re-stales the gate and you
+  re-run `/sa:audit`. `/sa:review` and `/sa:estimate-review` remain advisory and block nothing.
+- **`/sa:doc` and `/sa:offer` are not the same document.** `/sa:doc` is an *internal* consolidation for
+  your team. The client-facing path is `/sa:offer` → `/sa:audit` → `/sa:package`. Confusing them is how
+  internal risk language reaches a client.
+- **Estimates are effort, never price.** With no `rates.yaml` configured you get effort-only output, said
+  plainly — never an invented number. See `sa-framework/ESTIMATION-METHOD.md §5` and `SETUP.md` for the
+  rate-card step.
 - **Never commit is enforced only where a command says so** (SCM's `/scm:fix`/`/scm:req`/
   `/scm:devops-change`). The generic `dev-*` agents and `/dev:quick` have no opinion on commits — that's a
   project-specific mechanic, not a global rule.

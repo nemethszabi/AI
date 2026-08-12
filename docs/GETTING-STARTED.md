@@ -60,9 +60,13 @@ pointers. If it says "not initialized," that project needs `/dev:init` first —
 /scm:devops-ask "what happens if the shared App Pool recycles while a redeploy is in progress?"
 ```
 (or, in any project) `/sa:clarify "<a small, real idea you've been meaning to write down>"`. Nothing gets
-written to source code either way — `devops-ask` is read-only by design, and `clarify` only ever writes a
-new `ai/sa/<slug>/requirements.md`. This is the safest possible way to see a full dispatch → report cycle
-without any risk.
+written to source code either way — `devops-ask` is read-only by design, and `clarify` only ever writes
+`ai/sa/<slug>/requirements.json` plus its rendered `.md`. This is the safest possible way to see a full
+dispatch → report cycle without any risk.
+
+Even gentler, if a document just landed on you: `/doc-brief <path-to-a-docx-or-pdf>`. It reads the
+document and hands back a section map, the key facts, and where the gaps are — writing nothing but its own
+brief file.
 
 **3. Try one real dispatch that actually touches something.**
 Pick something genuinely small — a one-line fix, a copy change, anything you could undo by hand in thirty
@@ -102,9 +106,12 @@ one of these (as opposed to an explicit "none") is itself worth double-checking.
 
 ## The safety rails already built in
 
-Nothing here has a mandatory quality gate yet (see `dev-framework/DESIGN.md` for why) — **you are
-currently the review step**, every time. But several things are already designed to stop and ask rather
-than silently proceed:
+The `dev-*` side has no mandatory quality gate (see `dev-framework/DESIGN.md` for why) — **you are the
+review step there**, every time. The `/sa:*` side has exactly one: `/sa:package` refuses to build a
+client-facing document unless `/sa:audit` passed on the current content. That single exception exists
+because it's the only command whose output a client sees.
+
+Several other things are already designed to stop and ask rather than silently proceed:
 
 - `/scm:req` and `/scm:devops-change` show you a full design + implementation plan and wait for an
   explicit approve/change/cancel answer before writing any code.
@@ -129,6 +136,11 @@ than silently proceed:
 ## Where to go once this feels normal
 
 - **`USAGE.md`** — the full "which command for which situation" reference across all your projects.
-- **`SETUP.md`** — install/troubleshooting detail.
-- **`dev-framework/DESIGN.md`** — why the system is shaped the way it is, and the specific conditions
+- **`SA-WORKFLOW.md`** — the requirement→offer pipeline end to end: the three lanes, the five design
+  decisions worth understanding, and a worked "inbound TSD → priced offer" example. Read this before any
+  presales or bid work.
+- **`SETUP.md`** — install/troubleshooting detail, including the rate-card step.
+- **`dev-framework/DESIGN.md`** — why the `dev-*` side is shaped the way it is, and the specific conditions
   under which it'd be worth adding real gates/wave orchestration later.
+- **`sa-framework/ARTIFACT-SCHEMAS.md`** and **`ESTIMATION-METHOD.md`** — the binding doctrine behind the
+  `/sa:*` pipeline. Reference material; you don't need it to use the commands.

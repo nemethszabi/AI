@@ -93,6 +93,26 @@ A `<namespace>:help` command (once a namespace exists — see `README.md`) is th
 `<process>`, just a `<reference>` block of static text and an explicit instruction not to add live
 analysis. See `commands/sa/help.md` in the reference framework.
 
+### Follow-up questions to an already-dispatched agent — `SendMessage`
+
+A dispatch is **not** necessarily single-shot. An `Agent(...)` call returns an agent id, and
+`SendMessage(to: <id>)` resumes that same agent **with its context intact** — the documents it read, the
+code it walked, the reasoning it did. Verified live 2026-08-12 during the `doc-briefer` review, when the
+`agent-reviewer` dispatch returned a resumable id.
+
+Use it when the agent's value is in what it *holds*, not just what it returned — a document-comprehension
+agent answering follow-ups from the source, a reviewer asked to expand on one finding. Re-dispatching
+instead makes it re-read everything from scratch, at full token cost, with no memory of the first pass.
+
+Two rules:
+- **A command that promises follow-up Q&A must say `SendMessage`, not "ask it again."** The distinction is
+  load-bearing and invisible to the user otherwise.
+- **Always document the fallback.** Agent sessions don't live forever. Name what to do when the id is
+  gone — usually re-reading the artifact the agent already wrote, plus targeted `Grep`, rather than a full
+  re-dispatch.
+
+First implemented in `agents/doc-briefer.md` + `skills/doc-brief/SKILL.md`.
+
 ## 4. Tone
 
 - Imperative, not descriptive: "Read the diff" not "The agent should read the diff."

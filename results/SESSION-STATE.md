@@ -561,3 +561,94 @@ destinations** after the `--model` build. This `SESSION-STATE.md` entry itself n
   wasn't needed for review anyway. **If continuing on yet another account/profile, re-verify
   `check-sync.ps1` and plugin presence before assuming either is available** — both are mutable, per-profile
   state that can drift, not something to trust from this file.
+
+## `req-architect` HLD-depth upgrade + `--model` syntax alignment (2026-08-12)
+
+Eighth slice. Prompted by `/review-agent` being run against all `req-*` agents/`sa:*` commands with an
+explicit follow-on ask: make `req-architect` more professional and produce a more detailed, complex HLD.
+This directly closes the loop on the 2026-08-11 slice's outstanding retrospective item above ("the HLD felt
+too high level... like an extract of all the information") — rather than leaving that diagnosis unresolved,
+this slice added real structural depth to the HLD template itself.
+
+**Two pre-existing structural bugs found and fixed first** (before any content work): `commands\sa\
+design-detail.md`, `ingest.md`, `review.md` each had one orphaned `</output>` closing tag with no matching
+opener — the same defect class the 2026-08-11 slice's `agent-reviewer` pass caught in `req-architect.md`/
+`req-analyst.md`/`req-estimator.md`, apparently never fully swept across the command files at the time.
+Fixed directly (mechanical, unambiguous), patch-bumped.
+
+**`agents\req-architect.md` (1.2.0 → 1.3.0)** — substantially deeper HLD output template and process, while
+explicitly guarding the existing HLD/LLD depth boundary (new rules name exact things that must NOT appear —
+token lifetimes, schema field classifications, config values, infra sizing — pushing those to `req-detailer`
+instead):
+- New sections: **System Context** (C4-style boundary view), **Quality Attributes/NFRs** (`QA-` IDs, traced
+  to driving requirements), **Security & Compliance** (approach-level authn/authz, data classification,
+  compliance regime), **Data Flow** (trust boundaries, prose-level), **Deployment Topology** (env/HA/DR
+  shape, prose-level), **Traceability Matrix** (every `REQ-ID` appears exactly once, mapped to components
+  and QA-IDs), **Assumptions & Constraints** (split out from Open Questions), **Glossary** (formalized from
+  the existing gloss-on-first-use rule).
+- **Alternatives Considered** now requires named **Decision Criteria** the alternatives are actually scored
+  against, not just prose.
+- New process steps for each of the above, added one at a time as an independent `agent-reviewer` pass
+  (dispatched twice — once on the first draft, once after fixes) caught real gaps: the first draft had two
+  new template sections (System Context, Assumptions & Constraints) with no corresponding process step,
+  unlike their five siblings — fixed by adding `identify-system-context` and `state-assumptions-constraints`
+  steps. Also caught and fixed live during drafting: a stray duplicate `</output>` tag I introduced myself
+  while writing the new template (irony noted) — verified gone via tool-assisted tag-count, not by eye.
+
+**Conforming edits downstream**, so the upgrade doesn't get silently ignored by the rest of the pipeline:
+- `agents\req-reviewer.md` (1.1.0 → 1.2.0) — new dimension 9 checks traceability-matrix/QA coverage against
+  `req-architect`'s new sections. Also added an explicit rule documenting that skipping `AGENT-CONDUCT-
+  BASELINE.md`'s B7 verdict block is a deliberate, disclosed divergence (this pipeline is gate-free by
+  design per `sa:help`) — `agent-reviewer` flagged the missing block as a WARN-level doctrine finding on the
+  unmodified file; rather than bolt on a gate that would contradict the pipeline's own stated philosophy,
+  documented the divergence instead.
+- `agents\req-detailer.md` (1.1.0 → 1.1.1) — `load-inputs` now also reads the HLD's Quality Attributes/
+  Security & Compliance/Deployment Topology sections so per-component LLD detail stays consistent with what
+  the HLD already committed to. (First landed as a 1.2.0/minor bump; `agent-reviewer` correctly called that
+  oversized for a one-sentence addition — patch is right.)
+- `agents\req-estimator.md` (1.0.0 → 1.0.1) — line items can now cite a `QA-ID` alongside `REQ-ID`/component
+  ID.
+- `commands\sa\doc.md` (1.0.0 → 1.0.1) — stakeholder package now surfaces Quality Attributes/Security
+  highlights from `architecture.md` if present.
+
+**The `--model` flag syntax mismatch flagged as outstanding in the 2026-08-11 slice is now resolved**:
+`commands\sa\design.md` (1.2.0 → 1.2.1) changed `--model <name>` to `--model=<name>`, matching `sa\review.md`
+and `sa\help.md`'s existing convention, plus added the same "never persist the override into the agent's own
+frontmatter" rule `sa\review.md` already had. `agents\req-architect.md:21`'s own `<role>` prose had the same
+stale space-form example — caught in the same pass, fixed (1.3.0 → 1.3.1). No remaining `--model <name>`
+(space form) references found anywhere in the repo as of this slice.
+
+**The 2026-08-11 slice's "diagram generation is not wired into the pipeline at all" outstanding item is
+stale** — as of this slice, `commands\sa\design.md`/`design-detail.md` already dispatch
+`mermaid-diagram-maker` after `req-architect`/`req-detailer` write their artifact, writing paired `.mmd`+
+`.png` files to `ai/sa/<slug>/diagrams/`. Not built in this slice; found already working when the command
+files were read for this slice's review. Whichever earlier session wired this up didn't add a `SESSION-
+STATE.md` entry for it — worth remembering this file can lag real repo state, don't trust it over actually
+reading the files.
+
+**Review process**: two rounds of independent `agent-reviewer` dispatch (structural/doctrine only, per its
+own explicit scope limit — it does not evaluate design quality, so the "make it more professional/detailed"
+content judgment itself was this session's own, not delegated). Round 1: all 6 `req-*` agents + all 8
+`sa:*` commands, cold, before any edits — 12/14 fully clean, 2 minor findings (`design.md`'s then-mismatched
+`--model` syntax; `req-reviewer.md`'s undocumented B7 gap) neither blocking. Round 2: the 5 files actually
+edited — found the System Context/Assumptions step gap above, the `req-detailer.md` stale-terminology nit
+(`deployment`/`phasing` lowercase reference not updated to match the real `Deployment Topology` section
+name — fixed), and the version-bump-magnitude call on `req-detailer.md` — all fixed same session.
+
+**Docs updated**: `README.md`'s Current Inventory table (`req-architect`/`req-reviewer`/`req-detailer`/
+`req-estimator`/`sa:*` row entries) brought current with all of the above. `docs\USAGE.md`/`docs\
+GETTING-STARTED.md`/`docs\SETUP.md` checked — no stale content found, no edits needed (none of them describe
+per-agent capability depth, only routing/install mechanics).
+
+**Rollout**: copied to all three destinations, confirmed fully in sync via `check-sync.ps1` immediately
+after. Committed as `04e6cef` ("enhancements to req agents") before rollout ran.
+
+**Outstanding / not yet done, this slice:**
+- The upgraded `req-architect` has not yet been run against a real HLD end-to-end — the Netrisk/CampaignManager
+  slug (`d:\WORK\Geomant\CampaignManager\ai\sa\netrisk-cm-internal-design\`) is the natural first real test
+  once a fresh session picks up the rolled-out agent (session restart required first — agent definitions
+  don't hot-reload). User indicated intent to re-run `/sa:design` there next; outcome not yet known as of
+  this entry.
+- The `QA-` ID prefix doesn't follow the `H`-prefix convention its siblings (`HR-`/`HQ-`) use — flagged by
+  `agent-reviewer` as a style-only observation, no actual collision risk (doesn't overlap `REQ-`/`HR-`/
+  `HQ-`), left as-is; revisit only if it causes real confusion.

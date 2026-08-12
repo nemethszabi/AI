@@ -23,12 +23,15 @@ project's material never informs, and is never cited by, anything drafted here.
 | `DESIGN-PRINCIPLES-BASELINE.md` | Checklist for drafting a **project's own** `ai/context/design-principles.md` — code/architecture principles (layering, DI, DTOs, isolation boundaries). Not itself binding on any project. |
 | `AGENT-CONDUCT-BASELINE.md` | Checklist for drafting a **new agent's own** `<rules>` section — how an agent should behave while working (executor discipline), while reviewing others' work (reviewer discipline), or while using persistent memory (memory conduct). Not code-architecture rules — see the table in this file for the distinction. |
 | `AGENT-TEMPLATE-BASELINE.md` | Checklist for a new agent/command's **file structure** — frontmatter fields, section skeleton, tone. Governs shape, not behavior — pairs with `AGENT-CONDUCT-BASELINE.md`, doesn't replace it. |
+| `sa-framework\ARTIFACT-SCHEMAS.md` | **Binding** data contract for the `req-*` family and the `/sa:*` namespace — the JSON schema for every artifact, the universal `meta` block, ID conventions, the three-lane model, the canonical `STATE.md` shape, and the content-hash packaging gate. Also records why JSON-as-source-of-truth deliberately reverses `req-analyst` v1.1.0's "stay narrative" rule. Added 2026-08-12. |
+| `sa-framework\ESTIMATION-METHOD.md` | **Binding** estimation method for `req-estimator`/`req-estimate-critic`/`req-risk-officer` — PERT and spread rules, the K1–K6 work-type compression factors for AI-assisted delivery, the probability × impact severity matrix and contingency bands, the calibration commitment gate, the effort-is-not-price separation, the commonly-forgotten lifecycle lines, and the `rates.yaml` schema. Codified from the real Netrisk CampaignManager v1/v2 estimates rather than invented. Added 2026-08-12. |
 | `dev-framework\PRINCIPLES.md` | **Binding** shared protocol for the `dev-*` role-specialist agent family (state loading, lane discipline, contract discipline, commit/report format, blocked protocol). Scoped to that one family — not global like `CONSTITUTION.md`, not a checklist like the `*-BASELINE.md` files. |
 | `dev-framework\DESIGN.md` | Rationale for the `dev-*` family — why it's deliberately lighter than the reference framework's full wave/gate pipeline, the canonical `ai/dev/` state-file schema, explicit non-goals, and the trigger condition for revisiting them. Read when deciding whether to extend this family, not at runtime. |
 | `agents\` | Generic agent definitions, one file per agent, copied to `~\.claude\agents\` |
 | `skills\` | Generic skill definitions (`skills\<name>\SKILL.md`, one folder per skill), copied to `~\.claude\skills\`. The canonical form for new reusable, `/name`-invocable work going forward — see `commands\agent-builder.md`'s `classify` step for when to use this instead of `commands\`. |
 | `commands\` | Generic slash-command definitions, copied to `~\.claude\commands\` — a legacy path Claude Code still runs but isn't developing further; new work should default to `skills\` instead. |
-| `docs\` | Reference documentation that stays in this repo (not copied to `~\.claude\`) — `GETTING-STARTED.md` (first-time walkthrough for someone new to agentic work), `SETUP.md` (install/verify/troubleshoot), and `USAGE.md` (cross-repo "which entry point when" map, since commands now span four different project repos). |
+| `estimation-data\` | `rates.yaml.example` only — the rate-card template. A filled-in card is commercially sensitive and gitignored; copy it to `~\.claude\estimation-data\rates.yaml` and edit it there. |
+| `docs\` | Reference documentation that stays in this repo (not copied to `~\.claude\`) — `GETTING-STARTED.md` (first-time walkthrough for someone new to agentic work), `SETUP.md` (install/verify/troubleshoot), `USAGE.md` (cross-repo "which entry point when" map, since commands now span four different project repos), and `SA-WORKFLOW.md` (the requirement→offer pipeline: lanes, the five design decisions, a worked example, and what was deliberately not copied from the reference framework). |
 
 ## Current inventory
 
@@ -46,6 +49,10 @@ project's material never informs, and is never cited by, anything drafted here.
 | `agents\req-detailer.md` | Low-Level Design (LLD) from a reviewed HLD — per-component interface/contract sketches, data model, key flows, deployment detail, staying consistent with the HLD's Quality Attributes/Security & Compliance/Deployment Topology sections rather than ignoring them (2026-08-12). Never re-litigates the HLD's approach; flags it in Open Questions instead. Added 2026-08-11. |
 | `agents\req-estimator.md` | Three-point effort estimate from requirements + design — line items can now also cite a `QA-ID` alongside `REQ-ID`/component ID, for components built specifically to hit a quality-attribute target (2026-08-12). Never invents a rate card — effort-only if none found. Named `req-estimator`, not `project-estimator`, same collision-avoidance reason. |
 | `agents\mermaid-diagram-maker.md` | Writes `.mmd` diagrams (architecture/sequence/flowchart/class/state/deployment/ER) and renders `.png` via `mmdc`. Generic, `memory: user` for cross-project styling conventions only — never project-specific component/service names. Adapted from `agentic-dev-framework`, not copy-pasted: fixed a memory-boundary violation in the source (it told the agent to save component/service names globally) and added a no-silent-overwrite rule. |
+| `agents\req-risk-officer.md` | Scored risk register (probability × impact → **derived** severity, treatment, owner, residual) plus a compliance register, and the contingency recommendation `req-estimator` consumes. Enforces that every `assumed`/`unknown` integration produces a risk, and that every `priced_in: false` risk becomes an offer exclusion. Added 2026-08-12. |
+| `agents\req-estimate-critic.md` | Estimate-side mirror of `req-reviewer` — quantified optimism-bias and spread heuristics, PERT integrity, K-category sanity, contingency-band fit, exclusion integrity, and the commonly-forgotten lifecycle lines. Advisory only; never blocks packaging. Added 2026-08-12. |
+| `agents\req-offer.md` | Composes the client-facing solution offer (`offer.json` + `offer.md`) from completed artifacts. **Composes, never creates** — every scope line traces to another artifact; never commits to a `to_clarify`, unestimated, or unrequested `could` item; never states a price without a rate card. Added 2026-08-12. |
+| `agents\req-auditor.md` | Cross-artifact validation gate — referential integrity, `must` coverage, exclusion integrity, offer traceability, PERT arithmetic, locale preservation. Deliberately **mechanical, never editorial**, which is what makes the gate unarguable. Emits the fenced `sa-verdict` block with a content-based `inputs_hash` that `/sa:package` requires. Six blocking checks are unwaivable. Added 2026-08-12. |
 | `agents\agent-reviewer.md` | Independent, read-only reviewer for a drafted/edited agent, skill, command, or one-time prompt — the meta-level counterpart to `dev-reviewer` (reviews customization artifacts, not application code). Reads cold, never the drafting session's own reasoning. Ends with an `AGENT-CONDUCT-BASELINE.md` B7 verdict block. No `Edit` beyond narrow, unambiguous mechanical fixes. Added 2026-08-10 specifically because `agent-builder`'s own self-check isn't independent (same session checking its own work) — closes that gap. |
 
 | Skill | Purpose |
@@ -137,7 +144,15 @@ interactively and stays current as they evolve; this section is the reference, n
        Copy-Item *-BASELINE.md   "$dest\"          -Force
        Copy-Item CONSTITUTION.md "$dest\"          -Force
        Copy-Item dev-framework   "$dest\" -Recurse -Force
+       Copy-Item sa-framework    "$dest\" -Recurse -Force
    }
+   ```
+   `estimation-data\rates.yaml` is deliberately **not** copied — it's commercially sensitive and lives only
+   at `~\.claude\estimation-data\rates.yaml`, created once by hand from `rates.yaml.example`:
+   ```powershell
+   New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\estimation-data" | Out-Null
+   Copy-Item estimation-data\rates.yaml.example `
+             "$env:USERPROFILE\.claude\estimation-data\rates.yaml"   # then edit
    ```
 4. Merge `CLAUDE.md` into **each** destination's own `CLAUDE.md` by hand (create it if missing) — do
    **not** blind-copy with `-Force`, since a real `CLAUDE.md` at any of the three may already carry

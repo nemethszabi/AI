@@ -2,3 +2,6 @@
 _scripts/sync-check.log
 __pycache__/
 *.pyc
+
+# Commercially sensitive — only the .example template is staged here
+estimation-data/rates.yaml

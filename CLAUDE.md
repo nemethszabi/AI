@@ -13,6 +13,14 @@ readable every session; never inline the doctrine itself in this file.
 - Every `dev-*` agent follows `~/.claude/dev-framework/PRINCIPLES.md`.
 - Why it's shaped this way, the `ai/dev/` state schema, and non-goals: `~/.claude/dev-framework/DESIGN.md`.
 
+## req-* agent family / `sa:` pipeline (requirement → offer)
+- Artifact data contract (JSON + rendered Markdown, IDs, lanes, the packaging gate):
+  `~/.claude/sa-framework/ARTIFACT-SCHEMAS.md`.
+- How estimates are derived (PERT, compression factors, contingency, calibration gate, pricing
+  separation): `~/.claude/sa-framework/ESTIMATION-METHOD.md`.
+- Both are **binding** on every `req-*` agent, read after `CONSTITUTION.md`.
+- Workflow walkthrough and design rationale: `d:\_AI_GIT\docs\SA-WORKFLOW.md`. Quick reference: `/sa:help`.
+
 ## Getting started / usage reference
 - First time using these agents? Read `d:\_AI_GIT\docs\GETTING-STARTED.md`.
 - Full "which command for which situation" map: `d:\_AI_GIT\docs\USAGE.md`.

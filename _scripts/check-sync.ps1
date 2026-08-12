@@ -45,7 +45,7 @@ function Get-FileHashMap($root, $relativeDirs) {
     return $map
 }
 
-$staged = Get-FileHashMap $repoRoot @('agents', 'skills', 'commands')
+$staged = Get-FileHashMap $repoRoot @('agents', 'skills', 'commands', 'dev-framework', 'sa-framework')
 $doctrineFiles = @('CONSTITUTION.md', 'AGENT-CONDUCT-BASELINE.md', 'AGENT-TEMPLATE-BASELINE.md', 'DESIGN-PRINCIPLES-BASELINE.md')
 foreach ($f in $doctrineFiles) {
     $stagedPath = Join-Path $repoRoot $f
@@ -66,7 +66,7 @@ foreach ($dest in $destinations) {
         continue
     }
 
-    $live = Get-FileHashMap $destRoot @('agents', 'skills', 'commands')
+    $live = Get-FileHashMap $destRoot @('agents', 'skills', 'commands', 'dev-framework', 'sa-framework')
     foreach ($f in $doctrineFiles) {
         $livePath = Join-Path $destRoot $f
         if (Test-Path $livePath) { $live[$f] = Get-Sha256 $livePath }

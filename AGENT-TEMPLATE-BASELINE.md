@@ -81,8 +81,9 @@ a minimal command looks like).
 </objective>
 
 <process>
-  Resolve arguments ($ARGUMENTS / explicit path), then either the command's own steps, or a Task(...)
-  invocation of the agent it dispatches to. Keep this thin — a command that routes to an agent should
+  Resolve arguments ($ARGUMENTS / explicit path), then either the command's own steps, or an Agent(...)
+  invocation of the agent it dispatches to. (The dispatch tool is named `Agent`; earlier revisions of
+  this file said `Task(...)`, which was stale — grant `Agent` in `allowed-tools`, not `Task`.) Keep this thin — a command that routes to an agent should
   not re-describe that agent's own logic (see README.md's generic/project-specific decision rule: the
   specificity lives in the agent, not the dispatcher).
 </process>

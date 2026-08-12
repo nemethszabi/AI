@@ -1,0 +1,47 @@
+# Rate card — EXAMPLE / TEMPLATE
+#
+# Copy to ~/.claude/estimation-data/rates.yaml and fill in real figures there.
+# Do NOT commit a filled-in rate card to this repo — real rates are commercially
+# sensitive. The repo stages this placeholder only; .gitignore excludes rates.yaml.
+#
+# Lookup order used by req-estimator (first hit wins):
+#   1. ai/sa/rates.yaml          engagement-specific
+#   2. ai/context/rates.yaml     project
+#   3. ~/.claude/estimation-data/rates.yaml   personal default
+#
+# Schema and rules: sa-framework/ESTIMATION-METHOD.md §7
+
+version: 1
+currency: EUR
+unit: man-day                 # man-day | hour
+as_of: 2026-08-12             # older than ~6 months → used but flagged stale
+source: "internal blended rates — never client-facing"
+
+roles:
+  - id: sa
+    name: Solution Architect
+    rate: 0                   # 0 = placeholder → req-estimator treats the whole
+  - id: be                    #     card as absent and produces effort-only output,
+    name: Backend Developer   #     rather than reporting a €0 total.
+    rate: 0
+  - id: fe
+    name: Frontend Developer
+    rate: 0
+  - id: qa
+    name: QA Engineer
+    rate: 0
+  - id: pm
+    name: Project Manager
+    rate: 0
+
+# Optional. When present, effort is split across roles for costing.
+# Must sum to 1.0.
+default_role_mix:
+  sa: 0.10
+  be: 0.35
+  fe: 0.25
+  qa: 0.20
+  pm: 0.10
+
+# Optional, commercial-only. Never applied silently — always shown as its own line.
+margin_percent: null

@@ -4,7 +4,8 @@ description: Static reference for the sa: command namespace. No live analysis, n
 allowed-tools: []
 ---
 
-> Version: 2.0.0
+> Version: 2.1.0 — minor: `/sa:brief` documented, and the `doc-briefer` exception to the `req-` prefix
+> convention recorded so it isn't "corrected" later.
 
 <reference>
 # `sa:` commands — lane-driven Solution-Architect / presales pipeline
@@ -41,6 +42,7 @@ re-run `/sa:triage` to change it, and it never re-scaffolds over existing artifa
 | Command | What it produces | Dispatches to |
 |---|---|---|
 | `/sa:triage [path-or-description]` | `engagement.json` + `ENGAGEMENT.md` + `STATE.md`, and the `ai/sa/<slug>/` scaffold. Picks the lane. Always the first command. | none (direct) |
+| `/sa:brief <slug>` | `brief.md` — a comprehension read of the engagement's inbound documents: section map, key facts, integration surface, conspicuous gaps, where to read closely. Advisory; touches no pipeline artifact or state. Use it *before* `/sa:clarify` when you haven't read the document yourself. (`/doc-brief <path>` is the same thing outside an engagement.) | `doc-briefer` |
 | `/sa:status [slug]` | Nothing written — a read-only report of lane, phase, artifacts present vs. the lane's expected set, gate freshness, open `to_clarify` counts, ending in exactly one recommended next command. | none (direct) |
 | `/sa:help` | This reference. | none (direct) |
 
@@ -107,7 +109,9 @@ Never send `package.md` to a client, and never treat `/sa:doc` as a substitute f
 - **Nothing here commits.** Writing artifacts is the pipeline's job; `git add`/`git commit` is yours.
 - **Agents are `req-`-prefixed** (`req-analyst`, `req-architect`, `req-detailer`, `req-reviewer`,
   `req-risk-officer`, `req-estimator`, `req-estimate-critic`, `req-offer`, `req-auditor`, `req-ingestor`)
-  specifically to avoid colliding with same-named agents from other installed frameworks.
+  specifically to avoid colliding with same-named agents from other installed frameworks. **`doc-briefer`
+  is a deliberate exception, not a naming slip** — it is reusable outside this pipeline entirely (that's
+  what `/doc-brief` exists for), so prefixing it `req-` would misdescribe it. Don't "fix" it.
 - All agents read the target project's `CLAUDE.md` / `ai/context/*.md` when run inside one, and proceed
   standalone (saying so) when not — this pipeline works before a project exists.
 - `.xlsx`/`.xls`/`.docx` extraction uses the `office-doc-reader` skill; `.pdf` uses the built-in `Read`

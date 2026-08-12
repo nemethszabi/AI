@@ -3,8 +3,6 @@ name: sa:brief
 description: Produce a structured comprehension brief of an engagement's inbound documents via doc-briefer — the pre-triage read that /sa:triage deliberately doesn't do. Advisory only; writes brief.md and touches no pipeline artifact or state.
 allowed-tools:
   - Read
-  - Write
-  - Bash
   - Grep
   - Glob
   - Agent
@@ -21,10 +19,11 @@ read closely.
 
 It exists because of a real hole in the lane model: `/sa:triage` asks the human to commit to `rom`,
 `offer-sow` or `full-design` — the choice that determines the entire downstream pipeline — while its own
-rules forbid it from reading the inbound material ("Do not copy, summarize or rewrite it; record its path…
-No analysis here"), and `/sa:ingest` is likewise forbidden from interpreting what it extracts. The first
-interpreted output in the pipeline is `/sa:clarify`, two steps after the lane was already chosen. This
-command fills that gap without weakening either rule.
+rules forbid it from *interpreting or summarizing* the inbound material ("Do not copy, summarize or rewrite
+it; record its path… No analysis here"), and `/sa:ingest` is likewise forbidden from interpreting what it
+extracts. Triage may read; it may not tell you what the document means. So the first interpreted output in
+the pipeline is `/sa:clarify` — two steps after the lane was already chosen. This command fills that gap
+without weakening either rule.
 
 **Advisory, not a phase.** It writes no JSON, updates no `STATE.md`, and produces nothing any other
 artifact cites. Run it before `/sa:triage`, after `/sa:ingest`, or never — the pipeline behaves identically
@@ -79,20 +78,21 @@ can go to the same `doc-briefer` agent while it still holds the document.
 </process>
 
 <rules>
-- **Never writes a pipeline artifact.** No `*.json`, no rendered pipeline `.md`, no `audit/`, no
-  `deliverables/`. Only `brief.md` at the resolved output path.
-- **Never updates `STATE.md`.** "brief" is not a value in the phase enum (`ARTIFACT-SCHEMAS.md` §6), and
-  writing one would make `/sa:status` report a phase the lane model doesn't contain. The brief's absence
-  from pipeline state is deliberate, not an oversight.
-- **`brief.md` is excluded from the packaging gate.** It carries no IDs, nothing cites it, and it is not
+- **This command writes nothing at all** — enforced by its tool grant, which has no `Write` or `Edit`. It
+  resolves inputs, dispatches, and reports; `doc-briefer` writes the brief. No `*.json`, no rendered
+  pipeline `.md`, no `audit/`, no `deliverables/`, no `inputs/`.
+- **Never updates `STATE.md`.** "brief" is not a value in the phase enum, and writing one would make
+  `/sa:status` report a phase the lane model doesn't contain. This is the advisory-command carve-out
+  recorded in `ARTIFACT-SCHEMAS.md` §6 — cite it there; don't re-argue it here.
+- **`brief.md` is excluded from the packaging gate.** It carries no IDs and nothing cites it, so it is not
   part of `/sa:package`'s `inputs_hash` (`ARTIFACT-SCHEMAS.md` §5). Re-running `/sa:brief` never stales a
   gate.
-- **Never writes into `inputs/`.** Immutable after `/sa:ingest` — the agent extracts to a temp directory
-  when it has to extract at all.
-- **Never re-extracts what `/sa:ingest` already extracted.** Existing `inputs/*.extracted.md` are the
-  source; they carry provenance headers this command must not duplicate or contradict.
-- **Never produces requirements.** No REQ-IDs, no priorities, no design, no estimate, no risk scores. If
-  the user wants those, name `/sa:clarify` and stop.
+- **Never dispatches a second agent.** One `doc-briefer` call. Requirements, design, risk and estimate work
+  belong to their own commands — name the right one (`/sa:clarify` first) and stop.
 - **Never commits.** No `git add`, `git commit` or `git push` — `CONSTITUTION.md` Articles II and VII.
 - **Re-running is non-destructive to everything but the brief itself**, which is regenerated wholesale.
+
+`doc-briefer`'s own rules — extraction limits, `inputs/` immutability, the no-requirements boundary,
+one-level folder scanning — live in `agents\doc-briefer.md` and are deliberately not restated here
+(`AGENT-TEMPLATE-BASELINE.md` §3: the specificity lives in the agent, not the dispatcher).
 </rules>

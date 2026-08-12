@@ -10,7 +10,8 @@ allowed-tools:
 argument-hint: "[slug]"
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — minor: `brief.md` reported on its own advisory line and excluded from `extra`, per the
+> `ARTIFACT-SCHEMAS.md` §6 advisory non-artifact carve-out.
 
 <objective>
 `/sa:status [slug]` answers "where am I in this engagement?" It reads `ai/sa/<slug>/STATE.md` and
@@ -53,7 +54,9 @@ Counts and comparisons only — no analysis of content.
     packaged files under `deliverables/`
   - `full-design` → the above plus `review.json`, `detailed-design.json`, and files under `diagrams/`
   Mark each present or missing. An artifact outside the lane's expected set that exists anyway is listed
-  as extra, not as an error.
+  as extra, not as an error. **`brief.md` is never `extra`** — it is an advisory non-artifact
+  (`ARTIFACT-SCHEMAS.md` §6), optional on every lane; report it on its own line as present or absent, and
+  never as unexpected.
 - **Open `to_clarify`**: requirements with `"status": "to_clarify"` in `requirements.json`, plus
   `open_questions[]` entries in `engagement.json` and `requirements.json`, plus any field in
   `engagement.json` still literally valued `to_clarify`. Report the three sub-counts, not one blended
@@ -114,6 +117,7 @@ Artifacts (lane expects <n>):
   requirements     <present rev <n> | missing>
   architecture     <present rev <n> | missing | n/a for this lane>
   ...              <one line per expected artifact, in lane pipeline order>
+  brief (advisory) <present | not run — /sa:brief>
   extra            <any present-but-unexpected artifact, or —>
 
 Open items:

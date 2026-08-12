@@ -445,8 +445,9 @@ generated_at: 2026-08-12T14:30:00Z
 ```
 ai/sa/<slug>/
   ENGAGEMENT.md          engagement.json          ← /sa:triage
-  STATE.md                                        ← every command updates
+  STATE.md                                        ← every pipeline command updates
   inputs/                                         ← /sa:ingest (immutable)
+  brief.md                                        ← /sa:brief (advisory — see below)
   requirements.md        requirements.json        ← req-analyst
   architecture.md        architecture.json        ← req-architect
   detailed-design.md     detailed-design.json     ← req-detailer
@@ -464,6 +465,24 @@ ai/sa/<slug>/
 
 `inputs/` is **immutable** — never edited after ingest. Rendered `.md` files are **generated** — never
 hand-edited, because the next agent run overwrites them from JSON.
+
+### Advisory non-artifacts — the `brief.md` carve-out
+
+`brief.md` (written by `/sa:brief`, via `doc-briefer`) is the first and so far only **advisory
+non-artifact**: a file that lives in the engagement folder but is deliberately outside the pipeline's
+contracts. It has no JSON source of truth, defines no IDs, and is cited by nothing. Three consequences,
+each intentional:
+
+- **It is not in the `inputs_hash`** (§5). Re-running `/sa:brief` can never stale a packaging gate.
+- **Its command does not update `STATE.md`** — an explicit and documented divergence from this section's
+  own "every pipeline command updates it" rule, in the same spirit as `review.json`'s documented
+  divergence from `AGENT-CONDUCT-BASELINE.md` B7 (§4.5). `brief` is not a value in the phase enum, and
+  adding one would make `/sa:status` report a phase the lane model doesn't contain.
+- **`/sa:status` must not list it as `extra`.** It is expected-but-optional on every lane, not an
+  unexpected artifact.
+
+A future advisory command follows the same three rules. Anything that defines an ID other artifacts cite,
+or that a deliverable is built from, is **not** advisory and belongs in the schemas above.
 
 ### `STATE.md` — canonical shape
 

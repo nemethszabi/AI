@@ -71,6 +71,7 @@ small bid costs a few hours; under-delivering on a large one costs the bid.
 | Command | Produces | Agent |
 |---|---|---|
 | `/sa:triage` | `engagement.json` + `ENGAGEMENT.md` + `STATE.md`, and the lane | — |
+| `/sa:brief` | `brief.md` — a comprehension read of the inbound documents *(advisory)* | `doc-briefer` |
 | `/sa:ingest` | `inputs/*.extracted.md` from Excel/Word/PDF | `req-ingestor` |
 | `/sa:clarify` | `requirements.json` — REQ-IDs, priority, status, source | `req-analyst` |
 | `/sa:design` | `architecture.json` — HLD, components, NFRs, integrations, phasing | `req-architect` |
@@ -89,6 +90,17 @@ small bid costs a few hours; under-delivering on a large one costs the bid.
 **`/sa:doc` and `/sa:offer` are not the same thing.** `/sa:doc` is an internal consolidation for your own
 team. `/sa:offer` → `/sa:audit` → `/sa:package` is the client-facing path. Confusing them is how internal
 risk language reaches a client.
+
+**`/sa:brief` is deliberately absent from all three lane sequences.** It is an *advisory non-artifact*
+(`ARTIFACT-SCHEMAS.md` §6): it writes no JSON, defines no IDs, updates no `STATE.md`, and is excluded from
+`/sa:package`'s `inputs_hash`, so it can never stale a gate. Run it, or don't — the pipeline behaves
+identically either way. Don't add it to a lane chain.
+
+Its reason to exist is a gap in the ordering above: `/sa:triage` makes you commit to a lane, which
+determines everything downstream, but triage is forbidden from *interpreting* the inbound material ("No
+analysis here"), and `/sa:ingest` is likewise extraction-only. The first interpreted output is
+`/sa:clarify` — two steps after the lane was chosen. `/sa:brief` closes that without weakening either
+rule. `/doc-brief <path>` is the same thing outside an engagement.
 
 ---
 
@@ -166,10 +178,16 @@ Six checks are **blocking and unwaivable**, each one a defect that would otherwi
 ## Worked example — an inbound TSD
 
 ```powershell
+/doc-brief  "d:\WORK\Client\Their_TSD_v1.0.docx"
+# → optional but recommended: read it before you classify it. Section map, key facts,
+#   integration surface, conspicuous gaps. Ask follow-ups against the same agent.
+
 /sa:triage  "d:\WORK\Client\Their_TSD_v1.0.docx"
 # → asks 3-5 intake questions, classifies the lane, scaffolds ai/sa/<slug>/
 
 /sa:ingest  <slug>              # TSD → inputs/*.extracted.md
+/sa:brief   <slug>              # → re-brief from the extractions, into ai/sa/<slug>/brief.md
+                                #   (skip if you already ran /doc-brief above)
 /sa:clarify <slug>              # → REQ-IDs, with to_clarify where the TSD is vague
 /sa:design  <slug>              # → HLD; integrations marked assumed where no spec exists
 /sa:risk    <slug>              # → every assumed integration becomes a scored risk
@@ -259,5 +277,5 @@ gate is a safety property, not a speed bump — `CONSTITUTION.md` Articles III a
 
 ---
 
-**Last revised**: 2026-08-12 (v1.0 — initial workflow, lane model, and the presales/bid split from
-internal solution design).
+**Last revised**: 2026-08-12 (v1.1 — added `/sa:brief` / `doc-briefer` and the advisory non-artifact
+concept. v1.0 — initial workflow, lane model, and the presales/bid split from internal solution design).

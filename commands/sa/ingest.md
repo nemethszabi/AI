@@ -9,7 +9,7 @@ allowed-tools:
 argument-hint: "<slug> <file-or-folder-path...> [--recursive]"
 ---
 
-> Version: 1.1.0
+> Version: 1.1.1
 
 <objective>
 `/sa:ingest <slug> <path...> [--recursive]` extracts one or more Excel/Word/PDF/text files into
@@ -52,4 +52,3 @@ option for you to invoke.
 - **Extraction is not analysis.** This command (and the agent it dispatches to) never writes a
   requirement, a component, or an estimate line — that's `/sa:clarify`'s job on the next pass.
 </rules>
-</output>

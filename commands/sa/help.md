@@ -4,7 +4,7 @@ description: Static reference for the sa: command namespace. No live analysis, n
 allowed-tools: []
 ---
 
-> Version: 1.0.0
+> Version: 1.0.2
 
 <reference>
 # `sa:` commands — lightweight Solution-Architect / REQ-CR pipeline
@@ -18,7 +18,7 @@ reviewed by you directly. Add rigor later only if it proves necessary.
 |---|---|---|
 | `/sa:ingest <slug> <path...> [--recursive]` | Extract inbound Excel/Word/PDF/text files into readable Markdown. Optional first step, when starting from files rather than prose. Folder scans are one-level-deep by default — `--recursive` opts into walking every subfolder. | `req-ingestor` |
 | `/sa:clarify <description>` | Turn a free-form REQ/CR (or already-ingested files) into a structured requirements list. | `req-analyst` |
-| `/sa:design <slug>` | High-Level Design (HLD) — approach, components, integration points, phasing. | `req-architect` |
+| `/sa:design <slug> [--model=<name>] [--apply-review[=<severity>]]` | High-Level Design (HLD) — approach, components, NFRs/security/deployment posture, risks, phasing, and a full requirements traceability matrix. `--apply-review` revises against `review.md` findings instead. | `req-architect` |
 | `/sa:review <slug> [--model=opus\|sonnet\|haiku\|fable]` | Narrative critique of the design (HLD, and LLD once it exists) against requirements — no gate. `--model` is opt-in per-run; `opus` recommended for a high-stakes/client-facing pass, unset otherwise. | `req-reviewer` |
 | `/sa:design-detail <slug>` | Low-Level Design (LLD) — per-component interfaces, data model, key flows, deployment detail. | `req-detailer` |
 | `/sa:estimate <slug>` | Three-point effort estimate from requirements + design. | `req-estimator` |
@@ -77,4 +77,3 @@ doesn't need `/sa:ingest` or a separate LLD pass at all).
 
 This command performs no live analysis — it only prints the reference above.
 </reference>
-</output>

@@ -10,7 +10,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify> [--model=sonnet|opus|haiku|fable]"
 ---
 
-> Version: 1.1.0
+> Version: 1.1.1
 
 <objective>
 `/sa:review <slug> [--model=<model>]` reviews `ai/sa/<slug>/architecture.md` (and `detailed-design.md` if
@@ -56,4 +56,3 @@ Remind the user this produces findings for their own disposition, not a gate —
   frontmatter as a side effect of someone using `--model` once — that would pin a default for every future
   run, which is exactly what this flag is designed to avoid.
 </rules>
-</output>

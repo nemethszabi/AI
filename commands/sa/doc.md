@@ -9,7 +9,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify>"
 ---
 
-> Version: 1.0.0
+> Version: 1.0.1
 
 <objective>
 `/sa:doc <slug>` consolidates `ai/sa/<slug>/requirements.md`, `architecture.md` (HLD),
@@ -48,8 +48,9 @@ effort/cost) if available — written for someone who won't read past this secti
 <the Requirements table from requirements.md, plus a one-line note on any still-open `to_clarify` items>
 
 ## Design (High-Level)
-<the Approach + Components summary from architecture.md, if available — omit this section header
-entirely if architecture.md doesn't exist yet, don't show an empty section>
+<the Approach + Components summary from architecture.md, plus its Quality Attributes and Security &
+Compliance highlights if those sections are present, if available — omit this section header entirely if
+architecture.md doesn't exist yet, don't show an empty section>
 
 ## Design Review — Key Findings
 <the Summary + high/medium-severity rows from review.md's Findings table, if available — omit entirely if

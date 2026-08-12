@@ -7,10 +7,10 @@ allowed-tools:
   - Glob
   - Agent
   - AskUserQuestion
-argument-hint: "<slug from /sa:clarify> [--model <name>, optional] [--apply-review[=<severity>], optional — revise the existing HLD against ai/sa/<slug>/review.md's findings at or above <severity> (default: High)]"
+argument-hint: "<slug from /sa:clarify> [--model=<name>, optional] [--apply-review[=<severity>], optional — revise the existing HLD against ai/sa/<slug>/review.md's findings at or above <severity> (default: High)]"
 ---
 
-> Version: 1.2.0
+> Version: 1.2.1
 
 <objective>
 `/sa:design <slug>` produces a High-Level Design (HLD) from `ai/sa/<slug>/requirements.md` via
@@ -25,7 +25,7 @@ design. Re-run `/sa:review` afterward to confirm the fixes landed.
 
 <process>
 <step name="parse-model-override">
-If `$ARGUMENTS` contains `--model <name>`, extract it and strip it from the remaining arguments before
+If `$ARGUMENTS` contains `--model=<name>`, extract it and strip it from the remaining arguments before
 slug resolution. This is optional — omit it and the dispatch inherits whatever model the calling session
 is running under. Reach for it only when the design is genuinely novel or high-stakes (no close precedent
 in the codebase, or the cost of a wrong recommendation is high) — not as a default.
@@ -73,4 +73,7 @@ the recommended next step before `/sa:design-detail`.
 <rules>
 - **Thin dispatcher only.** All design reasoning happens inside `req-architect`; all diagram drawing happens
   inside `mermaid-diagram-maker`.
+- **Model override is per-invocation only.** Never write a `model:` line into `req-architect.md`'s own
+  frontmatter as a side effect of someone using `--model` once — that would pin a default for every future
+  run, which is exactly what this flag is designed to avoid.
 </rules>

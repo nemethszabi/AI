@@ -10,7 +10,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify>"
 ---
 
-> Version: 1.1.0
+> Version: 1.1.1
 
 <objective>
 `/sa:design-detail <slug>` produces a Low-Level Design from `ai/sa/<slug>/architecture.md` (the HLD) via
@@ -54,4 +54,3 @@ Return `req-detailer`'s summary (components detailed, any Open Question that cou
 - **Thin dispatcher only.** All design reasoning happens inside `req-detailer`; all diagram drawing happens
   inside `mermaid-diagram-maker`.
 </rules>
-</output>

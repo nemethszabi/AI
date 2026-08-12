@@ -9,7 +9,8 @@ allowed-tools:
 argument-hint: "<slug-or-path> [--out <path>] [--recursive]"
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — minor: follow-up Q&A now names `SendMessage` and its fallback explicitly, per
+> `AGENT-TEMPLATE-BASELINE.md` §3; the `<slug-or-path>` bare-path form documented in `<objective>`.
 
 <objective>
 `/sa:brief <slug-or-path>` dispatches `doc-briefer` to read an engagement's inbound documents and write
@@ -28,6 +29,15 @@ without weakening either rule.
 **Advisory, not a phase.** It writes no JSON, updates no `STATE.md`, and produces nothing any other
 artifact cites. Run it before `/sa:triage`, after `/sa:ingest`, or never — the pipeline behaves identically
 either way.
+
+**Both argument forms work, and the path form is the point.** `/sa:brief <slug>` briefs an existing
+engagement's extracted inputs; `/sa:brief <path>` briefs a raw file or folder with **no engagement yet** —
+which is the pre-triage case this command was built for, since the lane call is what needs the read. The
+path form neither creates nor requires `ai/sa/<slug>/`.
+
+`/doc-brief <path>` is the same underlying agent for documents unrelated to any engagement. Prefer
+`/sa:brief` once a document is headed for a bid, even before triage: the brief then lands in the
+engagement folder as soon as one exists, instead of beside the source file.
 </objective>
 
 <process>
@@ -72,8 +82,17 @@ Next: <the recommendation — see below>
 ```
 
 `Next` is `/sa:triage <path>` when no engagement exists yet, `/sa:ingest <slug> <path>` when the engagement
-has no extracted inputs, and `/sa:clarify <slug>` otherwise. Add one line noting that follow-up questions
-can go to the same `doc-briefer` agent while it still holds the document.
+has no extracted inputs, and `/sa:clarify <slug>` otherwise.
+
+Then add one line telling the user that follow-up questions go to that **same** `doc-briefer` agent via
+`SendMessage` to the agent id this dispatch returned — it still holds the full document text and answers
+with section citations. Say `SendMessage`, not "ask it again": a fresh `Agent` call re-extracts and
+re-reads everything at full token cost with no memory of the first pass
+(`AGENT-TEMPLATE-BASELINE.md` §3).
+
+If that agent session is gone, name the fallback rather than silently re-dispatching: read the `brief.md`
+just written, and `Grep` the extracted Markdown at the path the agent reported. Re-dispatch only when the
+question genuinely needs the whole document re-read.
 </step>
 </process>
 

@@ -4,8 +4,12 @@ description: Static reference for the sa: command namespace. No live analysis, n
 allowed-tools: []
 ---
 
-> Version: 2.1.0 — minor: `/sa:brief` documented, and the `doc-briefer` exception to the `req-` prefix
-> convention recorded so it isn't "corrected" later.
+> Version: 2.3.0 — minor: `/sa:screen` (the bid/no-bid pass) documented, the advisory non-artifact pair
+> and the screening-band-is-not-an-estimate boundary added to Shared conventions. 2.2.0 — `/sa:brief`'s
+> `<slug-or-path>` pre-triage form documented (it was listed
+> `<slug>`-only, hiding the form it was built for), and the read-before-you-classify habit added to
+> Shared conventions. 2.1.0 — `/sa:brief` documented, and the `doc-briefer` exception to the `req-`
+> prefix convention recorded so it isn't "corrected" later.
 
 <reference>
 # `sa:` commands — lane-driven Solution-Architect / presales pipeline
@@ -16,8 +20,10 @@ written twice: a `.json` (source of truth) and a rendered `.md` (what humans rea
 `sa-framework/ARTIFACT-SCHEMAS.md` is the binding contract for both; `sa-framework/ESTIMATION-METHOD.md`
 governs how numbers are derived and what they may be used for.
 
-**v1 is human-driven.** One command per step, with human review in between. No command runs a multi-step
-sequence on your behalf, and none of them commit. If you remember one thing from this page:
+**v1 is human-driven.** One command per step, with human review in between, and none of them commit. The
+single exception is **`/sa:screen`**, which chains the shallow front half (scaffold → ingest → clarify →
+screen) because it terminates in an internal bid/no-bid decision rather than in anything a client receives —
+it stops dead at the screen and never touches `/sa:design` onward. If you remember one thing from this page:
 **`/sa:status <slug>` tells you the single next command** at any point in an engagement.
 
 ## Which lane do I need?
@@ -42,7 +48,8 @@ re-run `/sa:triage` to change it, and it never re-scaffolds over existing artifa
 | Command | What it produces | Dispatches to |
 |---|---|---|
 | `/sa:triage [path-or-description]` | `engagement.json` + `ENGAGEMENT.md` + `STATE.md`, and the `ai/sa/<slug>/` scaffold. Picks the lane. Always the first command. | none (direct) |
-| `/sa:brief <slug>` | `brief.md` — a comprehension read of the engagement's inbound documents: section map, key facts, integration surface, conspicuous gaps, where to read closely. Advisory; touches no pipeline artifact or state. Use it *before* `/sa:clarify` when you haven't read the document yourself. (`/doc-brief <path>` is the same thing outside an engagement.) | `doc-briefer` |
+| `/sa:brief <slug-or-path>` | `brief.md` — a comprehension read of the inbound documents: section map, key facts, integration surface, conspicuous gaps, where to read closely. Advisory; touches no pipeline artifact or state. **Takes a bare file/folder path too, with no engagement yet** — that's the pre-triage form, and the one worth reaching for, because the lane call is what needs the read. Follow-ups go to the same agent via `SendMessage`. (`/doc-brief <path>` is the same agent for documents unrelated to any bid.) | `doc-briefer` |
+| `/sa:screen <path-or-slug>` | **The bid/no-bid pass — "can we do this, and roughly what would it cost?"** Runs scaffold → ingest → clarify → screen in one command, producing a real `requirements.json` plus an advisory `screen.md`: feasibility verdict (`can-do` / `can-do-if` / `probably-not` / `cannot-assess`), named blockers, and an order-of-magnitude effort band that is **never quotable**. Writes no `estimation.json` and no `offer.json`. Runs on any lane — depth of pass and lane are independent axes. | `req-ingestor` → `req-analyst` → `req-screener` |
 | `/sa:status [slug]` | Nothing written — a read-only report of lane, phase, artifacts present vs. the lane's expected set, gate freshness, open `to_clarify` counts, ending in exactly one recommended next command. | none (direct) |
 | `/sa:help` | This reference. | none (direct) |
 
@@ -99,6 +106,18 @@ Never send `package.md` to a client, and never treat `/sa:doc` as a substitute f
 - **`inputs/` is immutable.** Once `/sa:ingest` has written there, nothing edits those files.
 - **IDs are stable.** `REQ-`, `C-`, `QA-`, `INT-`, `R-`, `CMP-`, `L-`, `PH-`, `F-`, `A-`, `X-`, `D-` are
   never renumbered or reused; a dropped item becomes `withdrawn`, because downstream artifacts cite it.
+- **Read before you classify.** `/sa:triage` commits you to a lane but is forbidden from interpreting the
+  document, and `/sa:ingest` is extraction-only — so the pipeline's first interpreted output is
+  `/sa:clarify`, two steps *after* the lane was chosen. Either triage blind or run `/sa:brief <path>`
+  first. It is advisory, so it never appears in any `STATE.md` `Next`: triage and ingest offer it, and
+  choosing it is always yours.
+- **Two advisory non-artifacts, both optional, both before the binding work.** `brief.md` (`/sa:brief`)
+  answers *what does this document say*; `screen.md` (`/sa:screen`) answers *can we do it and roughly what
+  would it cost*. Neither has a JSON source of truth, neither defines an ID, nothing cites either, both are
+  excluded from `inputs_hash`, and neither is a phase — see `ARTIFACT-SCHEMAS.md` §6.
+- **A screening band is not an estimate and is never quotable.** `ESTIMATION-METHOD.md` §8: no PERT, no
+  contingency, no compression, no calibration — by specification, not by shortfall. `/sa:estimate` is the
+  only path to a number anyone may put in front of a client, and it never reads the band.
 - **`STATE.md` is the shared state file.** Every command updates it — lane, phase, last command, and a
   `Next` naming exactly one command. Phase history is appended to, never rewritten.
 - **One gate, at the end.** `/sa:review` and `/sa:estimate-review` produce findings, not verdicts. Refusal

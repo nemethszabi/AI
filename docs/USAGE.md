@@ -11,7 +11,8 @@ lighter than a full wave/gate system.
 |---|---|---|
 | Unfamiliar/new project, no `ai/context/` yet | `/scaffold-context [path]` | Global |
 | Need an architecture/sequence/flowchart diagram | `/diagram [what]` | Global |
-| **A client document just landed and you need to understand it** | `/doc-brief <path>` (or `/sa:brief <slug>`) | Global |
+| **A client document just landed and you need to understand it** | `/sa:brief <path-or-slug>` if it's headed for a bid — works before triage, no engagement needed; `/doc-brief <path>` otherwise | Global |
+| **"Can we do this, and roughly what would it cost?" — before deciding whether to bid** | `/sa:screen <path>` — one command, real requirements + a non-quotable band | Global |
 | **Inbound TSD/RFP → priced offer** | `/sa:triage` first, then follow the lane it picks | Global |
 | New REQ/CR to analyze, in any project or standalone | `/sa:triage` → `/sa:clarify` → … (see `SA-WORKFLOW.md`) | Global |
 | Starting from an existing Excel/Word/PDF (RFP, estimate sheet, design doc) | `/sa:ingest <slug> <path>` after `/sa:triage`, before `/sa:clarify` | Global |
@@ -45,14 +46,15 @@ Each project namespace also has its own `:help` (`/scm:help`, `/merge:help`) onc
 couple of commands — static reference, no live analysis. `/sa:help` and `/dev:help` cover the two global
 namespaces.
 
-**The `/sa:*` namespace is now 16 commands across three lanes** — too much for one table row. Its full
+**The `/sa:*` namespace is now 17 commands across three lanes** — too much for one table row. Its full
 walkthrough, design rationale, and a worked "inbound TSD → offer" example live in **`SA-WORKFLOW.md`**.
 Start there rather than here for any presales/bid work.
 
 ## The shape underneath, in one paragraph
 
 One generic agent per role (`dev-backend`, `dev-frontend`, `dev-reviewer`, `dev-browser-tester`,
-`solution-analyst`, `mermaid-diagram-maker`, `doc-briefer`, `req-ingestor`, `req-analyst`, `req-architect`,
+`solution-analyst`, `mermaid-diagram-maker`, `doc-briefer`, `req-screener`, `req-ingestor`, `req-analyst`,
+`req-architect`,
 `req-reviewer`, `req-detailer`, `req-risk-officer`, `req-estimator`, `req-estimate-critic`, `req-offer`,
 `req-auditor`,
 `agent-reviewer` — the meta-level counterpart to `dev-reviewer`, reviewing agent/skill/command/prompt
@@ -87,6 +89,13 @@ not a reusable role.
   conversation), `offer-sow` (days, a written priced offer — the default for an inbound TSD/RFP), or
   `full-design` (weeks, HLD + LLD + pitch). Re-running triage changes the lane without destroying
   anything. Run `/sa:status` any time to get the single next command for your lane.
+- **One command chains, and only one: `/sa:screen`.** It runs scaffold → ingest → clarify → screen
+  unattended, because it ends in an internal bid/no-bid call and writes no `estimation.json`/`offer.json` —
+  nothing a client could receive. It stops dead there. The rule isn't "never chain", it's **never chain
+  across the point where output becomes client-facing**, so `/sa:design` onward stays one at a time.
+- **A screening band is not an estimate.** `screen.md`'s number is order-of-magnitude, deliberately wide,
+  and **never quotable** — no PERT, no contingency, no compression, no price (`ESTIMATION-METHOD.md` §8).
+  `/sa:estimate` is the only route to a number anyone may show a client.
 - **One step *does* block: `/sa:package` refuses without a fresh `/sa:audit` PASS.** This is the one
   hard gate in the namespace and it is deliberate — it's the only command that produces something a client
   sees. Freshness is checked by **content hash**, so changing any artifact re-stales the gate and you

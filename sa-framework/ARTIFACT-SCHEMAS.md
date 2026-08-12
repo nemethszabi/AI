@@ -448,6 +448,7 @@ ai/sa/<slug>/
   STATE.md                                        ← every pipeline command updates
   inputs/                                         ← /sa:ingest (immutable)
   brief.md                                        ← /sa:brief (advisory — see below)
+  screen.md                                       ← /sa:screen (advisory — see below)
   requirements.md        requirements.json        ← req-analyst
   architecture.md        architecture.json        ← req-architect
   detailed-design.md     detailed-design.json     ← req-detailer
@@ -466,23 +467,34 @@ ai/sa/<slug>/
 `inputs/` is **immutable** — never edited after ingest. Rendered `.md` files are **generated** — never
 hand-edited, because the next agent run overwrites them from JSON.
 
-### Advisory non-artifacts — the `brief.md` carve-out
+### Advisory non-artifacts — the `brief.md` and `screen.md` carve-out
 
-`brief.md` (written by `/sa:brief`, via `doc-briefer`) is the first and so far only **advisory
-non-artifact**: a file that lives in the engagement folder but is deliberately outside the pipeline's
-contracts. It has no JSON source of truth, defines no IDs, and is cited by nothing. Three consequences,
-each intentional:
+An **advisory non-artifact** is a file that lives in the engagement folder but is deliberately outside the
+pipeline's contracts: no JSON source of truth, no IDs, cited by nothing. There are two —
 
-- **It is not in the `inputs_hash`** (§5). Re-running `/sa:brief` can never stale a packaging gate.
-- **Its command does not update `STATE.md`** — an explicit and documented divergence from this section's
-  own "every pipeline command updates it" rule, in the same spirit as `review.json`'s documented
-  divergence from `AGENT-CONDUCT-BASELINE.md` B7 (§4.5). `brief` is not a value in the phase enum, and
-  adding one would make `/sa:status` report a phase the lane model doesn't contain.
-- **`/sa:status` must not list it as `extra`.** It is expected-but-optional on every lane, not an
-  unexpected artifact.
+| File | Written by | Answers |
+|---|---|---|
+| `brief.md` | `/sa:brief` → `doc-briefer` | *What does this document actually say?* |
+| `screen.md` | `/sa:screen` → `req-screener` | *Can we do it, and roughly what would it cost?* |
 
-A future advisory command follows the same three rules. Anything that defines an ID other artifacts cite,
-or that a deliverable is built from, is **not** advisory and belongs in the schemas above.
+Both sit before the pipeline's binding work: one before the lane is chosen, the other before anyone decides
+to bid at all. Three consequences apply to each, all intentional:
+
+- **Not in the `inputs_hash`** (§5). Re-running either can never stale a packaging gate.
+- **No `STATE.md` phase** — an explicit and documented divergence from this section's own "every pipeline
+  command updates it" rule, in the same spirit as `review.json`'s documented divergence from
+  `AGENT-CONDUCT-BASELINE.md` B7 (§4.5). Neither `brief` nor `screen` is a value in the phase enum, and
+  adding one would make `/sa:status` report a phase the lane model doesn't contain. (`/sa:screen` *does*
+  update `STATE.md` for the `triage`/`ingest`/`clarify` steps it runs, because those write real artifacts —
+  the screen step itself records nothing.)
+- **`/sa:status` must not list either as `extra`.** Both are expected-but-optional on every lane, not
+  unexpected artifacts.
+
+A further advisory command follows the same three rules. Anything that defines an ID other artifacts cite,
+or that a deliverable is built from, is **not** advisory and belongs in the schemas above — which is
+precisely why `/sa:screen` writes a real `requirements.json` but no `estimation.json`: the requirements are
+cited downstream, the band is not, and a coarse number sitting in the file an offer is generated from is the
+exact failure this distinction prevents.
 
 ### `STATE.md` — canonical shape
 
@@ -528,5 +540,8 @@ framework's `/dev:auto` is exactly the pattern this one declines to copy.
 
 ---
 
-**Last revised**: 2026-08-12 (v1.0 — initial schema set, created alongside the lane model and the
+**Last revised**: 2026-08-12 (v1.2 — `screen.md` added as advisory non-artifact #2, and §6's carve-out
+generalized from one file to a two-entry table. v1.1 — added §6's *advisory non-artifact* concept and the
+`brief.md` carve-out: no JSON source of truth, excluded from the §5 `inputs_hash`, no `STATE.md` update,
+never `extra` in `/sa:status`. v1.0 — initial schema set, created alongside the lane model and the
 presales/bid split from internal solution design).

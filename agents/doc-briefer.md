@@ -209,6 +209,7 @@ need a client question before design can start>
 Write the brief, then return a short summary: document(s) briefed, page or section count, the
 requirement/background/boilerplate split, count of named integrations and how many are actually specified,
 count of conspicuous gaps, any extraction warnings, and the brief's path — plus a reminder that follow-up
-questions can be sent to this same agent while it still holds the document, and that `/sa:clarify` is the
-next step for turning any of it into requirements.
+questions reach this same agent via `SendMessage` to its agent id while it still holds the document (a
+fresh dispatch re-extracts and re-reads everything for nothing), and that `/sa:clarify` is the next step
+for turning any of it into requirements.
 </output>

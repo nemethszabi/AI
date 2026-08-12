@@ -4,6 +4,9 @@
 `sa-framework\ARTIFACT-SCHEMAS.md` (what the artifacts look like); this file governs **how the numbers are
 derived and what they may be used for**.
 
+`req-screener` is bound by **§5 only** (effort is not price; no invented rates) and is deliberately exempt
+from the derivation machinery in §§1–4 — see §8.
+
 Not invented. Codified from real estimates produced on this machine — principally the Netrisk
 CampaignManager v1/v2 pair (2026-08-10), which established the differentiated-compression model, the
 calibration gate, and the pricing separation. Before this file existed, that method lived in a single
@@ -244,5 +247,40 @@ show them.
 
 ---
 
-**Last revised**: 2026-08-12 (v1.0 — initial codification from the Netrisk CampaignManager v1/v2
+## 8. Screening bands are not estimates
+
+`req-screener` (via `/sa:screen`) produces an **order-of-magnitude effort band** to answer "can we do this,
+and roughly what would it cost?" before anyone decides to bid. It is not an estimate under this document,
+and the distinction is deliberate rather than a shortfall:
+
+| | Screening band | Estimate |
+|---|---|---|
+| Written by | `req-screener` | `req-estimator` |
+| Lands in | `screen.md` (advisory non-artifact) | `estimation.json` + `.md` |
+| Method | Rounded range, one or two significant figures | §1 PERT over best/likely/worst per line |
+| Contingency | **None** — no register exists yet | §3, derived from the risk register |
+| Compression | **None** — no K-categorisation | §2 per-line work-type factors |
+| Calibration | **None** | §4, with the commitment gate |
+| May be quoted | **Never**, rate card or not | Yes, as effort, per §5 |
+
+Three rules follow, and they bind both agents:
+
+- **A screening band must never be widened, narrowed, or converted into an estimate.** If a real number is
+  needed, `/sa:design` → `/sa:risk` → `/sa:estimate` runs from the requirements, not from the band.
+- **`req-estimate-critic` never critiques a `screen.md`.** A band with no PERT, no contingency and no
+  calibration is not a method violation there — it is the specified output. Critiquing it against §§1–4
+  would be a category error, and `screen.md` is outside the artifact set that agent reads.
+- **`req-estimator` never treats a band as an input or an anchor.** Reading one before estimating imports
+  precisely the optimism the three-point method exists to surface. Estimate from requirements, design and
+  register; ignore whatever the screen said.
+
+The reason a deliberately coarse number is allowed to exist at all is that it lives in an advisory
+non-artifact nothing cites (`ARTIFACT-SCHEMAS.md` §6) and no deliverable can be built from it. A coarse
+number in `estimation.json` would be a defect; the same number in `screen.md` is the honest answer to a
+different question.
+
+---
+
+**Last revised**: 2026-08-12 (v1.1 — added §8, the screening-band carve-out for `req-screener`. v1.0 —
+initial codification from the Netrisk CampaignManager v1/v2
 estimates and their risk registers).

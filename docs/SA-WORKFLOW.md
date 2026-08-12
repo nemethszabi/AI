@@ -34,6 +34,45 @@ v1 adds the right column. The **lane** you pick at triage is what selects betwee
 
 ---
 
+## Before the lanes — the bid/no-bid screen
+
+Not every inbound document deserves a pipeline. The first question is usually asked in a corridor: *"can we
+do this, and roughly what would it cost?"* — and the answer needs to be good enough to decide **whether to
+invest days in an offer**, not good enough to send anyone.
+
+```
+/sa:screen "d:\WORK\Client\Their_RFP.docx"
+```
+
+One command, four steps — scaffold → ingest → clarify → screen — producing two files with deliberately
+different standing:
+
+| Output | Standing | Why |
+|---|---|---|
+| `requirements.json` | **Real** | The artifact every later step cites, and the most expensive thing to re-derive. If you bid, `/sa:design` picks it up as-is. |
+| `screen.md` | **Advisory** | Feasibility verdict, named blockers, an order-of-magnitude effort band. Nothing cites it, no deliverable is built from it, and it is excluded from `inputs_hash`. |
+
+It writes **no `estimation.json` and no `offer.json`** — and that omission is the entire reason a
+multi-step command is acceptable here. A coarse number sitting in the file an offer is generated from is a
+defect waiting to be signed; the same number in `screen.md` is an honest answer to a different question
+(`ESTIMATION-METHOD.md` §8).
+
+**Depth of pass and lane are independent axes.** A screen is *not* the `rom` lane. `rom` is a statement
+about an engagement's commercial weight; a screen is a statement about how deep this particular sweep goes.
+The largest RFP in the pipeline still starts with someone asking whether to bid it, so `/sa:screen` runs on
+any lane and on none — and it deliberately does *not* make you commit to a lane first, since that would
+invert the question you're asking.
+
+The verdict is one of four, and two of them are "no": `can-do`, `can-do-if` (with the conditions listed as
+things someone must go get), `probably-not`, and `cannot-assess` — the honest outcome when a document is too
+thin to judge. A screen that cannot say no has no value, so none of the four is ever softened into another.
+
+The band is **never quotable**, rate card or not. `screen.md` says so in its own header, not just in the
+report. `req-estimator` never reads it as an anchor, and `req-estimate-critic` never critiques it — a band
+with no PERT, no contingency and no calibration isn't a method violation, it's the specification.
+
+---
+
 ## The three lanes
 
 Pick once, at `/sa:triage`. It's reversible — re-running triage updates the engagement in place.
@@ -70,8 +109,9 @@ small bid costs a few hours; under-delivering on a large one costs the bid.
 
 | Command | Produces | Agent |
 |---|---|---|
+| `/sa:screen` | `requirements.json` (real) + `screen.md` — feasibility verdict and a non-quotable effort band *(the bid/no-bid pass)* | `req-screener` |
 | `/sa:triage` | `engagement.json` + `ENGAGEMENT.md` + `STATE.md`, and the lane | — |
-| `/sa:brief` | `brief.md` — a comprehension read of the inbound documents *(advisory)* | `doc-briefer` |
+| `/sa:brief` | `brief.md` — a comprehension read of the inbound documents, from a slug **or a bare path** *(advisory)* | `doc-briefer` |
 | `/sa:ingest` | `inputs/*.extracted.md` from Excel/Word/PDF | `req-ingestor` |
 | `/sa:clarify` | `requirements.json` — REQ-IDs, priority, status, source | `req-analyst` |
 | `/sa:design` | `architecture.json` — HLD, components, NFRs, integrations, phasing | `req-architect` |
@@ -100,7 +140,17 @@ Its reason to exist is a gap in the ordering above: `/sa:triage` makes you commi
 determines everything downstream, but triage is forbidden from *interpreting* the inbound material ("No
 analysis here"), and `/sa:ingest` is likewise extraction-only. The first interpreted output is
 `/sa:clarify` — two steps after the lane was chosen. `/sa:brief` closes that without weakening either
-rule. `/doc-brief <path>` is the same thing outside an engagement.
+rule.
+
+**It takes a bare path, not just a slug** — `/sa:brief "…\Their_TSD.docx"` works with no engagement in
+existence, which is the pre-triage form and the one worth reaching for, since the lane call is what needs
+the read. `/doc-brief <path>` is the same agent for documents unrelated to any bid.
+
+Because it is advisory it never appears in a `STATE.md` `Next`. So the practical choice is: triage blind,
+or brief first. `/sa:triage` and `/sa:ingest` both *offer* it — triage when it classified documents you
+hadn't read, ingest when no `brief.md` exists yet — but neither runs it and neither treats it as a phase.
+Nothing is lost by skipping it: the lane is reversible, so a brief that changes the picture is answered by
+re-running `/sa:triage`.
 
 ---
 
@@ -178,16 +228,18 @@ Six checks are **blocking and unwaivable**, each one a defect that would otherwi
 ## Worked example — an inbound TSD
 
 ```powershell
-/doc-brief  "d:\WORK\Client\Their_TSD_v1.0.docx"
+/sa:brief   "d:\WORK\Client\Their_TSD_v1.0.docx"
 # → optional but recommended: read it before you classify it. Section map, key facts,
-#   integration surface, conspicuous gaps. Ask follow-ups against the same agent.
+#   integration surface, conspicuous gaps. Takes a bare path — no engagement needed yet.
+#   Follow-ups go to the same agent via SendMessage, which still holds the full text.
 
 /sa:triage  "d:\WORK\Client\Their_TSD_v1.0.docx"
 # → asks 3-5 intake questions, classifies the lane, scaffolds ai/sa/<slug>/
+#   Offers /sa:brief here if you classified without having read the document.
 
 /sa:ingest  <slug>              # TSD → inputs/*.extracted.md
 /sa:brief   <slug>              # → re-brief from the extractions, into ai/sa/<slug>/brief.md
-                                #   (skip if you already ran /doc-brief above)
+                                #   (skip if you already briefed the raw file above)
 /sa:clarify <slug>              # → REQ-IDs, with to_clarify where the TSD is vague
 /sa:design  <slug>              # → HLD; integrations marked assumed where no spec exists
 /sa:risk    <slug>              # → every assumed integration becomes a scored risk
@@ -261,6 +313,17 @@ of-truth data model, the estimate-critic's quantified heuristics, and the compli
 v1 runs one command at a time with human review between. That's the intended shape for now: the
 review points *are* the value on commercially binding work.
 
+**`/sa:screen` is the one deliberate exception, and where it draws its line is the whole argument.** It
+chains four steps unattended because it terminates in an *internal* bid/no-bid decision — nothing it writes
+can be built into a client deliverable, since it produces no `estimation.json` and no `offer.json`. It stops
+dead at the screen and will not run `/sa:design` onward even if asked. So the rule isn't "never chain"; it's
+**never chain across the point where output becomes something a client receives**. Everything from
+`/sa:design` to `/sa:package` stays one command at a time, because that's where the compounding happens: a
+misread requirement becomes a design, becomes a number, becomes a signature.
+
+Treat `/sa:screen` as the proving ground for the orchestrator below — it validates the chaining mechanics on
+the case where being wrong costs a conversation rather than a bid.
+
 Three properties were built in so an orchestrator can be added later without touching any agent:
 
 1. **Machine-readable state** — `engagement.json` carries the lane, `STATE.md` carries phase and next.
@@ -277,5 +340,9 @@ gate is a safety property, not a speed bump — `CONSTITUTION.md` Articles III a
 
 ---
 
-**Last revised**: 2026-08-12 (v1.1 — added `/sa:brief` / `doc-briefer` and the advisory non-artifact
-concept. v1.0 — initial workflow, lane model, and the presales/bid split from internal solution design).
+**Last revised**: 2026-08-12 (v1.3 — added `/sa:screen` / `req-screener`: the bid/no-bid pass, the
+depth-vs-lane distinction, advisory non-artifact #2, and the "never chain across the client boundary" rule
+that scopes it. v1.2 — documented `/sa:brief`'s bare-path pre-triage form, the
+`SendMessage` follow-up route, and the triage/ingest *offer* that makes an advisory command discoverable
+without making it a phase. v1.1 — added `/sa:brief` / `doc-briefer` and the advisory non-artifact concept.
+v1.0 — initial workflow, lane model, and the presales/bid split from internal solution design).

@@ -12,9 +12,10 @@ structured comprehension brief. The agent reads the full document so the calling
 to — a 50-page TSD costs tens of thousands of tokens to read inline, and that's context the human needs for
 the actual work.
 
-For an SA engagement with a slug, use `/sa:brief` instead — it resolves the engagement's already-extracted
-inputs and writes the brief into the engagement folder. This skill is the general-purpose form: any
-document, any folder, no pipeline involved.
+**If the document is headed for a bid, use `/sa:brief` instead** — including before any engagement exists,
+since it takes a bare path too. It resolves an engagement's already-extracted inputs when given a slug, and
+writes the brief into the engagement folder rather than beside the source file. This skill is the
+general-purpose form: any document, any folder, no pipeline involved and none intended.
 
 ## Usage
 

@@ -12,7 +12,8 @@ allowed-tools:
 argument-hint: "[path-or-description]"
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — minor: offers `/sa:brief` in the confirm step when inbound documents were classified
+> unread, without making it a `Next` (the advisory carve-out, `ARTIFACT-SCHEMAS.md` §6).
 
 <objective>
 `/sa:triage [path-or-description]` classifies an inbound solution-architect ask into exactly one lane —
@@ -213,6 +214,15 @@ Next: <the same command written into STATE.md's Next>
 
 On a re-triage where the lane changed, add one line naming the old and new lane and which artifacts the
 new lane additionally expects.
+
+**When inbound documents exist and you asked the lane question without having read them**, add one further
+line offering `/sa:brief <slug>` — a comprehension read (section map, key facts, integration surface,
+conspicuous gaps) that this command is forbidden to produce itself. Offer it; never run it, and never write
+it into `Next`. `/sa:brief` is an advisory non-artifact (`ARTIFACT-SCHEMAS.md` §6) and `brief` is not a
+value in the phase enum, so it cannot be a `Next` without making `/sa:status` report a phase the lane model
+doesn't contain. Skip the line entirely when `brief.md` already exists or the triage input was a free-form
+description rather than a document — the lane is reversible, so a brief that changes the picture is
+answered by re-running `/sa:triage`, not by having blocked on it here.
 </step>
 </process>
 

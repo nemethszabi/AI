@@ -54,7 +54,7 @@ copy step above stays a deliberate, explicit action, never automatic.
 1. **Start a brand-new Claude Code session, under the profile you actually use** (`claude --profile scm`
    or `claude --profile nsz` — agent/command lists load at session start, see the restart gotcha below,
    and are per-profile, not shared with the default location).
-2. Run `/sa:help` — should print the `sa:` namespace reference (16 commands), not an error.
+2. Run `/sa:help` — should print the `sa:` namespace reference (17 commands), not an error.
 3. In any project with `ai/dev/STATE.md` already scaffolded, run `/dev:status` — should print that
    project's phase/gates, not "not initialized." In a project without one yet, run `/dev:init` and confirm
    it creates `ai/dev/STATE.md` + `config.json`.

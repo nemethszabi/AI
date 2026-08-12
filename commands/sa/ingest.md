@@ -11,7 +11,8 @@ allowed-tools:
 argument-hint: "<slug> <file-or-folder-path...> [--recursive]"
 ---
 
-> Version: 1.2.0
+> Version: 1.3.0 — minor: offers `/sa:brief` in the relay step when no `brief.md` exists yet; `Next`
+> stays `/sa:clarify` (the advisory carve-out, `ARTIFACT-SCHEMAS.md` §6).
 
 <objective>
 `/sa:ingest <slug> <path...> [--recursive]` extracts one or more Excel/Word/PDF/text files into
@@ -59,7 +60,13 @@ starts at `/sa:triage`.
 <step name="relay">
 Return the agent's summary (files extracted, files skipped and why, warnings) and the index file path.
 Remind the user that `/sa:clarify <slug>` is next — it picks up everything under `ai/sa/<slug>/inputs/`
-automatically. If `req-ingestor` flagged a file it couldn't handle (scanned PDF, legacy `.doc`), mention
+automatically.
+
+If `ai/sa/<slug>/brief.md` does not exist, add one line offering `/sa:brief <slug>` first: it reads the
+extractions you just produced and returns a section map, key facts, the integration surface and conspicuous
+gaps, which is what makes the `/sa:clarify` pass — and any lane correction — an informed one. Offer it,
+never run it, and leave `Next` as `/sa:clarify`: the brief is an advisory non-artifact
+(`ARTIFACT-SCHEMAS.md` §6), optional on every lane, and it never becomes a phase. If `req-ingestor` flagged a file it couldn't handle (scanned PDF, legacy `.doc`), mention
 that the `document-skills` plugin (`anthropic-agent-skills` marketplace — `docx`/`xlsx`/`pptx`/`pdf`
 skills, installed at user scope) is available in this session for that specific file via the `Skill` tool
 — `req-ingestor` itself never reaches for it, this command surfaces it as an option for you to invoke.

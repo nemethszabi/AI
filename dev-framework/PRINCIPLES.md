@@ -62,6 +62,27 @@ are `CONSTITUTION.md` Article II — not restated here, just enforced.
   `ai/context/`: follow `ai/dev/ARCHITECTURE.md`.
 - Deviation rule: if the plan says X but reality demands Y, do the smallest correct Y, document it under
   `## Deviations` in your report with rationale — never silently do something other than what was asked.
+- **Diagnose before fixing.** When the task is a bug/defect rather than new-feature work: before changing
+  anything, form a root-cause hypothesis grounded only in what you actually read this run — the error/
+  stack trace/log excerpt handed to you, plus the affected code. If the project maintains a bug-patterns
+  file under `ai/context/*.md` (commonly named `*-bug-patterns.md`), check it first — apply its documented
+  fix directly if a pattern matches, rather than re-deriving one from scratch, and append a new entry
+  there (following that file's own format) once you've fixed something not yet documented. State a
+  confidence level before implementing, using this fixed scale — also the scale to use for a `Confidence`
+  line in your own report format, where one exists:
+  - **High (85–100%)** — root cause confirmed by reading the actual code, log, or stack trace, and the
+    repro is unambiguous. A match in the project's bug-patterns file further confirms this but isn't
+    required — a genuinely novel bug can still be High if the evidence itself is conclusive.
+  - **Medium (60–84%)** — plausible but not fully confirmed (e.g. no direct repro, or the code reading is
+    inferential rather than a confirmed trace through the actual failure).
+  - **Low (<60%)** — inferred from limited evidence, best-effort.
+
+  Base the percentage on evidence quality, not how clean the resulting fix looks. If nothing in the
+  available evidence supports a hypothesis, say so and ask for more evidence (repro steps, logs) rather
+  than implementing a speculative fix. Before touching code, also weigh blast radius: does the fix affect
+  other callers of the changed method/endpoint, a public API surface, auth/session, or payment/money
+  handling? If so, read whatever project convention doc covers that area first, and flag the exposure
+  under `## Notes for gates`.
 
 ## 6. Report format
 
@@ -98,3 +119,12 @@ AI-tooling state grouped under the existing `ai/` folder (`ai/context/`, `ai/pro
 instead of adding a new top-level dot-folder. Also clarified that `contracts/` and `ARCHITECTURE.md`
 should point at a project's real, pre-existing sources of truth rather than being duplicated under
 `ai/dev/` when those already exist in code or in `ai/context/`.
+
+**Amendment note (2026-08-14)**: added the "Diagnose before fixing" quality default (§5), generalizing
+discipline that had been living ad hoc inside `net8-migration`'s `/scm:fix` command (confidence bands,
+bug-patterns-first, blast-radius check) — `ReaFlow`'s older, pre-agent monolithic fix prompt had
+independently reinvented a weaker version of the same thing, which is the drift this closes. Centralized
+here rather than duplicated into `dev-backend.md`/`dev-frontend.md` directly, since both already say
+"follow PRINCIPLES.md's rules, don't restate them" and inherit this automatically. Bug-fixing commands
+(e.g. `/scm:fix`) still own whatever's structurally project-only — DB/log access, issue-tracker
+integration, version-bump mechanics — since the dispatched agent's tool grant can't reach those anyway.

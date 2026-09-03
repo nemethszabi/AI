@@ -7,7 +7,6 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
-  - Bash
   - Agent
 argument-hint: "<slug from /sa:triage>"
 ---

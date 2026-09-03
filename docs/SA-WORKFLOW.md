@@ -118,7 +118,7 @@ small bid costs a few hours; under-delivering on a large one costs the bid.
 | `/sa:review` | `review.json` — narrative critique of the design | `req-reviewer` |
 | `/sa:design-detail` | `detailed-design.json` — LLD *(full-design lane only)* | `req-detailer` |
 | `/sa:risk` | `risk-register.json` — scored risks + compliance register | `req-risk-officer` |
-| `/sa:estimate` | `estimation.json` — three-point effort, one or two delivery models | `req-estimator` |
+| `/sa:estimate` | `estimation.json` — three-point best/likely/worst **AI-assisted** effort per line; `must`-only bare-minimum baseline with contingency, `should`/`could` priced separately as Optional; stricter on `rom` | `req-estimator` |
 | `/sa:estimate-review` | `estimate-review.json` — optimism bias, coverage, lifecycle gaps | `req-estimate-critic` |
 | `/sa:offer` | `offer.json` — the client-facing content | `req-offer` |
 | `/sa:audit` | `audit/audit-<ts>.md` — **the gate** | `req-auditor` |
@@ -190,21 +190,43 @@ This matters most under an AI-assisted model, where pricing man-days against a c
 destroy revenue on work whose value to the client hasn't changed. The pipeline flags that; it doesn't
 resolve it.
 
-### 4. Compression is differentiated, never uniform
+### 4. AI-assisted is the delivery model, not a discount applied to one
 
-Where an AI-assisted estimate is produced, each line is compressed by its **own** work-type factor
-(`ESTIMATION-METHOD.md §2`): UI and CRUD compress hard, external integration barely, UAT and coordination
-almost not at all.
+`req-estimator` sizes AI-assisted effort **directly** — it no longer builds a hypothetical traditional
+estimate and divides it down. `estimation.json.basis.model` defaults to, and normally stays, `ai-assisted`;
+a `traditional`/`both` comparison figure is opt-in only, requires a stated reason, and is never produced on
+`rom` (`ESTIMATION-METHOD.md §2`). Each line still carries a `K1`–`K6` work-type category, but it's now a
+**sanity band**, not a division mechanic: UI/CRUD carries very high AI leverage, external integration and
+UAT/coordination carry the least, and a number that doesn't fit its category's band is a defect to catch
+before it ships.
 
-The most expensive misreading of a compressed estimate is generalising one headline factor to everything.
-Calendar time, client decisions, third-party roadmaps and UAT windows **do not compress**. Every
-AI-assisted estimate says this out loud, and the offer repeats it.
+The most expensive misreading of an AI-assisted estimate is generalising one headline leverage ratio to
+everything. Calendar time, client decisions, third-party roadmaps and UAT windows **do not compress**.
+Every estimate says this out loud, and the offer repeats it.
 
-An AI-assisted figure also stays **uncommitted** until a short calibration sprint measures real velocity on
-real items from *this* engagement. Until then it's quoted as a range with the gate named. Present that as
-a strength — it converts an unbounded estimation risk into a bounded, client-visible checkpoint.
+The figure also stays **uncommitted** until a short calibration sprint measures real velocity on real items
+from *this* engagement. Until then it's quoted as a range with the gate named. Present that as a strength —
+it converts an unbounded estimation risk into a bounded, client-visible checkpoint.
 
-### 5. One hard gate, in one place
+### 5. Baseline is must-only and bare-minimum; everything else is priced but optional
+
+`req-estimator` sizes two tiers, never blended (`ESTIMATION-METHOD.md §9`):
+
+- **Baseline** — every `must`-priority requirement, sized to the *leanest implementation that still fully
+  satisfies it*. Bare-minimum is a discipline on effort, never on scope — a `must` is never under-delivered
+  to hit a smaller number; that's a requirement-change conversation, not an estimating one. Contingency
+  (decision 2) applies here, and only here.
+- **Optional** — every `should`/`could`-priority requirement, estimated with the same rigor but excluded
+  from the baseline total, its own contingency, and any commitment. It's listed, priced, and addable by an
+  explicit client decision, never folded silently into the headline number.
+
+**On the `rom` lane this is enforced harder, not lighter** (`ESTIMATION-METHOD.md §10`): bare-minimum is
+mandatory on every line with no exceptions, a `traditional`/`both` comparison is refused even on request,
+and `likely` is never rounded up "to be safe" — the first number said out loud tends to anchor a client's
+expectations harder than any later, better-informed one, so the response to having the least information of
+any lane is more estimating discipline, not less.
+
+### 6. One hard gate, in one place
 
 `/sa:package` refuses to build a client deliverable unless `/sa:audit` shows `PASS` or
 `PASS-WITH-WAIVERS` **on a matching content hash**. Change any artifact and the gate goes stale — by
@@ -214,14 +236,16 @@ content, never by timestamp, so touching a file without changing it doesn't inva
 whether a judgment was good. That's what makes the gate unarguable. Judgment lives in `/sa:review` and
 `/sa:estimate-review`, and neither of those blocks anything.
 
-Six checks are **blocking and unwaivable**, each one a defect that would otherwise reach a client:
+Seven checks are **blocking and unwaivable**, each one a defect that would otherwise reach a client:
 
 1. An offer scope line with no traceability
 2. A `must` requirement with no estimate and no reasoned deferral
 3. A `priced_in: false` risk with no exclusion
 4. A broken ID reference between artifacts
-5. Offer scope containing a `to_clarify`, unestimated, or unrequested `could` item
+5. Offer scope containing a `to_clarify`, unestimated, or `should`/`could` item (that belongs in
+   `scope.optional`, not `in_scope` — decision 5)
 6. A price stated with no rate card behind it
+7. A `traditional`/`both` delivery model recorded on the `rom` lane (decision 5 forbids it outright)
 
 ---
 
@@ -243,7 +267,8 @@ Six checks are **blocking and unwaivable**, each one a defect that would otherwi
 /sa:clarify <slug>              # → REQ-IDs, with to_clarify where the TSD is vague
 /sa:design  <slug>              # → HLD; integrations marked assumed where no spec exists
 /sa:risk    <slug>              # → every assumed integration becomes a scored risk
-/sa:estimate <slug>             # → three-point effort; contingency from the register
+/sa:estimate <slug>             # → AI-assisted three-point effort; must-only baseline + priced optional;
+                                #   contingency from the register
 /sa:estimate-review <slug>      # → optimism bias, lifecycle gaps
 /sa:offer   <slug>              # → client-facing content
 /sa:audit   <slug>              # → the gate
@@ -340,7 +365,12 @@ gate is a safety property, not a speed bump — `CONSTITUTION.md` Articles III a
 
 ---
 
-**Last revised**: 2026-08-12 (v1.3 — added `/sa:screen` / `req-screener`: the bid/no-bid pass, the
+**Last revised**: 2026-09-03 (v1.4 — decision 4 rewritten and decision 5 added for the estimation-doctrine
+update: AI-assisted is now the only delivery model estimated by default (`traditional`/`both` opt-in,
+never on `rom`), and the baseline is `must`-only and bare-minimum, with `should`/`could` priced separately
+as Optional and `rom` held to a stricter standard (`ESTIMATION-METHOD.md §2, §9, §10`). The blocking-checks
+list grew from six to seven (the new `rom` model-restriction check) and item 5's wording widened from
+`could` to `should`/`could`. v1.3 — added `/sa:screen` / `req-screener`: the bid/no-bid pass, the
 depth-vs-lane distinction, advisory non-artifact #2, and the "never chain across the client boundary" rule
 that scopes it. v1.2 — documented `/sa:brief`'s bare-path pre-triage form, the
 `SendMessage` follow-up route, and the triage/ingest *offer* that makes an advisory command discoverable

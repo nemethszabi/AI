@@ -4,7 +4,9 @@ description: Static reference for the sa: command namespace. No live analysis, n
 allowed-tools: []
 ---
 
-> Version: 2.3.0 — minor: `/sa:screen` (the bid/no-bid pass) documented, the advisory non-artifact pair
+> Version: 2.4.0 — minor: `/sa:estimate`'s row updated for the AI-assisted-only default and the
+> must-only-baseline/priced-optional split (`ESTIMATION-METHOD.md §2, §9`). 2.3.0 — `/sa:screen` (the
+> bid/no-bid pass) documented, the advisory non-artifact pair
 > and the screening-band-is-not-an-estimate boundary added to Shared conventions. 2.2.0 — `/sa:brief`'s
 > `<slug-or-path>` pre-triage form documented (it was listed
 > `<slug>`-only, hiding the form it was built for), and the read-before-you-classify habit added to
@@ -59,7 +61,7 @@ re-run `/sa:triage` to change it, and it never re-scaffolds over existing artifa
 |---|---|---|
 | `/sa:ingest <slug> <path...> [--recursive]` | `inputs/*.extracted.md` — inbound Excel/Word/PDF/text turned into citable Markdown. `inputs/` is immutable afterwards. Folder scans are one level deep unless `--recursive`. | `req-ingestor` |
 | `/sa:clarify <slug-or-description>` | `requirements.json` + `requirements.md` — `REQ-NNN` items with priority, status, source, and the open questions blocking them. | `req-analyst` |
-| `/sa:estimate <slug>` | `estimation.json` + `estimation.md` — three-point best/likely/worst per line with computed PERT, K-category compression, contingency rollup, coverage against `must` requirements. | `req-estimator` |
+| `/sa:estimate <slug>` | `estimation.json` + `estimation.md` — AI-assisted three-point best/likely/worst per line with computed PERT, bare-minimum `must`-only baseline plus separately priced `should`/`could` optional items, contingency on the baseline, coverage against `must` requirements. | `req-estimator` |
 | `/sa:offer <slug>` | `offer.json` + `offer.md` — the client-facing offer's **content**: scope in/out, delivery plan, commercial basis, assumptions, exclusions, client dependencies. Every scope line traces to another artifact. | `req-offer` |
 
 ### Added by `offer-sow`

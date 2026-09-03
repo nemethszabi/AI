@@ -13,7 +13,7 @@ allowed-tools:
 argument-hint: "<slug> [offer|estimation-pack|hld|lld|pitch|all] [--mode=auto|regenerate|patch]"
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0
 
 <objective>
 `/sa:package <slug> [type] [--mode=]` renders `ai/sa/<slug>/`'s JSON artifacts into the actual
@@ -98,10 +98,14 @@ openpyxl/python-docx/python-pptx styling inline.
 
 - **`offer`** → DOCX from `offer.json`, sections in the order of `req-offer`'s own output template.
 - **`estimation-pack`** → XLSX from `estimation.json` + `rates.yaml` if one was used:
-  Tab 1 Summary (best/likely/worst, contingency and buffer shown separately) ·
-  Tab 2 Line items (one row per `L-`, with its REQ/component/QA citations and K-category) ·
+  Tab 1 Summary — **baseline** best/likely/worst with contingency and buffer shown separately, and a
+  distinct **optional** total below it, clearly labelled "not included above" ·
+  Tab 2 Line items (one row per `L-`, with its REQ/component/QA citations, K-category and
+  `scope_tier` — baseline and optional rows visually separated, never interleaved) ·
   Tab 3 Assumptions & exclusions · Tab 4 Coverage matrix (REQ × component × line).
-  Where both delivery models were estimated, show them side by side — never merge them into one column.
+  If a `traditional` comparison figure exists (opt-in only, per `ESTIMATION-METHOD.md §2`), show it
+  alongside `ai_assisted` in its own column, labelled "comparison — not the delivery model priced" —
+  never merged into one column and never given equal visual weight to the AI-assisted figure.
 - **`hld`** → DOCX from `architecture.json`. **`lld`** → DOCX from `detailed-design.json`.
 - **`pitch`** → PPTX, 8–12 slides: Title · Their objectives · Our understanding · Solution · Delivery ·
   Investment · Risks & controls · Next steps.

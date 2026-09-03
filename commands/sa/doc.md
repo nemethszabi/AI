@@ -10,7 +10,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:triage>"
 ---
 
-> Version: 2.0.0
+> Version: 2.1.0
 
 <objective>
 `/sa:doc <slug>` consolidates whichever of `ai/sa/<slug>/`'s artifacts exist into one clean document at
@@ -66,8 +66,11 @@ Read `estimation.json.basis.rate_card`. If it is `null` (or the card exists with
 If a rate card **was** used, present cost as the arithmetic consequence of effort × rate, labelled as an
 input to a pricing decision rather than as the price — and never reproduce the rate card itself.
 
-Where `estimation.json.basis.model` is `both`, show traditional and AI-assisted side by side; never merge
-them into one figure. If `basis.commitment_gate` is set, carry it verbatim next to any AI-assisted number.
+Lead with the **baseline** (must-have) figure — `estimation.json.rollup.baseline`, AI-assisted, per
+`ESTIMATION-METHOD.md §9.1`. Show `rollup.optional`'s total separately, clearly marked as priced but not
+included. If `basis.model` is `traditional`/`both` (opt-in only, per §2), show the `traditional` figure
+alongside `ai_assisted` labelled as a comparison, never merged into one figure. If `basis.commitment_gate`
+is set, carry it verbatim next to the baseline AI-assisted number.
 </step>
 
 <step name="write-package">
@@ -109,9 +112,10 @@ its rationale; every risk with `priced_in: false`; every compliance obligation w
 true`>
 
 ## Effort
-<rollup best/likely/worst per delivery model, contingency and buffer shown as separate figures with their
-own rationales, `must` coverage, and everything in `not_estimated` with its reason — per the commercial
-basis resolved above>
+<baseline (must-have) rollup best/likely/worst, AI-assisted, contingency and buffer shown as separate
+figures with their own rationales; the optional (should/could) total shown separately and marked "not
+included above"; `must` coverage; everything in `not_estimated` with its reason; a `traditional`
+comparison figure only if one was explicitly produced — per the commercial basis resolved above>
 
 ## Estimate Critique
 <finding count by severity, the recommended adjustments not yet applied, and any lifecycle gaps from

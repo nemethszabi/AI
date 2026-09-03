@@ -40,37 +40,62 @@ workbook did, reads as machine output rather than professional judgment.
 
 ---
 
-## 2. Delivery models and K-categories
+## 2. Delivery model and K-categories
 
-Two delivery models may be estimated. `estimation.json.basis.model` records which.
+`req-estimator` estimates **one delivery model: AI-assisted.** That is how the work is actually going to be
+delivered, so that is what gets sized — directly, not by building a hypothetical non-AI estimate first and
+discounting it.
 
-- **`traditional`** — conventional human delivery. Also serves as the **priced fallback ceiling**: if the
-  AI-assisted model underperforms, this is the number the commercial position retreats to.
-- **`ai-assisted`** — AI-augmented delivery, derived by dividing traditional figures by a
-  **work-type-specific compression factor**, then re-running PERT.
-- **`both`** — recommended default for any offer. Quoting both gives a defensible range and makes the
-  fallback explicit rather than hidden.
+`estimation.json.basis.model` **defaults to `"ai-assisted"` and this is normally the only value it takes.**
+`traditional` and `both` are opt-in, never the default, and exist only for the rare case where a client or
+internal stakeholder explicitly needs a non-AI comparison figure — e.g. a procurement process that
+requires a "business as usual" baseline for contrast. `req-estimator` **asks before producing one**
+(`AskUserQuestion`) rather than computing it just because the schema allows it, and records the reason in
+`basis.model_rationale`. A `traditional` figure, when produced, is labelled on its face as a **comparison
+figure, not the delivery model being priced** — it is never the number an offer quotes.
 
-### The compression factors
+**On the `rom` lane, `traditional`/`both` are never produced, full stop** — see §10.
 
-| K | Work type | Factor | Why this factor |
+This reverses the framework's original default (`both`, with traditional serving as "the priced fallback
+ceiling"). That framing assumed AI-assisted delivery was the exception needing a hedge; it is now the
+delivery model being sold, and estimating a parallel legacy figure nobody will use is effort spent
+producing a number nobody asked for.
+
+### The K-categories
+
+Every line still carries a `k_category` (`K1`–`K6`) — not to derive the AI-assisted figure by dividing a
+constructed traditional number, but because the category is the fastest sanity check available, to the
+estimator and to `req-estimate-critic`, that a figure is the right *shape* for the work:
+
+| K | Work type | Typical AI leverage vs. non-AI delivery | Why |
 |---|---|---|---|
-| **K1** | CRUD, UI, admin screens, list/detail/export | **÷3–5** | Highest-leverage generation. Well-patterned, verifiable by inspection. |
-| **K2** | Business-logic engines, workflow, state machines, data models | **÷3–3.5** | Strong generation, but correctness needs real test design. |
-| **K3** | External/third-party integration | **÷~2** | **The external system's behaviour is the constraint, not typing speed.** Undocumented APIs, latency windows, webhook timing — code generation barely helps. |
-| **K4** | Test, UAT, stabilisation | **÷~1.5** | Human- and calendar-bound. Deliberately the least compressed line. |
-| **K5** | PM, coordination, client meetings | **÷~2** | Bound by other people's availability. |
-| **K6** | Documentation | **÷~3** | Compresses well; review still human. |
+| **K1** | CRUD, UI, admin screens, list/detail/export | Very high (reference: ÷3–5) | Highest-leverage generation. Well-patterned, verifiable by inspection. |
+| **K2** | Business-logic engines, workflow, state machines, data models | High (reference: ÷3–3.5) | Strong generation, but correctness needs real test design. |
+| **K3** | External/third-party integration | Low (reference: ÷~2) | **The external system's behaviour is the constraint, not typing speed.** Undocumented APIs, latency windows, webhook timing — generation barely helps. |
+| **K4** | Test, UAT, stabilisation | Lowest (reference: ÷~1.5) | Human- and calendar-bound. Deliberately the category to lean on least when a figure feels tight. |
+| **K5** | PM, coordination, client meetings | Low (reference: ÷~2) | Bound by other people's availability. |
+| **K6** | Documentation | Moderate–high (reference: ÷~3) | Compresses well; review still human. |
+
+The "reference" ratios are what the same class of work has historically cost in non-AI delivery, per the
+Netrisk calibration (§4) — kept here as a **sanity band**, not a formula to run every time. Size each
+line's AI-assisted best/likely/worst **directly**, informed by the calibration source and the line's own
+history if one exists, then check the result against the band for its category. A `K3` integration line
+priced as if it carries `K1` leverage, or a `K4` test line compressed as hard as a `K1` screen, is the
+single most expensive misreading of this method and is a defect to catch before `req-estimate-critic` does.
+
+Where a `traditional` figure is separately produced (the opt-in case above), the ratio
+`traditional.likely / ai_assisted.likely` should land inside its line's band — `req-estimate-critic`
+dimension 6 checks this arithmetically when both figures exist, and records it as not checkable when they
+don't.
 
 ### The rule that matters most
 
-**Compression is differentiated, never uniform.** The single most common and most expensive misreading is
-to take a headline factor and apply it to everything. Calendar time, client decisions, third-party
-roadmaps, and UAT windows **do not compress at all.**
-
-State this explicitly in every AI-assisted estimate. The Netrisk v2 register carried it as a named risk
-(*"stakeholders generalise the compression to everything"*, rated High/Medium) precisely because it had
-already happened once in conversation.
+**AI leverage is differentiated, never uniform.** The single most common and most expensive misreading is
+to take a headline ratio and apply it to everything. Calendar time, client decisions, third-party
+roadmaps, and UAT windows **do not compress at all**, regardless of delivery model — state this explicitly
+in every estimate. The Netrisk v2 register carried it as a named risk (*"stakeholders generalise the
+compression to everything"*, rated High/Medium) precisely because it had already happened once in
+conversation.
 
 ---
 
@@ -281,6 +306,93 @@ different question.
 
 ---
 
-**Last revised**: 2026-08-12 (v1.1 — added §8, the screening-band carve-out for `req-screener`. v1.0 —
-initial codification from the Netrisk CampaignManager v1/v2
-estimates and their risk registers).
+## 9. Scope discipline: bare-minimum baseline, priced optionality
+
+Two independent disciplines, both mandatory on every estimate regardless of lane.
+
+### 9.1 Baseline = `must`-priority only
+
+The estimate's **baseline** is the set of `must`-priority requirements in `requirements.json` — nothing
+else. `should`- and `could`-priority requirements are estimated as separate, individually PERT'd
+**Optional** line items (`scope_tier: "optional"`) — same rigor, same K-category, same three-point
+discipline — but:
+
+- **Excluded from the baseline rollup and from contingency.** Contingency is sized against the baseline's
+  own risk profile (§3); blending optional scope into it either overstates the baseline's risk or
+  understates the optional item's own.
+- **Listed on their own, with their own PERT'd effort**, so a reader can add any of them by an explicit
+  decision — never because they rode along silently inside the headline number.
+- **Never silently promoted to baseline.** A `should` item the client clearly needs is a signal to send
+  back to `req-analyst` for reclassification to `must` — not license for `req-estimator` to fold it in on
+  its own judgment. Estimating is not the place to relitigate priority.
+
+The result is a headline number a client can act on immediately, with everything beyond it priced and
+visible rather than buried inside it.
+
+### 9.2 Bare-minimum sizing within the baseline
+
+Every baseline line is sized to the **leanest implementation that still fully satisfies the requirement as
+written** — not the most convenient one to build, not one with headroom for a use case nobody asked for,
+not "while we're already in this component." Bare-minimum is a discipline on **effort**, never a
+discipline on **scope**: it does not mean delivering less than a `must` requirement demands. A requirement
+that cannot be met leanly is estimated at whatever it genuinely takes — reducing what a `must` requirement
+actually delivers in order to hit a smaller number is scope-cutting, not estimating, and belongs to
+`req-analyst` and the client as a requirement-change conversation, never a unilateral move inside
+`req-estimator`.
+
+Concretely, for every baseline line:
+
+- Assume the smallest defensible design that meets the requirement — no speculative extensibility, no
+  configurability beyond what was asked for, no abstraction built for a second use case that doesn't exist
+  yet.
+- Record in `notes` what was deliberately kept minimal, so the client can see where headroom was traded
+  away and ask for it back as an explicit, priced option if they want it.
+- Where a leaner alternative would change *what* the requirement delivers rather than merely *how* it's
+  built, that is not a bare-minimum sizing choice — raise it as an assumption, or send it to `req-analyst`.
+
+**Contingency still applies as usual** (§3), sized from the risk register against the bare-minimum
+baseline. Bare-minimum sizing tightens the estimate; it does not remove the uncertainty the register
+already priced in — the two are not the same lever, and contingency is never shrunk to compensate for
+scope already having been trimmed.
+
+---
+
+## 10. The `rom` lane is estimated more strictly than the others
+
+A ROM (rough order of magnitude) figure is produced with the least design and the least risk information
+of any lane, and yet tends to anchor client expectations harder than any later, better-informed number —
+the first number said out loud is the one people remember. `req-estimator` responds to that with **more**
+discipline on `rom`, not less, which runs opposite to what "rough" suggests:
+
+- **Bare-minimum is mandatory, not best-effort, on every line** — §9.2 applies with no exceptions. There is
+  no architecture yet to reveal genuine complexity, so the honest response to that ignorance is the
+  leanest defensible reading of each requirement, never a comfortable middle figure.
+- **`traditional`/`both` are never produced on `rom`, even on explicit request.** A ROM engagement has the
+  thinnest basis of any lane for a second delivery model, and offering one invites exactly the
+  anchor-shopping a ROM figure exists to foreclose.
+- **`likely` is never quietly rounded up "to be safe."** A ROM's job is a tight, honest band, not a padded
+  one — uncertainty belongs in the contingency percentage (§3), a number anyone can see and question, not
+  folded invisibly into `likely`.
+- **State plainly, in `basis`, that the figure was produced without an architecture and without a risk
+  register**, and that it will move — often materially — once `/sa:design` and `/sa:risk` exist. A `rom`
+  figure that reads as final is a defect regardless of how carefully it was built.
+- **Contingency is still derived, never skipped**, even without a register — from whatever unconfirmed
+  integrations and assumptions are visible, or from the requirements' own `to_clarify` count, per the
+  fallback already described for `req-estimator` in its `load-inputs` step — stated plainly as weaker for
+  the missing register.
+- **The §9.1 baseline/optional split still applies**, undiluted. A `rom` figure that quietly includes
+  `should`/`could` scope in its headline number is the easiest way for a rough number to be mistaken for a
+  firm one.
+
+None of this changes the lane table in `ARTIFACT-SCHEMAS.md §4.1` — `rom` still skips `/sa:design` and
+`/sa:risk` by design. It changes how tightly `req-estimator` holds itself to §9 *within* that lighter
+pipeline, precisely because less rigor upstream is a reason for more discipline at the estimating step, not
+less.
+
+---
+
+**Last revised**: 2026-09-03 (v1.2 — §2 rewritten: AI-assisted is now the only delivery model estimated by
+default, `traditional`/`both` are opt-in and require a stated reason; added §9 (must-only baseline, priced
+optionality, bare-minimum sizing) and §10 (stricter, bare-minimum-mandatory `rom` lane). v1.1 — added §8,
+the screening-band carve-out for `req-screener`. v1.0 — initial codification from the Netrisk
+CampaignManager v1/v2 estimates and their risk registers).

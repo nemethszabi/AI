@@ -313,7 +313,8 @@ as an exclusion in `offer.json`.
   "meta": { "...": "artifact: estimation" },
   "basis": {
     "unit": "man-days",
-    "model": "both",
+    "model": "ai-assisted",
+    "model_rationale": null,
     "rate_card": null,
     "rate_card_note": "No rate card found — effort-only output.",
     "calibration_source": "Netrisk CM v2 (2026-08-10)",
@@ -326,20 +327,29 @@ as an exclusion in `offer.json`.
       "category": "build",
       "addresses": { "req": ["REQ-005"], "components": ["C-003"], "qa": [] },
       "k_category": "K2",
-      "traditional": { "best": 18, "likely": 26, "worst": 40, "pert": 26.3 },
+      "scope_tier": "baseline",
       "ai_assisted": { "best": 6, "likely": 9, "worst": 14, "pert": 9.3 },
+      "traditional": null,
       "uncertainty": "medium",
       "assumptions": ["A-002"],
-      "notes": ""
+      "notes": "Single-column layout only; multi-column configurability was kept out — see A-002."
     }
   ],
   "rollup": {
-    "traditional": { "best": 0, "likely": 0, "worst": 0 },
-    "ai_assisted": { "best": 0, "likely": 0, "worst": 0 },
-    "contingency_percent": 15,
-    "contingency_rationale": "From risk-register.json contingency_recommendation.",
-    "buffer_percent": 0,
-    "totals_with_contingency": {}
+    "baseline": {
+      "ai_assisted": { "best": 0, "likely": 0, "worst": 0 },
+      "traditional": null,
+      "contingency_percent": 15,
+      "contingency_rationale": "From risk-register.json contingency_recommendation.",
+      "buffer_percent": 0,
+      "totals_with_contingency": { "ai_assisted": 0, "traditional": null }
+    },
+    "optional": {
+      "ai_assisted": { "best": 0, "likely": 0, "worst": 0 },
+      "traditional": null,
+      "items": [],
+      "note": "should/could-priority scope. Not included in baseline totals or contingency; priced independently for the client to add."
+    }
   },
   "summary": "What changed since the previous revision, or the estimate's headline on a first run.",
   "assumptions": [ { "id": "A-002", "text": "..." } ],
@@ -349,9 +359,17 @@ as an exclusion in `offer.json`.
 }
 ```
 
-`model` is `traditional` \| `ai-assisted` \| `both`. `k_category` is `K1`–`K6` per
-`ESTIMATION-METHOD.md §2`; `null` for zero-effort lines. `pert` is **computed**, never typed by hand:
-`(best + 4×likely + worst) / 6`.
+| Field | Rule |
+|---|---|
+| `basis.model` | `ai-assisted` \| `traditional` \| `both`. **Defaults to, and normally stays, `ai-assisted`** per `ESTIMATION-METHOD.md §2`. Never `traditional`/`both` on the `rom` lane (§10). |
+| `basis.model_rationale` | `null` when `model` is `ai-assisted`. Required, non-null when `model` is `traditional` or `both` — the explicit reason a non-AI comparison figure was requested. |
+| `lines[].scope_tier` | `baseline` \| `optional`. Mirrors the source requirement's priority: `must` → `baseline`, `should`/`could` → `optional` (`ESTIMATION-METHOD.md §9.1`). Never set independently of the requirement's priority. |
+| `lines[].ai_assisted` | **Required on every line**, estimated directly per `ESTIMATION-METHOD.md §2` — not derived by dividing a `traditional` figure. |
+| `lines[].traditional` | `null` unless `basis.model` is `traditional`/`both`. Present only for the rare, explicitly-requested comparison case. |
+| `k_category` | `K1`–`K6` per `ESTIMATION-METHOD.md §2`; `null` for zero-effort lines. |
+| `pert` | **Computed**, never typed by hand: `(best + 4×likely + worst) / 6`. |
+| `rollup.baseline` | `must`-priority lines only. Contingency (§3) is derived and applied here, never against `optional`. |
+| `rollup.optional` | `should`/`could`-priority lines. No contingency or buffer of its own by default; `items` lists the contributing `L-ID`s. Never summed into `rollup.baseline`. |
 
 An item that genuinely cannot be estimated goes in `not_estimated` with a reason — never as a guessed
 line, and never silently folded into "misc".
@@ -383,6 +401,7 @@ nothing**.
   "understanding": "Our reading of the client's need, in their language.",
   "scope": {
     "in_scope": [ { "text": "", "traces_to": ["REQ-001"] } ],
+    "optional": [ { "text": "", "traces_to": ["REQ-009"], "indicative_effort": "estimation.json L-014, ai_assisted.likely" } ],
     "out_of_scope": [ { "text": "", "traces_to": ["X-001"] } ]
   },
   "solution_summary": { "text": "", "traces_to": ["C-001"] },
@@ -404,6 +423,12 @@ nothing**.
 
 **Every `in_scope` entry carries a non-empty `traces_to`.** An offer line with nothing behind it is a
 scope commitment nobody estimated — the single most expensive defect this pipeline exists to prevent.
+
+`scope.optional[]` mirrors `estimation.json`'s `rollup.optional` (`should`/`could`-priority requirements,
+`ESTIMATION-METHOD.md §9.1`): priced, traceable, and visible to the client, but never summed into
+`commercial.figures`' baseline total and never implied to be included unless the client asks for it
+explicitly. An optional item the estimator didn't size does not appear here — it appears in
+`not_estimated` upstream instead.
 
 ---
 
@@ -540,8 +565,11 @@ framework's `/dev:auto` is exactly the pattern this one declines to copy.
 
 ---
 
-**Last revised**: 2026-08-12 (v1.2 — `screen.md` added as advisory non-artifact #2, and §6's carve-out
-generalized from one file to a two-entry table. v1.1 — added §6's *advisory non-artifact* concept and the
-`brief.md` carve-out: no JSON source of truth, excluded from the §5 `inputs_hash`, no `STATE.md` update,
-never `extra` in `/sa:status`. v1.0 — initial schema set, created alongside the lane model and the
-presales/bid split from internal solution design).
+**Last revised**: 2026-09-03 (v1.3 — §4.7 `estimation.json`: `basis.model` defaults to `ai-assisted`
+(`traditional`/`both` now opt-in, with `basis.model_rationale`); added `lines[].scope_tier` and split
+`rollup` into `baseline`/`optional`, per `ESTIMATION-METHOD.md §9`. §4.9 `offer.json`: added
+`scope.optional[]` mirroring the estimator's optional tier. v1.2 — `screen.md` added as advisory
+non-artifact #2, and §6's carve-out generalized from one file to a two-entry table. v1.1 — added §6's
+*advisory non-artifact* concept and the `brief.md` carve-out: no JSON source of truth, excluded from the §5
+`inputs_hash`, no `STATE.md` update, never `extra` in `/sa:status`. v1.0 — initial schema set, created
+alongside the lane model and the presales/bid split from internal solution design).

@@ -1,7 +1,7 @@
 ---
 name: req-ingestor
 description: Extracts inbound Excel/Word/PDF/text files into readable Markdown under ai/sa/<slug>/inputs/, so req-analyst can cite them as source material. Mechanical extraction only — no interpretation of what the content means, no requirement-writing. Generic across domains; the read-side on-ramp to the lightweight sa: pipeline. Use after dropping client files (RFP, existing estimate, design doc) into a project, typically via /sa:ingest, before running /sa:clarify.
-tools: Read, Bash, Write, Glob
+tools: Read, Bash(python:*), Write, Glob
 color: teal
 ---
 

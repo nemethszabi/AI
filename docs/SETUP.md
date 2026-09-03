@@ -99,6 +99,21 @@ or the default profile; repeat both commands under each profile you actually use
 Source-available, not open-source (Anthropic's own README) — a real dependency to trust deliberately, not
 a default reach.
 
+## Optional: the `frontend-design` plugin (HTML/CSS work)
+
+Not part of this repo's own agents/commands — a general-purpose Anthropic plugin for producing distinctive,
+production-grade frontend UI instead of generic AI-default styling. Relevant any time a task involves
+writing or reviewing HTML/CSS (dashboards, landing pages, artifact-based UI mockups). Installed via:
+
+```
+claude plugin marketplace add anthropics/claude-plugins-official   # already added on this machine
+claude plugin install frontend-design@claude-plugins-official --scope user
+```
+
+**Same per-profile gotcha as `document-skills` above** — installed 2026-09-03 on all three config roots
+(default, `claude-scm`, `claude-nsz`) since there is no shared/global plugin location across them. Repeat
+on any additional profile you set up later.
+
 ## Troubleshooting
 
 **A command isn't found (`/dev:status` etc. don't autocomplete or error out).**

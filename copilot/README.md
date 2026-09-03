@@ -70,15 +70,16 @@ before copying, so this was a clean additive copy, nothing clobbered) — the do
   ```
 - **Done** — merged `copilot\AGENTS.md` into `~/.copilot/AGENTS.md` (no pre-existing file there, so this
   was a plain copy, not an actual merge).
-- **Not yet done — needs a separate go-ahead**: set `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (user env var) to
-  include `~/.copilot/` so the doctrine is visible regardless of which project you're in. Copilot's
-  custom-instructions loading is scoped to git root / cwd / this env var — there's no single
-  always-loaded global file the way `~\.claude\CLAUDE.md` works — and the exact multi-file-per-dir
-  discovery behavior still hasn't been independently confirmed beyond the CLI's own `--help` text. Blocked
-  by the permission classifier on 2026-09-03 as a permanent environment change; run
-  `setx COPILOT_CUSTOM_INSTRUCTIONS_DIRS "$env:USERPROFILE\.copilot"` yourself, or approve it explicitly.
-- **Not yet done**: wire the same MCP servers already configured for Claude Code (Azure DevOps ×2,
-  Playwright, draw.io, sequential-thinking, filesystem) into Copilot's MCP config. `~/.copilot/servers/`
-  exists and is empty; confirm its expected file shape against current `copilot mcp --help` before wiring
-  anything in — this doc originally assumed a single `~/.copilot/mcp-config.json`, unconfirmed. Genuine
-  shared capability, not just a doc convention, since Copilot CLI supports MCP natively.
+- **Done 2026-09-03** — `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (permanent, user-level) set to
+  `%USERPROFILE%\.copilot` via `setx`, approved explicitly. Requires a new terminal to take effect (`setx`
+  doesn't affect already-open shells). The exact multi-file-per-dir discovery behavior still hasn't been
+  independently observed working end-to-end — worth a real check (open a fresh terminal, run `copilot` from
+  outside `_AI_GIT`, confirm it's actually reading the doctrine) next time Copilot CLI is used for real.
+- **Partially done 2026-09-03** — confirmed via `copilot mcp --help` that `~/.copilot/mcp-config.json` is
+  indeed the right location (the earlier assumption held; `~/.copilot/servers/` was something else, unused
+  here). Added `azure-devops-geomant` only (`copilot mcp add azure-devops-geomant --env ... --
+  npx -y @tiberriver256/mcp-server-azure-devops`, values read straight from Claude's own
+  `azure-devops-geomant` entry — same org URL, PAT, auth method), verified via `copilot mcp get
+  azure-devops-geomant` (Status: Enabled). Deliberately **not yet done**: `azure-devops-netsolve`,
+  Playwright, draw.io, sequential-thinking, filesystem — scoped down to Geomant only for now, add the rest
+  the same way (`copilot mcp add <name> --env KEY=VALUE ... -- <command> [args...]`) when actually needed.

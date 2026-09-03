@@ -176,17 +176,17 @@ confirmed). Matches `copilot\README.md`'s own rollout section verbatim.
   ```
 - **Done** — `copilot\AGENTS.md` merged into `~/.copilot/AGENTS.md` (a plain copy, since nothing was there
   before).
-- **Not yet done — needs a separate go-ahead**: set `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (user env var) to
-  include `~/.copilot/` so the doctrine is visible regardless of which project you're in — Copilot's
-  custom-instructions loading is scoped to git root/cwd/this env var, there's no single always-loaded
-  global file the way `CLAUDE.md` works, and exact multi-file discovery behavior still hasn't been
-  independently confirmed beyond the CLI's own `--help` text. Run
-  `setx COPILOT_CUSTOM_INSTRUCTIONS_DIRS "$env:USERPROFILE\.copilot"` yourself, or approve it explicitly.
-- **Not yet done**: wire the same MCP servers already configured for Claude Code (Azure DevOps
-  ×2, Playwright, draw.io, sequential-thinking, filesystem) into Copilot's MCP config. `~/.copilot/servers/`
-  exists and is empty; confirm its expected file shape against current `copilot mcp --help` before wiring
-  anything in — this section originally assumed a single `~/.copilot/mcp-config.json`, unconfirmed. Genuine
-  shared capability, since Copilot CLI supports MCP natively, not just a doc convention.
+- **Done 2026-09-03** — `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (permanent, user-level) set to
+  `%USERPROFILE%\.copilot` via `setx`. Requires a new terminal to take effect. Still worth a real
+  end-to-end check next time Copilot CLI is used for real (open a fresh terminal, run `copilot` from
+  outside `_AI_GIT`, confirm it's actually reading the doctrine) — the discovery behavior itself was never
+  independently observed, only documented from `--help` text.
+- **Partially done 2026-09-03** — `~/.copilot/mcp-config.json` confirmed as the right location via
+  `copilot mcp --help` (the earlier assumption held). Only `azure-devops-geomant` wired in so far, via
+  `copilot mcp add azure-devops-geomant --env KEY=VALUE ... -- npx -y @tiberriver256/mcp-server-azure-devops`
+  (values copied from Claude's own config for that server). `azure-devops-netsolve`, Playwright, draw.io,
+  sequential-thinking, and filesystem are **not yet wired** — deliberately scoped to Geomant only for now;
+  add the rest the same way, one `copilot mcp add` call per server, when actually needed.
 
 **Support tier, current as of 2026-09-03**: Copilot CLI has real subagent dispatch (`/fleet` + `@agent-name`)
 and reads the same open `SKILL.md` format Claude Code does, so full parity is possible in principle — but

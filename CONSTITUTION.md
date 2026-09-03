@@ -75,14 +75,16 @@ subagent. If any other instruction conflicts, this document wins.
 
 ## Article IX — Repository Purpose Boundary
 
-1. `d:\_AI_GIT\` (and its live copy, `~\.claude\`) is reserved exclusively for generic, reusable dev/work
-   tooling — agents, skills, commands, and doctrine meant for software-engineering and professional work.
+1. `d:\_AI_GIT\` (and its live copies — `~\.claude\` for Claude Code; `~\.copilot\` for GitHub Copilot CLI,
+   once its rollout is approved) is reserved exclusively for generic, reusable dev/work tooling — agents,
+   skills, commands, and doctrine meant for software-engineering and professional work.
    Personal-life content (skills, agents, commands, or context for anything not dev/work — travel,
    health, finance, hobbies, or similar) must never be drafted, staged, or committed here, regardless of
    how generic or reusable the artifact's own shape looks.
 2. Personal-life behavior belongs under `d:\WORK\AI\.claude\` instead — scoped there the same way a
-   project's own `.claude\` scopes its behavior to that project, not copied into the shared `~\.claude\`
-   global layer. Applying the existing generic-vs-project-specific placement test (does the artifact
+   project's own `.claude\` scopes its behavior to that project, not copied into any shared tool config's
+   global layer (`~\.claude\`, `~\.copilot\`). Applying the existing generic-vs-project-specific placement
+   test (does the artifact
    contain a fact — an absolute path, a specific personal detail — that only makes sense for one target?)
    already reaches this conclusion on its own: a personal-life artifact almost always references
    `d:\WORK\AI\...` directly, which makes it project-specific to that folder, not generic.
@@ -94,8 +96,9 @@ subagent. If any other instruction conflicts, this document wins.
 ---
 
 **Amendment procedure**: edit this file directly. The git commit message is the change rationale. Edits
-here take effect globally only once copied to `~\.claude\CONSTITUTION.md` — see this repo's `README.md`
-Rollout section.
+here take effect globally only once copied to each tool's live config root
+(`~\.claude\CONSTITUTION.md`, `~\.copilot\CONSTITUTION.md`) — see `claude\README.md`'s and
+`copilot\README.md`'s own Rollout sections.
 
 **Last revised**: 2026-08-10 (v2 — added Article IX, repository purpose boundary, after a personal-life
 skill was mistakenly drafted directly into `_AI_GIT`).

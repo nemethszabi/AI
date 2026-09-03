@@ -123,13 +123,13 @@ unambiguous (the user should be able to tell when a plan step is overkill; when 
 Write the file(s):
 
 - **Naming**: kebab-case throughout.
-  - Generic agent → `agents\<role>.md`, no project prefix. Project agent →
+  - Generic agent → `claude\agents\<role>.md`, no project prefix. Project agent →
     `<repo>\.claude\agents\<project-prefix>-<role>.md`.
-  - Generic skill → `skills\<role>\SKILL.md` (a folder, not a flat file — the folder name matches the
-    skill's own `name:` frontmatter field). Project skill →
+  - Generic skill → `skills\<role>\SKILL.md` (shared, repo root — a folder, not a flat file — the folder
+    name matches the skill's own `name:` frontmatter field). Project skill →
     `<repo>\.claude\skills\<project-prefix>-<role>\SKILL.md`.
   - Legacy commands mirror the agent naming rule, optionally namespaced under a subfolder
-    (`commands\<namespace>\<verb>.md` → `/namespace:verb`) once there's more than one command in a
+    (`claude\commands\<namespace>\<verb>.md` → `/namespace:verb`) once there's more than one command in a
     related family — a single standalone command stays flat.
 - **Frontmatter**:
   - Agents use `tools:` (comma list).
@@ -159,8 +159,9 @@ Write the file(s):
   bodies only, and only if the draft embeds an example Markdown output block (avoids the outer/inner
   heading collision) — state this decision in the design summary above, don't silently pick one. Never
   XML for a Skill body, no exception.
-- **Placement**: generic → this repo's `agents\`, `skills\`, or `commands\` (staged, not live until
-  copied to `~\.claude\` — say so in the report). Project-specific → the target repo's own
+- **Placement**: generic → this repo's `claude\agents\`, `skills\` (shared, repo root), or
+  `claude\commands\` (staged, not live until copied to `~\.claude\` — say so in the report).
+  Project-specific → the target repo's own
   `.claude\agents\`, `.claude\skills\`, or `.claude\commands\` directly (no staging step for those —
   they're only ever relevant to that one repo).
 - **Versioning**: add a `> Version: 1.0.0` line near the top of the body (right after frontmatter) for

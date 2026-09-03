@@ -15,7 +15,7 @@ rolled out to `~\.claude\`). Always install to all three, every time:
 
 ```powershell
 # from this repo's root — pre-create destination folders first; Copy-Item -Recurse onto a
-# not-yet-existing destination can silently mis-create it (see README.md Rollout step 3 for the
+# not-yet-existing destination can silently mis-create it (see claude\README.md Rollout step 3 for the
 # skills\ incident this caused once)
 $destinations = @(
     "$env:USERPROFILE\.claude",
@@ -27,13 +27,14 @@ foreach ($dest in $destinations) {
     New-Item -ItemType Directory -Path "$dest\skills"   -Force | Out-Null
     New-Item -ItemType Directory -Path "$dest\commands" -Force | Out-Null
 
-    Copy-Item agents\*.md     "$dest\agents\"   -Force
-    Copy-Item skills\*        "$dest\skills\"   -Recurse -Force
-    Copy-Item commands\*      "$dest\commands\" -Recurse -Force
-    Copy-Item *-BASELINE.md   "$dest\"          -Force
-    Copy-Item CONSTITUTION.md "$dest\"          -Force
-    Copy-Item dev-framework   "$dest\" -Recurse -Force
-    Copy-Item sa-framework    "$dest\" -Recurse -Force
+    Copy-Item claude\agents\*.md          "$dest\agents\"   -Force
+    Copy-Item skills\*                    "$dest\skills\"   -Recurse -Force
+    Copy-Item claude\commands\*           "$dest\commands\" -Recurse -Force
+    Copy-Item AGENT-CONDUCT-BASELINE.md, DESIGN-PRINCIPLES-BASELINE.md   "$dest\" -Force
+    Copy-Item claude\AGENT-TEMPLATE-BASELINE.md   "$dest\" -Force
+    Copy-Item CONSTITUTION.md             "$dest\"          -Force
+    Copy-Item dev-framework               "$dest\" -Recurse -Force
+    Copy-Item sa-framework                "$dest\" -Recurse -Force
 }
 ```
 
@@ -145,9 +146,50 @@ balance with `grep -c '<tagname[ >]' file` vs. `grep -c '</tagname>' file` — r
 *only* the tag (`^<tagname>$`), since a tag name mentioned in backtick-quoted prose (` `` `<output>` `` `)
 will false-positive a plain count. Never conclude a defect from eyeballing `Read` output alone.
 
-## What this repo does not attempt
+## Install — GitHub Copilot CLI
 
-Unlike the reference framework this was adapted from
-(`d:\_GEOMANT_GIT\agentic-dev-framework\docs\SETUP.md`), there is currently no Copilot/Codex install path
-and no multi-tool support tier — everything here assumes Claude Code only. Revisit only if that stops being
-true; adding it speculatively now would be building for a need that doesn't exist yet.
+**Approved and run 2026-09-03.** The file copy below has been executed — `~/.copilot/` (Copilot CLI's own
+live runtime state; confirmed empty of any pre-existing doctrine first, so this was a clean additive copy)
+now carries the doctrine files and `AGENTS.md`. Two pieces remain outstanding, see the callouts below:
+`COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (blocked by the permission classifier as a permanent env-var change,
+needs explicit approval) and MCP server wiring (not attempted — the destination file shape wasn't
+confirmed). Matches `copilot\README.md`'s own rollout section verbatim.
+
+- **Destination**: `~/.copilot/` (global/personal). `COPILOT_HOME` is the direct analog of Claude Code's
+  `CLAUDE_CONFIG_DIR` — a future second Copilot identity would follow the same
+  `copilot-work`/`copilot-personal` PowerShell-function pattern already used for Claude. Today there's one
+  Copilot login, so one destination.
+  ```powershell
+  # from this repo's root
+  $copilotDest = "$env:USERPROFILE\.copilot"
+  New-Item -ItemType Directory -Path "$copilotDest\agents" -Force | Out-Null
+  New-Item -ItemType Directory -Path "$copilotDest\skills" -Force | Out-Null
+
+  Copy-Item copilot\agents\*.agent.md   "$copilotDest\agents\" -Force -ErrorAction SilentlyContinue
+  Copy-Item copilot\skills\*            "$copilotDest\skills\" -Recurse -Force -ErrorAction SilentlyContinue
+  Copy-Item skills\*                    "$copilotDest\skills\" -Recurse -Force
+  Copy-Item AGENT-CONDUCT-BASELINE.md, DESIGN-PRINCIPLES-BASELINE.md   "$copilotDest\" -Force
+  Copy-Item copilot\AGENT-TEMPLATE-BASELINE.md   "$copilotDest\" -Force
+  Copy-Item CONSTITUTION.md             "$copilotDest\" -Force
+  Copy-Item dev-framework               "$copilotDest\" -Recurse -Force
+  Copy-Item sa-framework                "$copilotDest\" -Recurse -Force
+  ```
+- **Done** — `copilot\AGENTS.md` merged into `~/.copilot/AGENTS.md` (a plain copy, since nothing was there
+  before).
+- **Not yet done — needs a separate go-ahead**: set `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (user env var) to
+  include `~/.copilot/` so the doctrine is visible regardless of which project you're in — Copilot's
+  custom-instructions loading is scoped to git root/cwd/this env var, there's no single always-loaded
+  global file the way `CLAUDE.md` works, and exact multi-file discovery behavior still hasn't been
+  independently confirmed beyond the CLI's own `--help` text. Run
+  `setx COPILOT_CUSTOM_INSTRUCTIONS_DIRS "$env:USERPROFILE\.copilot"` yourself, or approve it explicitly.
+- **Not yet done**: wire the same MCP servers already configured for Claude Code (Azure DevOps
+  ×2, Playwright, draw.io, sequential-thinking, filesystem) into Copilot's MCP config. `~/.copilot/servers/`
+  exists and is empty; confirm its expected file shape against current `copilot mcp --help` before wiring
+  anything in — this section originally assumed a single `~/.copilot/mcp-config.json`, unconfirmed. Genuine
+  shared capability, since Copilot CLI supports MCP natively, not just a doc convention.
+
+**Support tier, current as of 2026-09-03**: Copilot CLI has real subagent dispatch (`/fleet` + `@agent-name`)
+and reads the same open `SKILL.md` format Claude Code does, so full parity is possible in principle — but
+no `req-*`/`sa:` port exists yet (`copilot\README.md` has the full reasoning). Today, running the steps
+above only makes the shared doctrine legible to Copilot; it does not run the `/sa:*`/`/dev:*` pipeline —
+there is no Copilot equivalent to dispatch yet.

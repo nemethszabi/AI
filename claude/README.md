@@ -1,0 +1,184 @@
+# `claude/` — Claude Code agents & commands
+
+The Claude Code branch of `_AI_GIT`. Staging and distribution source for generic, project-agnostic Claude
+Code agents, commands, and its own doctrine baseline file. Files here are drafted, reviewed manually, then
+copied into `~\.claude\agents\`, `~\.claude\commands\`, and `~\.claude\` respectively — nothing here is
+live/active in Claude Code until that copy step happens. See the repo root `README.md` for the shared
+doctrine (`CONSTITUTION.md`, both remaining baselines, `dev-framework\`, `sa-framework\`, `skills\`) that
+applies to this branch too but lives one level up.
+
+Project-specific agents, commands, and context belong in each project's own repo (its own `.claude\` and
+`ai\context\`), never here — see `DESIGN-PRINCIPLES-BASELINE.md`'s and `AGENT-CONDUCT-BASELINE.md`'s own
+"how to use" sections (both at repo root) for how generic and project-specific artifacts connect.
+
+**Exclusion**: nothing from `d:\WORK\Private\Költségvetés\` may appear in this repo's content, ever — that
+project's material never informs, and is never cited by, anything drafted here.
+
+---
+
+## Repository layout
+
+| Path | What it is |
+|---|---|
+| `CLAUDE.md` | Thin, always-loaded pointer block — merge into `~\.claude\CLAUDE.md` manually (never blind-overwrite; you may already have personal notes there). Points at the doctrine files below, doesn't inline them. |
+| `AGENT-TEMPLATE-BASELINE.md` | Checklist for a new agent/command's **file structure** — frontmatter fields, section skeleton, tone. Governs shape, not behavior — pairs with `..\AGENT-CONDUCT-BASELINE.md`, doesn't replace it. |
+| `agents\` | Generic agent definitions, one file per agent, copied to `~\.claude\agents\` |
+| `commands\` | Generic slash-command definitions, copied to `~\.claude\commands\` — a legacy path Claude Code still runs but isn't developing further; new work should default to the shared `..\skills\` instead. |
+
+The shared doctrine one level up — `..\CONSTITUTION.md` (binding), `..\DESIGN-PRINCIPLES-BASELINE.md`,
+`..\AGENT-CONDUCT-BASELINE.md`, `..\dev-framework\`, `..\sa-framework\`, `..\skills\`,
+`..\estimation-data\`, `..\docs\` — is genuinely tool-agnostic and lives at the repo root; see the root
+`README.md` for that table. `skills\` in particular is listed again below for completeness of "what
+Claude can invoke", even though the folder itself physically lives at the repo root as shared, cross-tool
+content (already the open `SKILL.md` format both Claude Code and Copilot CLI read natively).
+
+## Current inventory
+
+| Agent | Purpose |
+|---|---|
+| `agents\solution-analyst.md` | Reads an unfamiliar solution/repo and drafts a first-pass `ai/context/<slug>-context.md` for human review. CREATE/UPDATE mode-aware. Generic across stacks and solution types. Dry-run tested 2026-08-07 (CREATE mode) against `d:\_GEOMANT_GIT\CampaignManager` — held up on a real, messy repo. UPDATE mode still untested. |
+| `agents\dev-backend.md` | Backend implementation specialist — generic across stacks. Bound by `..\dev-framework\PRINCIPLES.md`. Reads a project's `CLAUDE.md`/`ai/context/*.md`/`ai/dev/*` for everything project-specific. |
+| `agents\dev-frontend.md` | Frontend implementation specialist — generic across stacks. Same shape/binding as `dev-backend.md`. |
+| `agents\dev-reviewer.md` | Independent, read-only code reviewer — generic across stacks. Cold `git diff` read, fixed review dimensions (concrete checks come from the target project's own `ai/context/*.md`), ends with an `AGENT-CONDUCT-BASELINE.md` B7 verdict block. No `Edit`. No dispatcher command — invoked directly; the caller may pass `model:` on the `Agent` call for a large/high-risk/subtle diff (added 2026-08-11, no frontmatter pin). |
+| `agents\dev-browser-tester.md` | Browser-driven smoke-test specialist — generic across web projects. Drives a running app via the `playwright` MCP: navigate, log in, execute a scenario, screenshot, watch console errors, PASS/FAIL report. Never fixes anything; no `Edit`. |
+| `agents\doc-briefer.md` | Reads an inbound document (docx/xlsx/pdf/md, or already-ingested `inputs/*.extracted.md`) in its own context and produces a comprehension brief for a human about to work on it — section map classified requirement/background/boilerplate, key facts, integration surface with a "specified vs. merely named" call, conspicuous gaps, and where to read closely. Then answers follow-ups from the source with citations. Deliberately **not** requirement-writing — no REQ-IDs, no priorities; that's `req-analyst`. Sits beside the `/sa:*` pipeline, never writes pipeline state, and its `brief.md` is excluded from `inputs_hash`. Added 2026-08-12. |
+| `agents\req-screener.md` | Answers the two questions asked *before* anyone decides to bid — "can we do this?" and "roughly what would it cost?" — from a clarified requirements list. Feasibility verdict (`can-do`/`can-do-if`/`probably-not`/`cannot-assess`) with cited blockers, plus a deliberately coarse order-of-magnitude effort band that is **never quotable**. Writes only `screen.md`, advisory non-artifact #2 after `brief.md`. Deliberately **not** a lighter `req-estimator`: no PERT, no K-categories, no contingency, no calibration, no price — their absence is the point (`ESTIMATION-METHOD.md` §8, which also forbids `req-estimator` from anchoring on the band and `req-estimate-critic` from critiquing it). Runs on any lane, because depth-of-pass and lane are independent axes. Added 2026-08-12. |
+| `agents\req-ingestor.md` | Mechanically extracts inbound Excel/Word/PDF/text files into `ai/sa/<slug>/inputs/*.extracted.md` for `req-analyst` to cite. No interpretation — that's the next step's job. Uses the `office-doc-reader` skill for `.xlsx`/`.docx`; `.pdf` via the built-in `Read` tool. Added 2026-08-11. |
+| `agents\req-analyst.md` | Clarifies a free-form requirement/change request (or already-ingested files) into a structured, reviewable requirements list (`REQ-ID`/priority/status/source). Narrative markdown, no formal gates. Generic across domains. |
+| `agents\req-architect.md` | High-Level Design (HLD) from a clarified requirements list — approach with weighed alternatives scored against named decision criteria, components, quality attributes/NFRs, security & compliance posture, system context, data flow, deployment topology, risks, phasing, assumptions/constraints, and a full requirements traceability matrix. Deliberately stays at component level, never LLD-specific values (config, schema fields, exact infra sizing); `req-detailer` is the separate LLD pass. Named `req-architect`, not `solution-architect`, to avoid colliding with domain-specific agents of that name in other frameworks. Accepts an optional model override via `/sa:design <slug> --model=<name>` for a genuinely novel/high-stakes design (added 2026-08-11). Upgraded to this full depth 2026-08-12 (v1.3.0), no frontmatter pin. |
+| `agents\req-reviewer.md` | Independent, read-only critique of a design (HLD and/or LLD) against its requirements — narrative findings, no PASS/BLOCKING gate (a deliberate, explicitly documented divergence from `AGENT-CONDUCT-BASELINE.md` B7 — this pipeline is gate-free by design, unlike the heavier `sa-design-critic` in the reference framework). Also checks quality-attribute/traceability-matrix coverage against `req-architect`'s v1.3.0 output (added 2026-08-12). Named `req-reviewer`, same collision-avoidance reason as the others. Added 2026-08-11. |
+| `agents\req-detailer.md` | Low-Level Design (LLD) from a reviewed HLD — per-component interface/contract sketches, data model, key flows, deployment detail, staying consistent with the HLD's Quality Attributes/Security & Compliance/Deployment Topology sections rather than ignoring them (2026-08-12). Never re-litigates the HLD's approach; flags it in Open Questions instead. Added 2026-08-11. |
+| `agents\req-estimator.md` | Three-point **AI-assisted** effort estimate from requirements + design + risk register — one delivery model by default (`traditional`/`both` are opt-in, never on `rom`), `must`-only bare-minimum baseline with `should`/`could` sized separately as priced Optional items, stricter bare-minimum discipline on `rom` (v3.0.0, 2026-09-03). Line items cite a `QA-ID` alongside `REQ-ID`/component ID where relevant. Never invents a rate card — effort-only if none found. Named `req-estimator`, not `project-estimator`, same collision-avoidance reason. |
+| `agents\mermaid-diagram-maker.md` | Writes `.mmd` diagrams (architecture/sequence/flowchart/class/state/deployment/ER) and renders `.png` via `mmdc`. Generic, `memory: user` for cross-project styling conventions only — never project-specific component/service names. Adapted from `agentic-dev-framework`, not copy-pasted: fixed a memory-boundary violation in the source (it told the agent to save component/service names globally) and added a no-silent-overwrite rule. |
+| `agents\req-risk-officer.md` | Scored risk register (probability × impact → **derived** severity, treatment, owner, residual) plus a compliance register, and the contingency recommendation `req-estimator` consumes. Enforces that every `assumed`/`unknown` integration produces a risk, and that every `priced_in: false` risk becomes an offer exclusion. Added 2026-08-12. |
+| `agents\req-estimate-critic.md` | Estimate-side mirror of `req-reviewer` — quantified optimism-bias and spread heuristics, PERT integrity, K-category sanity, scope-tier discipline (must-only baseline vs. priced optional) and bare-minimum/`rom`-strictness compliance, contingency-band fit, exclusion integrity, and the commonly-forgotten lifecycle lines. Advisory only; never blocks packaging. v1.1.0, 2026-09-03. |
+| `agents\req-offer.md` | Composes the client-facing solution offer (`offer.json` + `offer.md`) from completed artifacts. **Composes, never creates** — every scope line traces to another artifact; `should`/`could` requirements are routed to `scope.optional` rather than committed, never to `in_scope` unless explicitly requested; never states a price without a rate card. v1.1.0, 2026-09-03. |
+| `agents\req-auditor.md` | Cross-artifact validation gate — referential integrity, `must` coverage, exclusion integrity, offer traceability, PERT arithmetic, must-only baseline/optional-scope reconciliation, `rom`-lane model restriction, locale preservation. Deliberately **mechanical, never editorial**, which is what makes the gate unarguable. Emits the fenced `sa-verdict` block with a content-based `inputs_hash` that `/sa:package` requires. Seven blocking checks are unwaivable. v1.1.0, 2026-09-03. |
+| `agents\agent-reviewer.md` | Independent, read-only reviewer for a drafted/edited agent, skill, command, or one-time prompt — the meta-level counterpart to `dev-reviewer` (reviews customization artifacts, not application code). Reads cold, never the drafting session's own reasoning. Ends with an `AGENT-CONDUCT-BASELINE.md` B7 verdict block. No `Edit` beyond narrow, unambiguous mechanical fixes. Added 2026-08-10 specifically because `agent-builder`'s own self-check isn't independent (same session checking its own work) — closes that gap. |
+
+| Skill | Purpose |
+|---|---|
+| `..\skills\prompt-builder\SKILL.md` | Drafts a new one-time/occasional-use prompt (`ai/prompts/<topic>/`) with proper context-loading, optional runtime parameters, and an approval gate if the task has real blast radius. Lighter-weight than `agent-builder` — no tool grant, no scope classification, no self-check machinery — and checks first whether the request is genuinely one-time rather than a recurring need in disguise, redirecting to `agent-builder` if not. First entry in the shared `..\skills\` folder (2026-08-10). |
+| `..\skills\doc-brief\SKILL.md` | Thin dispatcher to `doc-briefer` — invoke when a document needs understanding before anyone acts on it. Paired with `commands\sa\brief.md` (`/sa:brief <slug>`) for the engagement-slug form. Added 2026-08-12. |
+| `..\skills\review-agent\SKILL.md` | Thin dispatcher to `agent-reviewer` — invoke after `agent-builder`/`prompt-builder` produces something, or before trusting/copying anything to global. |
+| `..\skills\office-doc-builder\SKILL.md` | Reusable Excel/Word/PowerPoint formatting helpers (`lib\excel_helpers.py`, `word_helpers.py`, `pptx_helpers.py` — openpyxl/python-docx/python-pptx). A library, not a workflow — other skills with document-generation needs (e.g. `travel-planner`) import from it instead of rewriting styling boilerplate. Added 2026-08-10. |
+| `..\skills\office-doc-reader\SKILL.md` | Read-side counterpart to `office-doc-builder` — extracts `.xlsx`/`.docx` content to Markdown (`lib\excel_reader.py`, `word_reader.py`), both importable and CLI-runnable. `.pdf` deliberately out of scope here — the built-in `Read` tool already parses it. Backs `req-ingestor`. Zero-dependency default; escalation path documented in both this skill and `office-doc-builder` points to the optional `document-skills@anthropic-agent-skills` plugin (OCR, legacy `.doc`, patch-editing, charts/pivots — see `..\docs\SETUP.md`) for what neither library does. Added 2026-08-11. |
+
+| Command | Purpose |
+|---|---|
+| `commands\agent-builder.md` | `/agent-builder` — interactively drafts new agents/skills/legacy-commands per this repo's conventions (classifies agent-vs-skill-vs-command and generic-vs-project, executor-vs-reviewer; consults `..\CONSTITUTION.md`/both baselines; applies naming/placement/body-style rules including the Skill no-XML-tags constraint; self-checks tag balance). Deliberately a command, not an agent — see rationale below. |
+| `commands\scaffold-context.md` | `/scaffold-context [path]` — thin dispatcher to `solution-analyst` |
+| `commands\diagram.md` | `/diagram [what to diagram]` — thin dispatcher to `mermaid-diagram-maker` |
+| `commands\sa\*` (17: `screen`, `triage`, `brief`, `ingest`, `clarify`, `design`, `review`, `design-detail`, `risk`, `estimate`, `estimate-review`, `offer`, `audit`, `package`, `status`, `doc`, `help`) | `/sa:*` — the generic **requirement→offer** pipeline. Restructured 2026-08-12 from a linear 8-command REQ/CR chain into a **three-lane** model (`rom` / `offer-sow` / `full-design`) chosen at `/sa:triage`, because the old pipeline only ever served *internal* solution design and terminated in an internal `package.md` — nothing produced a client-facing priced document. Every artifact is now written twice, `<name>.json` (source of truth) + rendered `<name>.md`, per `..\sa-framework\ARTIFACT-SCHEMAS.md`. Dispatches to twelve agents (the eleven `req-*` plus `doc-briefer`); `doc`, `package` and `status` act directly. **One hard gate, deliberately**: `/sa:package` refuses to build a client deliverable without a fresh `PASS` from `/sa:audit`, verified by content hash (never mtime) — everything else (`review`, `estimate-review`) stays advisory. `/sa:doc` (internal consolidation) and `/sa:offer`→`audit`→`package` (client-facing) are different documents for different audiences and must not be confused. `design`/`design-detail` also dispatch `mermaid-diagram-maker` for the diagrams the HLD/LLD named. Artifacts slugged per-topic under `ai/sa/<slug>/`. `design` takes `--model=<name>` and `--apply-review[=<severity>]`. Full walkthrough: `..\docs\SA-WORKFLOW.md`. |
+| `commands\dev\init.md`, `status.md`, `quick.md`, `help.md` | `/dev:*` — generic, cross-project scaffold/status/dispatch for the `ai/dev/` convention. `/dev:quick` is the generic form of a project dispatcher for projects with no process of their own to enforce (see the `/cm:dev` retirement note below). |
+
+---
+
+## When authoring a new agent, skill, or command
+
+Prefer running `/agent-builder` over applying this section by hand — it implements the same rules
+interactively and stays current as they evolve; this section is the reference, not the primary workflow.
+
+1. Walk `AGENT-TEMPLATE-BASELINE.md` first — frontmatter fields, section skeleton, tone — before writing
+   a line of the agent/command itself, so structure doesn't drift file to file. For a skill, the
+   equivalent conventions (no XML tags, `description`-as-trigger, folder shape) live directly in
+   `commands\agent-builder.md`'s own `draft` step — no separate `SKILL-BASELINE.md` yet (see that file's
+   `consult-conventions` step for the threshold on when one would get created).
+2. If it touches how a **target codebase** should be structured → walk `..\DESIGN-PRINCIPLES-BASELINE.md`
+   against the project (informed by `solution-analyst`'s "Conventions Observed" output, if available) to
+   produce that project's `ai/context/design-principles.md`.
+3. Walk `..\AGENT-CONDUCT-BASELINE.md` — Executor section for an agent that does work, Reviewer section for
+   an agent that checks others' work, Memory section (§C) if it sets `memory: user` — and write the
+   relevant instances directly into the new agent's own `<rules>`/`<memory>` section.
+4. Decide **generic vs. project-specific** before deciding where the file lives: does the agent's own
+   text contain a fact that only makes sense inside one repo (an absolute path, an org name, a stack
+   fact), or a *process* that genuinely differs per project (an approval gate, an issue-tracker
+   integration, a release discipline)? If yes, it belongs in that project's own `.claude\`, not here. See
+   `d:\WORK\AI\results\claude-prompting-system-review.md §10` for the full decision rule and naming
+   conventions (§13) — not duplicated in this repo to avoid the two drifting out of sync. Concretely: SCM's
+   `/scm:fix` earns its project-specific home (Azure DevOps org rule, version-bump discipline — real
+   process differences); a thin dispatcher with **no** such differences doesn't — CampaignManager's
+   `/cm:dev` was exactly this mistake, retired 2026-08-07 in favor of the generic `/dev:quick` once it
+   became clear it carried no CampaignManager-specific logic at all. When in doubt, ask "does this
+   command's own `<process>` contain anything that wouldn't apply verbatim to a different project?" — if
+   no, it belongs here as a generic command, not there as a bespoke one.
+5. If the agent/command is a **gate or reviewer** (produces a PASS/FAIL-style verdict another command or
+   human must act on), follow `..\AGENT-CONDUCT-BASELINE.md` B7/B9 for the verdict-block and
+   freshness-hash conventions — don't invent a new verdict shape per agent.
+6. Once a command namespace (a `commands\<prefix>\` folder) accumulates more than a handful of commands,
+   add a `<prefix>:help` command whose only job is to print a static reference of that namespace — no
+   live analysis, no project context, just the reference (mirrors the sample framework's
+   `commands/sa/help.md`). Not needed yet at one command; noted here so it isn't forgotten once
+   `commands\` grows.
+7. Any agent named `dev-*` reads `..\dev-framework\PRINCIPLES.md` first (after `..\CONSTITUTION.md`) —
+   that's where the family's shared operational rules live; don't restate them in the agent's own
+   `<rules>`.
+
+## Rollout
+
+1. Draft under `agents\` or `commands\` here (or the shared `..\skills\` for new reusable work).
+2. Manual review.
+3. Copy to **every** live config location — not just one. This machine has **three independent Claude
+   Code config roots**, discovered the hard way on 2026-08-10 when `dev-backend` was "not found" in a
+   real session despite being correctly rolled out to `~\.claude\`: the default/legacy location
+   (`$env:USERPROFILE\.claude\`) **and** two profiles (`claude-scm`, `claude-nsz`, under
+   `$env:LOCALAPPDATA\`), each fully redirected via `CLAUDE_CONFIG_DIR` and **not** falling back to the
+   default. Real sessions run under a profile — rolling out to only the default silently leaves both real
+   profiles without any of this.
+   ```powershell
+   # Run from the repo root (one level up from claude\). Pre-create destination folders first —
+   # Copy-Item with -Recurse onto a not-yet-existing destination can silently mis-create it as a copy
+   # of the *first* source item's contents instead of a proper container (hit this for real on
+   # 2026-08-10 with skills\ — left a stray SKILL.md sitting loose in the destination instead of in its
+   # own subfolder). Always ensure the target exists as a real directory first, every time.
+   $destinations = @(
+       "$env:USERPROFILE\.claude",
+       "$env:LOCALAPPDATA\claude-scm",
+       "$env:LOCALAPPDATA\claude-nsz"
+   )
+   foreach ($dest in $destinations) {
+       New-Item -ItemType Directory -Path "$dest\agents"   -Force | Out-Null
+       New-Item -ItemType Directory -Path "$dest\skills"   -Force | Out-Null
+       New-Item -ItemType Directory -Path "$dest\commands" -Force | Out-Null
+
+       Copy-Item claude\agents\*.md          "$dest\agents\"   -Force
+       Copy-Item skills\*                    "$dest\skills\"   -Recurse -Force
+       Copy-Item claude\commands\*           "$dest\commands\" -Recurse -Force
+       Copy-Item AGENT-CONDUCT-BASELINE.md, DESIGN-PRINCIPLES-BASELINE.md   "$dest\" -Force
+       Copy-Item claude\AGENT-TEMPLATE-BASELINE.md   "$dest\" -Force
+       Copy-Item CONSTITUTION.md             "$dest\"          -Force
+       Copy-Item dev-framework               "$dest\" -Recurse -Force
+       Copy-Item sa-framework                "$dest\" -Recurse -Force
+   }
+   ```
+   `estimation-data\rates.yaml` is deliberately **not** copied — it's commercially sensitive and lives only
+   at `~\.claude\estimation-data\rates.yaml`, created once by hand from `rates.yaml.example`:
+   ```powershell
+   New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\estimation-data" | Out-Null
+   Copy-Item estimation-data\rates.yaml.example `
+             "$env:USERPROFILE\.claude\estimation-data\rates.yaml"   # then edit
+   ```
+4. Merge `CLAUDE.md` into **each** destination's own `CLAUDE.md` by hand (create it if missing) — do
+   **not** blind-copy with `-Force`, since a real `CLAUDE.md` at any of the three may already carry
+   personal notes this would clobber.
+5. After any future edit here, re-run step 3 (and re-check step 4) so every destination picks up the
+   change — this repo is the source of truth, none of the three destinations are, individually or
+   together.
+6. Run `powershell -File ..\_scripts\check-sync.ps1` (from `claude\`, or `_scripts\check-sync.ps1` from
+   the repo root) to confirm — reports anything staged here that's missing or stale, **per destination**,
+   all three checked every run. This caught two real gaps on 2026-08-10: the `skills\*` copy step didn't
+   exist in step 3 at first (nothing reached any `skills\` folder), and step 3 only ever targeted the
+   default location, silently leaving both real profiles completely empty the entire time — run it after
+   every rollout, not just when something seems off, and don't assume "in sync" for one destination means
+   any of the others are too.
+
+**One-time setup**: run `powershell -File ..\_scripts\install-hooks.ps1` once (and again after a fresh
+clone, or after pulling a change to `..\_scripts\hooks\`) — installs a `post-commit` hook that auto-runs
+step 6 after every commit, so drift surfaces immediately instead of whenever someone remembers to check.
+Informational only: it never blocks a commit and never auto-copies to `~\.claude\` — step 3 stays a
+deliberate, explicit action.
+
+Every hook run also appends its output to `..\_scripts\sync-check.log` (gitignored — runtime state, not
+repo content), timestamped and tagged with the commit it ran after — check that file if you want to
+confirm the hook actually fired and what it found, rather than relying on having seen it scroll by live
+in the terminal.

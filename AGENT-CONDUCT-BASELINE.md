@@ -133,8 +133,9 @@ the hash in the gate's own report so a later command can recompute and compare b
 ## C. Memory conduct — agents with `memory: user`
 
 Applies only to an agent whose frontmatter sets `memory: user` (persistent, cross-session storage at
-`~/.claude/agent-memory/<agent-name>/`, per `AGENT-TEMPLATE-BASELINE.md`). Most agents don't need this —
-add it only when cross-project learning has real, repeated value, not by default.
+`~/.claude/agent-memory/<agent-name>/` — or the equivalent path for whichever tool is in use — per
+`claude\AGENT-TEMPLATE-BASELINE.md`). Most agents don't need this — add it only when cross-project
+learning has real, repeated value, not by default.
 
 ### C1. Cross-project patterns only, never project facts
 What belongs in an agent's global memory is a pattern confirmed across *multiple* projects/runs — a

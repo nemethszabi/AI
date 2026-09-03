@@ -5,7 +5,7 @@ tags, tone. Distinct from `AGENT-CONDUCT-BASELINE.md`, which governs *behavior*;
 *shape*. Global, cross-project — draft here, copy to `~\.claude\AGENT-TEMPLATE-BASELINE.md` alongside the
 other baselines.
 
-Synthesized from real files, not invented: `agents\solution-analyst.md` (this repo), and
+Synthesized from real files, not invented: `claude\agents\solution-analyst.md` (this repo), and
 `dev-reviewer.md`, `mermaid-diagram-maker.md`, `sa-completeness-auditor.md` (via
 `commands/sa/audit-deliverable.md`'s invocation contract) from
 `d:\_GEOMANT_GIT\agentic-dev-framework\`.
@@ -15,8 +15,8 @@ Synthesized from real files, not invented: `agents\solution-analyst.md` (this re
 ## How to use this file
 
 Walk it once per new agent/command, top to bottom. Skip a piece only if it genuinely doesn't apply —
-don't force-fit ceremony onto a two-line dispatcher command (see `commands\scaffold-context.md` for what
-a minimal command looks like).
+don't force-fit ceremony onto a two-line dispatcher command (see `claude\commands\scaffold-context.md` for
+what a minimal command looks like).
 
 ---
 

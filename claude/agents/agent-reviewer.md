@@ -32,9 +32,9 @@ Determine what kind of artifact is under review before applying dimension-specif
   `name`+`description`.
 - A single `.md` file with `tools:` in its frontmatter → **Agent**.
 - A single `.md` file with `allowed-tools:` in its frontmatter → **Command** (legacy form).
-- A single `.md` file with neither, living outside `agents\`/`skills\`/`commands\` (e.g. under a project's
-  `ai\prompts\`) → **One-time prompt**. Lighter check — naming/context-loading/structure only, no
-  frontmatter or tool-grant dimensions apply.
+- A single `.md` file with neither, living outside `claude\agents\`/`skills\`/`claude\commands\` (e.g.
+  under a project's `ai\prompts\`) → **One-time prompt**. Lighter check —
+  naming/context-loading/structure only, no frontmatter or tool-grant dimensions apply.
 </mode_detection>
 
 <process>
@@ -77,9 +77,9 @@ them per `<mode_detection>`, don't mark them FAIL for not applying.
    finding, not a nitpick. For an Agent meant for proactive delegation, does it include a "Use PROACTIVELY
    when..." clause?
 4. **Naming & placement** — kebab-case; generic (no project prefix, lives in this repo's own
-   `agents\`/`skills\`/`commands\`) vs. project-specific (`<prefix>-<role>`, lives in the target repo's own
-   `.claude\`) naming actually matches where the file is; a Skill's folder name matches its own `name:`
-   field.
+   `claude\agents\`/`skills\`/`claude\commands\`) vs. project-specific (`<prefix>-<role>`, lives in the
+   target repo's own `.claude\`) naming actually matches where the file is; a Skill's folder name matches
+   its own `name:` field.
 5. **Tool grant — least privilege** — granted tools match the stated role, not convenience. A
    reviewer/read-only role has no `Edit`. A leaf-level specialist has no `Task`/`Agent` unless
    orchestration is genuinely its whole job — and if it does orchestrate, flag whether it violates
@@ -108,7 +108,7 @@ them per `<mode_detection>`, don't mark them FAIL for not applying.
   exception is applying a fix per the "unambiguous, low-risk, mechanical" rule above, and only to the
   extent your `Write` grant allows; if that's not enough for a given fix, suggest instead of applying.
 - **Cite by evidence, not by summary.** "Frontmatter line 5 uses `allowed-tools:` but this file lives in
-  `agents\`" — never "the frontmatter looks off."
+  `claude\agents\`" — never "the frontmatter looks off."
 - **Trust nothing.** Don't accept that a rule was followed because the file's own prose claims it was —
   check the actual content (e.g. actually grep for `<` in a Skill body, don't take "no XML used" at face
   value).

@@ -1,6 +1,6 @@
 ---
 name: Copilot Usage Query
-description: Query current month's Copilot CLI token usage and estimated costs by model. Returns cumulative session data with token counts and USD estimation.
+description: Query current month's Copilot CLI token usage and estimated costs by model. Returns cumulative ALL-SESSION data with token counts and USD estimation.
 license: MIT
 version: 1.0.0
 author: AI Framework — Usage Tracking
@@ -16,33 +16,30 @@ tags:
 
 ## What This Skill Does
 
-This skill provides a standardized, repeatable way to query your **current calendar month's Copilot CLI usage** in a single, easy-to-read format.
+Queries your **entire current calendar month's Copilot CLI usage** across ALL sessions (not just current session).
 
 **Output includes:**
-- Total input tokens (cumulative)
-- Total output tokens (cumulative)
+- Total input tokens (cumulative, all sessions)
+- Total output tokens (cumulative, all sessions)
 - Token usage breakdown by model
 - Estimated USD cost (based on current OpenAI/Anthropic/Google pricing)
-- Session count and date range
+- Event count across all sessions
 
-## When to Use This
+## How to Use
 
-Invoke this skill when you need to:
-- **Check month-to-date usage** for billing or quota tracking
-- **Understand cost trends** by model (Claude vs. GPT vs. Gemini)
-- **Prepare a usage report** for your team or manager
-- **Monitor quota against company limits**
-
-### Quick Invoke
-From inside a Copilot CLI session, type:
+### From Copilot CLI (Easiest)
+Type inside any Copilot CLI session:
 ```
 @copilot-usage-query
 ```
 
-Or, ask directly:
+### From PowerShell (Alternative)
+If you prefer the terminal, run:
+```powershell
+& 'd:\_AI_GIT\copilot\scripts\simple-usage.ps1'
 ```
-Query my current month's Copilot usage and show me tokens + USD cost by model.
-```
+
+This queries the last 30 days of usage and shows tokens + cost by model.
 
 ---
 

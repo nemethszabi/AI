@@ -1,0 +1,92 @@
+# Framework review scope — EXAMPLE / TEMPLATE
+#
+# Copy to {config-root}/framework-data/scope.yaml and fill in this machine's real
+# paths there. Do NOT commit a filled-in scope file to this repo: it names personal
+# and machine-specific roots, which makes it project-specific to this machine rather
+# than generic (CONSTITUTION.md Article IX's placement test). .gitignore excludes it.
+#
+# Same pattern as estimation-data/rates.yaml — the agent stays generic, the machine's
+# facts live at the config root only.
+#
+# Read by: framework-strategist (via the framework-review skill)
+# Lookup order (first hit wins):
+#   1. $CLAUDE_CONFIG_DIR/framework-data/scope.yaml
+#   2. ~/.claude/framework-data/scope.yaml
+#
+# Missing entirely → the agent bootstraps what it can from the environment and the
+# global CLAUDE.md, reports what it could not resolve, and offers to write this file.
+
+version: 1
+
+# The staging repo: where agents/skills/commands/doctrine are drafted before rollout.
+staging_repo: D:\path\to\framework-repo
+
+# Doctrine the review measures the roster against — and audits for contradiction and
+# staleness in its own right. Paths are relative to staging_repo. List them explicitly
+# rather than leaving the agent to infer which files are binding.
+doctrine_files:
+  binding:
+    - CONSTITUTION.md
+    - dev-framework\PRINCIPLES.md
+    - sa-framework\ARTIFACT-SCHEMAS.md
+    - sa-framework\ESTIMATION-METHOD.md
+  checklists:
+    - AGENT-CONDUCT-BASELINE.md
+    - DESIGN-PRINCIPLES-BASELINE.md
+    - claude\AGENT-TEMPLATE-BASELINE.md
+  rationale:
+    - dev-framework\DESIGN.md
+
+# Every live config root a session might actually run under. List them ALL — a
+# framework rolled out to one root and not another is silently broken for sessions
+# under the others, and checking only one is how that goes unnoticed.
+live_config_roots:
+  - "%USERPROFILE%\\.claude"
+  - "%LOCALAPPDATA%\\claude-profile-a"
+  - "%LOCALAPPDATA%\\claude-profile-b"
+
+# Living reference docs the review reconciles against reality. The agent may correct
+# verified factual errors in these directly — they are the only files it may edit.
+knowledge_base: D:\path\to\knowledge-base
+knowledge_base_files:
+  inventory: command-inventory.md          # flat list of every artifact
+  overview: system-overview.md             # layer map
+  gap_register: claude-prompting-kb.md     # tracked gaps live in a section of this
+  candidates: tool-candidates.md           # researched, not yet adopted
+  environment: mcp-reference.md            # MCP servers, profiles, allowlists
+
+# Where dated review reports are written, as framework-review-YYYYMMDD.md.
+report_dir: D:\path\to\results
+
+# Optional. Run manually; the agent reads its output, never re-implements it.
+sync_check_command: powershell -File D:\path\to\framework-repo\_scripts\check-sync.ps1
+
+# Optional second tool, when a migration or parity effort is in scope.
+second_tool:
+  name: copilot-cli
+  staging_dir: D:\path\to\framework-repo\copilot
+  live_root: "%USERPROFILE%\\.copilot"
+
+# Optional. Extra roots surveyed at low depth — entry-point files only (README,
+# agent-instruction file, context index), never a full tree walk. Used to spot
+# patterns worth borrowing and documentation that has gone stale.
+survey_roots:
+  - path: D:\path\to\a-project
+    note: what to look for here
+  - path: D:\path\to\reference-framework
+    note: colleague's fuller pipeline — check for newly adopted ideas
+
+# HARD exclusions. Never read, cited, summarized, or reasoned about — the agent stops
+# descending here even when reached from a survey root, and never proposes removing an
+# entry. Keep this list even if it is empty, so the intent is explicit.
+exclude:
+  - D:\path\to\excluded-personal-folder
+
+# Optional. Research priorities for the industry-delta step, most important first.
+# Names sources by role rather than by URL, so this file does not rot as sites move.
+research_priorities:
+  - vendor agent-platform documentation
+  - vendor changelog and release notes
+  - model context protocol spec and ecosystem
+  - second tool's documentation
+  - agent-engineering practice writing (evaluation, orchestration, context, cost)

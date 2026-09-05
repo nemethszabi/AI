@@ -5,3 +5,7 @@ __pycache__/
 
 # Commercially sensitive — only the .example template is staged here
 estimation-data/rates.yaml
+
+# Machine-specific paths (personal roots, exclusions) — only the .example is staged here.
+# Article IX placement test: a file naming d:\WORK\AI\... is specific to this machine, not generic.
+framework-data/scope.yaml

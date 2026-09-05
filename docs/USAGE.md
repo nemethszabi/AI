@@ -29,6 +29,7 @@ lighter than a full wave/gate system.
 | Draft a new agent/skill/legacy-command | `/agent-builder` | Global |
 | Draft a new one-time/occasional-use prompt | `prompt-builder` skill | Global |
 | Independent check on a drafted agent/skill/command before trusting/copying it | `review-agent` skill (dispatches `agent-reviewer`) | Global |
+| **Periodic health-and-strategy pass over the whole framework** — is it still in sync, coherent, current, and pointed at the work you actually do? | `/framework-review` (dispatches `framework-strategist`); add `drift`/`doctrine`/`research`/`ideas`/`parity` to narrow it | Global |
 | Generate/reformat an Excel/Word/PowerPoint document | `office-doc-builder` skill (library, imported by other skills) | Global |
 | Read/extract content from an existing Excel/Word file | `office-doc-reader` skill (backs `req-ingestor`; `.pdf` — use the built-in `Read` tool directly) | Global |
 | Extraction/generation genuinely needs OCR, patch-editing, or native charts/pivots — beyond what the lightweight skills above do | `document-skills@anthropic-agent-skills` plugin (installed 2026-08-11, user scope — see `SETUP.md` for the per-profile install gotcha) | Plugin, not this repo |

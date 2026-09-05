@@ -1,9 +1,9 @@
 ---
 name: review-agent
-description: Independently review a newly drafted or edited agent, skill, command, or one-time prompt file for structural and doctrine compliance, before it's trusted or copied to global. Use after agent-builder or prompt-builder produces a new file, after editing an existing agent/skill/command, or whenever asked to "review this agent", "check this skill before I copy it", "audit this prompt file".
+description: Independently review a newly drafted or edited agent, skill, command, or one-time prompt file for structural and doctrine compliance, before it's trusted or copied to global. Use after agent-builder or prompt-builder produces a new file, after editing an existing agent/skill/command, or whenever asked to "review this agent", "check this skill before I copy it", "audit this prompt file". Scoped to ONE artifact — for a health-and-strategy pass over the whole framework (sync, doctrine coherence, industry currency, new opportunities), that's framework-review instead.
 ---
 
-> Version: 1.0.0
+> Version: 1.0.1
 
 # Review Agent
 

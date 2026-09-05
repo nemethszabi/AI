@@ -16,6 +16,10 @@ for acting on the findings.
 Run it periodically, not continuously. Monthly is a reasonable starting cadence; the agent recommends its
 own next interval at the end of each report.
 
+**The full loop, end to end** — what the review changes itself, how an approved proposal actually gets
+built, and the rollout step that makes it live — is documented in `docs\FRAMEWORK-REVIEW-WORKFLOW.md`.
+Read that once; this file is the tool's reference, that one is the workflow.
+
 ## What it is not
 
 `review-agent` checks one newly drafted artifact for structural and doctrine compliance and returns a

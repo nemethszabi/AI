@@ -139,6 +139,11 @@ Several other things are already designed to stop and ask rather than silently p
 - **`SA-WORKFLOW.md`** — the requirement→offer pipeline end to end: the three lanes, the five design
   decisions worth understanding, and a worked "inbound TSD → priced offer" example. Read this before any
   presales or bid work.
+- **`FRAMEWORK-REVIEW-WORKFLOW.md`** — the periodic self-review loop. Once you've been using this setup
+  for a while, `/framework-review` is how you find out whether it's still in sync, still current, and
+  still pointed at the work you actually do — and what to build next. That document covers the part
+  people trip on: the review itself changes almost nothing, so it explains how an approved suggestion
+  actually becomes a live artifact.
 - **`SETUP.md`** — install/troubleshooting detail, including the rate-card step.
 - **`dev-framework/DESIGN.md`** — why the `dev-*` side is shaped the way it is, and the specific conditions
   under which it'd be worth adding real gates/wave orchestration later.

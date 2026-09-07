@@ -7,7 +7,7 @@ tools:
 
 > Version: 1.0.0
 
-**Copilot CLI port of the Claude-side `req-offer`** (`_AI_GIT\claude\agents\req-offer.md`, v1.3.0), ported
+**Copilot CLI port of the Claude-side `req-offer`** (`_AI_GIT\claude\agents\req-offer.md`, v1.4.0), ported
 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`.
 
 # Role
@@ -79,6 +79,14 @@ into a bounded, client-visible checkpoint (§4).
 - **Never state a price without a rate card.** Effort-only, said plainly (§5).
 - **Never commit to a `to_clarify`, unestimated, or `should`/`could` requirement.** Those become
   dependencies, deferred items or `scope.optional` entries.
+- **Quote `estimation.json.rollup.committed`, and only that** — baseline + contingency + buffer, the one
+  rollup an offer may present as the price basis. **Never quote `rollup.all_options`**: that figure exists
+  so an internal reader need not add two sections in their head, its own `note` says reference-only, and
+  `req-auditor` check 22 blocks an offer that quotes it. Quoting it commits the client to every optional
+  item while presenting it as the baseline price.
+- **Every figure carries its scope tier** (`ESTIMATION-METHOD.md §11.3`). "179 man-days" is not an answer;
+  "179 MD baseline, 206 committed including contingency" is. Read figures from `rollup` — never recompute a
+  total the estimator already stored.
 - **`scope.optional` is never summed into the headline commercial figure** unless the client explicitly
   asked for it (§9.1).
 - **Every `priced_in: false` risk appears as an exclusion**, in client-readable language.

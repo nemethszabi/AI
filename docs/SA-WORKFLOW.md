@@ -254,7 +254,7 @@ whether a judgment was good; `req-slop-detector` cites the search it performed r
 something "reads like AI". That's what keeps both unarguable. Judgment lives in `/sa:review` and
 `/sa:estimate-review`, and neither of those blocks anything.
 
-**Eight `sa-audit` checks are blocking and unwaivable**, each one a defect that would otherwise reach a
+**Nine `sa-audit` checks are blocking and unwaivable**, each one a defect that would otherwise reach a
 client:
 
 1. An offer scope line with no traceability
@@ -267,6 +267,8 @@ client:
 7. A `traditional`/`both` delivery model recorded on the `rom` lane (decision 5 forbids it outright)
 8. A `0` baseline where no `must` requirement exists — it must be `null` with the reason stated, because a
    quoted commitment of nothing is arithmetically defensible and completely misleading
+9. An offer quoting the **all-options** total rather than the committed one — that commits the client to
+   every optional item while presenting it as the baseline price
 
 On the `sa-slop` side, blocking is decided by **audience**: an ungrounded quantity, a fabricated specific,
 a contradiction between two client-facing figures, or a flattened diacritic in the client's own name blocks

@@ -60,7 +60,9 @@ compose a type whose required set is incomplete just because `all` was asked for
   beside it, calendar duration to go-live, count of decisions the client must make); "what they asked for"
   as 4–6 `must` bullets with `REQ-` ids; "what we propose" as the chosen approach plus **the rejected
   alternative and its reason** (which earns its space — it shows the recommendation was a choice); "what it
-  costs" as baseline / contingency / optional kept as three figures; top risks with derived severity; and
+  costs" as the summary block's own rows in `ESTIMATION-METHOD.md §11.1` order — baseline, + contingency,
+  **= committed** (visually distinct, the figure quoted), optional labelled *not included above*, never one
+  blended number; top risks with derived severity; and
   every `D-` decision needed, with what it blocks and by when.
 - **`roadmap`** — a column per delivery package (`PH-` phase, or estimation lines grouped by phase), each
   headed by number, name, **effort in large type**, week range, and one sentence stating what the client can
@@ -69,8 +71,10 @@ compose a type whose required set is incomplete just because `all` was asked for
   effort; they are the two lines cut first in a meeting and the two that hurt most when they are. A
   "product base" chip row of capabilities that already exist at 0 MD, which stops a reader assuming the
   total covers everything on the page. Numbered open blockers with their owners.
-- **`estimate`** — headline trio (baseline Likely, with contingency, and the verification+PM subtotal shown
-  separately, because "how much of this is not build work" is the first question anyone asks); a
+- **`estimate`** — headline trio read straight from `estimation.json.rollup`, never recomputed:
+  `baseline.likely`, `committed.likely` (baseline + contingency + buffer — **the figure quoted**), and the
+  non-build subtotal from `by_category`, because "how much of this is not build work" is the first question
+  anyone asks and `by_category` now answers it without summing the line table; a
   proportional bar segmented by package; line items grouped by package with `L-` ids, `optional` rows
   visually separated and totalled on their own; **"which number to use where"**, naming explicitly which
   figure goes in the offer, which is the internal plan, and which may not be quoted at all — the most
@@ -170,8 +174,11 @@ two years.
 - **Effort is not price.** Print man-days. A cost figure appears only when `basis.rate_card` is non-null,
   labelled as arithmetic on effort × rate, and **the rate card itself never appears**
   (`ESTIMATION-METHOD.md §5, §7`).
-- **Baseline, contingency and optional are three figures, never one**; optional is labelled *not included
-  above* wherever it appears (§9.1).
+- **Baseline, contingency, committed and optional are separate figures, never one**, each read from
+  `estimation.json.rollup` rather than recomputed. Optional is labelled *not included above* (§9.1), and
+  `rollup.all_options` — if shown at all — is labelled **reference only, not a quote**. Every figure
+  carries its scope tier (§11.3): a bare "179 MD" on a page a manager forwards is how a baseline becomes a
+  commitment.
 - **One page, no font below 6pt.** Overflow is resolved by merging and saying so, never by dropping a figure.
 - **Self-contained HTML** — no external font, no CDN, no JavaScript.
 - **Never overwrite a prior version.**

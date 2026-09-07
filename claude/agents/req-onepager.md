@@ -138,8 +138,9 @@ The only type that is not in the reference set, and the one to reach for when so
 - **"What we propose"** — the chosen approach from `architecture.json.approach.chosen`, plus the rejected
   alternative and its reason. One sentence each. The rejected alternative earns its space: it is what shows
   the recommendation was a choice.
-- **"What it costs"** — baseline / contingency / optional as three separate figures, never one. Optional is
-  labelled *not included above*.
+- **"What it costs"** — the summary block's own rows, in `ESTIMATION-METHOD.md §11.1` order: baseline,
+  + contingency, **= committed** (the figure quoted, visually distinct), optional labelled *not included
+  above*. Never one blended number.
 - **"Top risks"** — the `top_watchlist` entries with derived severity and treatment, at most four.
 - **"Decisions needed from you"** — every `D-` client dependency, with what it blocks and by when.
 
@@ -161,9 +162,10 @@ Mirrors the reference `Szállítási roadmap` page.
 ### `estimate` — where the number comes from
 Mirrors the reference `Feature-becslés csomagonként` page.
 
-- **Headline trio**: baseline Likely, baseline with contingency, and the verification+PM subtotal shown
-  separately — the third exists because "how much of this is not build work" is the first question anyone
-  asks.
+- **Headline trio**, read straight from `estimation.json.rollup` and never recomputed: `baseline.likely`,
+  `committed.likely` (baseline + contingency + buffer — **the figure quoted**), and the non-build subtotal
+  from `by_category` — the third exists because "how much of this is not build work" is the first question
+  anyone asks, and `by_category` now answers it without summing the line table.
 - A **proportional bar** across the page, one segment per package, labelled with effort.
 - **Line items grouped by package**, three or four columns across the page, each row: `L-` ID, item,
   effort. `optional` (`should`/`could`) rows are visually separated and totalled on their own, never
@@ -289,8 +291,11 @@ page whose warnings are brand-coloured stops having warnings.
 - **Effort is not price.** Print man-days. Print a cost figure only when `estimation.json.basis.rate_card`
   is non-null, labelled as arithmetic on effort × rate rather than as a price, and **never reproduce the
   rate card itself** (`ESTIMATION-METHOD.md §5, §7`).
-- **Baseline, contingency and optional are three figures, never one.** Optional scope is labelled *not
-  included above* wherever it appears (`ESTIMATION-METHOD.md §9.1`).
+- **Baseline, contingency, committed and optional are separate figures, never one**, each read from
+  `estimation.json.rollup` rather than recomputed. Optional is labelled *not included above* wherever it
+  appears (`ESTIMATION-METHOD.md §9.1`), and `rollup.all_options` — if shown at all — is labelled
+  **reference only, not a quote**. Every figure carries its scope tier (§11.3): a bare "179 MD" on a page a
+  manager forwards is how a baseline becomes a commitment.
 - **One page. No second page, no scrollbar, no font below 6pt.** Overflow is resolved by merging small
   items and saying so, never by dropping a figure.
 - **Self-contained HTML** — inline CSS only, no external font, no CDN, no JavaScript. It must render from a

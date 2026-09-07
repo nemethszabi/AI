@@ -45,7 +45,7 @@ Every artifact JSON begins with the same `meta` object. No exceptions.
 ```json
 {
   "meta": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "artifact": "requirements",
     "slug": "ams-osiguranje-client-portal",
     "lane": "offer-sow",
@@ -60,7 +60,7 @@ Every artifact JSON begins with the same `meta` object. No exceptions.
 
 | Field | Rule |
 |---|---|
-| `schema_version` | `"1.0"` for this document. Bump on any breaking change here, never per-artifact. |
+| `schema_version` | `"1.1"` for this document. Bump on any breaking change here, never per-artifact. **1.0 → 1.1 (2026-09-07)** restructured `estimation.json`'s `rollup` (§4.7): `contingency` and `buffer` moved out of `baseline` into their own objects, `totals_with_contingency` became `committed` and gained a three-point range, and `all_options` plus three sub-rollups were added. **Migration**: an `estimation.json` still carrying the 1.0 shape is readable — re-running `/sa:estimate` rewrites it in the 1.1 shape and bumps `revision`. Nothing else in this document changed. |
 | `artifact` | One of: `engagement`, `requirements`, `architecture`, `detailed-design`, `review`, `risk-register`, `estimation`, `estimate-review`, `offer`. |
 | `slug` | Matches the `ai/sa/<slug>/` folder name. |
 | `lane` | Copied from `engagement.json`. `rom` \| `offer-sow` \| `full-design`. |
@@ -352,19 +352,44 @@ as an exclusion in `offer.json`.
   ],
   "rollup": {
     "baseline": {
-      "ai_assisted": { "best": 0, "likely": 0, "worst": 0 },
+      "ai_assisted": { "best": 148, "likely": 179, "worst": 232 },
       "traditional": null,
-      "contingency_percent": 15,
-      "contingency_rationale": "From risk-register.json contingency_recommendation.",
-      "buffer_percent": 0,
-      "totals_with_contingency": { "ai_assisted": 0, "traditional": null }
+      "line_count": 34
+    },
+    "contingency": {
+      "percent": 15,
+      "rationale": "3 high + 1 critical risk; ESTIMATION-METHOD.md §3 band.",
+      "source_risks": ["R-001", "R-004", "R-007"],
+      "amount": { "best": 22, "likely": 27, "worst": 35 }
+    },
+    "buffer": { "percent": 0, "rationale": null, "amount": null },
+    "committed": {
+      "ai_assisted": { "best": 170, "likely": 206, "worst": 267 },
+      "traditional": null,
+      "formula": "baseline + contingency + buffer",
+      "note": "The figure an offer quotes. Uncommitted until the calibration gate closes."
     },
     "optional": {
-      "ai_assisted": { "best": 0, "likely": 0, "worst": 0 },
+      "ai_assisted": { "best": 38, "likely": 45, "worst": 61 },
       "traditional": null,
-      "items": [],
-      "note": "should/could-priority scope. Not included in baseline totals or contingency; priced independently for the client to add."
-    }
+      "line_count": 9,
+      "items": ["L-031", "L-032"],
+      "note": "should/could-priority scope. Not included in committed totals or contingency; priced independently for the client to add."
+    },
+    "all_options": {
+      "ai_assisted": { "best": 208, "likely": 251, "worst": 328 },
+      "formula": "committed + optional",
+      "note": "Reference only — what it would cost if every optional item were taken. NEVER the quoted figure unless the client has explicitly asked for all of them."
+    },
+    "by_phase": [
+      { "phase": "PH-001", "name": "Contact and buffer base", "scope_tier": "baseline", "likely": 46, "line_count": 8 }
+    ],
+    "by_category": [
+      { "category": "build", "baseline_likely": 120, "optional_likely": 30, "percent_of_baseline": 67 }
+    ],
+    "by_k_category": [
+      { "k_category": "K3", "baseline_likely": 28, "line_count": 5 }
+    ]
   },
   "summary": "What changed since the previous revision, or the estimate's headline on a first run.",
   "assumptions": [ { "id": "A-002", "text": "..." } ],
@@ -383,8 +408,31 @@ as an exclusion in `offer.json`.
 | `lines[].traditional` | `null` unless `basis.model` is `traditional`/`both`. Present only for the rare, explicitly-requested comparison case. |
 | `k_category` | `K1`–`K6` per `ESTIMATION-METHOD.md §2`; `null` for zero-effort lines. |
 | `pert` | **Computed**, never typed by hand: `(best + 4×likely + worst) / 6`. |
-| `rollup.baseline` | `must`-priority lines only. Contingency (§3) is derived and applied here, never against `optional`. |
-| `rollup.optional` | `should`/`could`-priority lines. No contingency or buffer of its own by default; `items` lists the contributing `L-ID`s. Never summed into `rollup.baseline`. |
+| `rollup.baseline` | Sum of `must`-priority (`scope_tier: baseline`) lines only. Three-point, never a single figure. |
+| `rollup.contingency` | Derived per `ESTIMATION-METHOD.md §3` and applied to `baseline` **only**, never to `optional`. `source_risks` names the actual `R-ID`s behind the percentage — a rationale citing none is a defect even when the number is right. `amount` is stored, not left to each consumer to recompute. |
+| `rollup.buffer` | Separate figure, separate justification (§3). `percent: 0` with `amount: null` is the normal state; a non-zero buffer sharing contingency's rationale is a defect. |
+| `rollup.committed` | **The figure an offer quotes.** `baseline + contingency + buffer`, three-point. This is the only rollup `offer.json.commercial` may present as the price basis. |
+| `rollup.optional` | `should`/`could`-priority lines. No contingency or buffer of its own by default; `items` lists the contributing `L-ID`s. Never summed into `baseline` or `committed`. |
+| `rollup.all_options` | `committed + optional`. **Reference only.** It exists so a reader never has to add two sections in their head — not so anyone can quote it. `req-auditor` blocks an offer that presents it as the committed figure. |
+| `rollup.by_phase`, `by_category`, `by_k_category` | Sub-rollups over the same lines, so the common questions are answered without re-summing 40 rows: *what ships when*, *how much of this is not build work*, *is the AI-leverage mix plausible*. Derived, never independently estimated — each must reconcile exactly to `baseline` + `optional`. |
+
+### Every rollup is three-point, and every total shows its arithmetic
+
+Two rules, both learned from this schema's own first version:
+
+1. **No rollup collapses to a single number.** `totals_with_contingency` was a scalar until 2026-09-07, which
+   meant the three-point method survived all the way to the moment it mattered most and then threw two
+   thirds of itself away. Every rollup carries `best`/`likely`/`worst`.
+2. **Every derived figure is stored, not recomputed by each consumer.** The contingency *amount*, the
+   committed total and the all-options total are all computable from other fields — and were, separately, by
+   the XLSX builder, the internal package document, the offer and the one-pager. Four consumers
+   recomputing one number is four chances to round it differently. Compute once, store, and let everything
+   read it.
+
+**Arithmetic integrity is checkable and is checked**: `committed = baseline + contingency.amount + buffer.amount`,
+`all_options = committed + optional`, each sub-rollup reconciles to the line set, and every `_likely` in
+`by_category` sums to `baseline.likely` + `optional.likely`. `req-auditor` verifies all of it mechanically
+(check 21) and `req-estimate-critic` reports a mismatch as `high`.
 
 An item that genuinely cannot be estimated goes in `not_estimated` with a reason — never as a guessed
 line, and never silently folded into "misc".
@@ -774,7 +822,15 @@ command may describe a cross-model pass as "independently verified".
 
 ---
 
-**Last revised**: 2026-09-07 (v1.4 — §5 packaging gate now reads **two** verdict blocks, `sa-audit` and the
+**Last revised**: 2026-09-07 (v1.5 / **schema_version 1.1** — §4.7 `estimation.json`'s `rollup`
+restructured so every related figure sums in one place: `contingency` and `buffer` moved out of `baseline`
+into their own objects with the derived `amount` **stored** rather than recomputed by each consumer;
+`totals_with_contingency` became `committed` and gained a three-point range (it was a scalar, which threw
+away two thirds of the three-point method at the moment it mattered most); added `all_options` as
+labelled reference arithmetic and `by_phase`/`by_category`/`by_k_category` sub-rollups. Paired with
+`ESTIMATION-METHOD.md` §11's presentation rules and `req-auditor` checks 21–22. Migration: a 1.0-shaped
+`estimation.json` is readable; re-running `/sa:estimate` rewrites it.
+v1.4 — §5 packaging gate now reads **two** verdict blocks, `sa-audit` and the
 new `sa-slop`, keyed on a mandatory `gate:` field: one refusal point, two disjoint gate inputs, with the
 comparison table recording why neither substitutes for the other. §4.1: added `vendor_org`,
 `document_profile` and a resolved `template_path`; lane table updated for `slop-check`. §6: added

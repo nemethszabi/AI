@@ -8,7 +8,7 @@ tools:
 
 > Version: 1.0.0
 
-**Copilot CLI port of the Claude-side `req-auditor`** (`_AI_GIT\claude\agents\req-auditor.md`, v1.2.0),
+**Copilot CLI port of the Claude-side `req-auditor`** (`_AI_GIT\claude\agents\req-auditor.md`, v1.3.0),
 ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`.
 
 **[Copilot] Scoped shell grant does not exist here.** The Claude sibling holds
@@ -83,8 +83,9 @@ git repo, `sha256sum`. Record it verbatim in the verdict block.
 7. **Schema conformance** — complete `meta` blocks; enum fields hold allowed values only.
 8. **PERT integrity** — recompute `(best + 4×likely + worst)/6` per line; report mismatches with arithmetic.
 9. **Integration risk coverage** — every `assumed`/`unknown` integration named in some risk's `affects`.
-10. **Contingency band** — `rollup.baseline.contingency_percent` matches what the register's composition
-    implies (§3), or its rationale explains the deviation. `rollup.optional` must carry none of its own.
+10. **Contingency band** — `rollup.contingency.percent` matches what the register's composition implies
+    (§3), or its `rationale` explains the deviation. `rollup.optional` must carry no contingency or buffer
+    of its own. Flag an empty `contingency.source_risks` — a percentage citing no `R-ID` is unverifiable.
 11. **Quality-attribute coverage** — every `QA-` has at least one component in `addressed_by`.
 12. **Open-question propagation** — every open question blocking a `must` appears in
     `offer.json.client_dependencies`.
@@ -98,11 +99,26 @@ git repo, `sha256sum`. Record it verbatim in the verdict block.
     Compare **content, never modification times** (`AGENT-CONDUCT-BASELINE.md` B9).
 18. **Optional-scope reconciliation** — every `scope_tier: optional` line whose requirement is not
     `withdrawn`/`to_clarify` appears in `offer.json.scope.optional` citing the same `REQ-` id.
-20. **Commitment-gate field** — `basis.commitment_gate` is non-empty whenever baseline Likely ≥ 20 MD, and
-    states non-applicability with a reason below it. An empty field is a finding either way.
+20. **Commitment-gate field** — `basis.commitment_gate` is non-empty whenever `rollup.committed.likely` is
+    ≥ 20 MD, and states non-applicability with a reason below it. An empty field is a finding either way.
+21. **Rollup arithmetic** — every derived total reconciles, shown with the arithmetic:
+    `committed = baseline + contingency.amount + buffer.amount` on each of best/likely/worst;
+    `all_options = committed + optional`; every `by_category[].baseline_likely` sums to
+    `baseline.ai_assisted.likely` and `optional_likely` to `optional.ai_assisted.likely`; `by_phase` and
+    `by_k_category` cover every line exactly once. Also flag any rollup collapsed to a single figure
+    instead of best/likely/worst (`ARTIFACT-SCHEMAS.md §4.7`).
 
-*(Check numbers are historical and deliberately non-contiguous — 17 and 19–20 were appended so that
-1–16 keep the numbers other documents already cite.)*
+**BLOCKING, added with check 21:**
+
+22. **The all-options figure is never quoted.** If `offer.json.commercial` states an effort or cost figure,
+    it must derive from `rollup.committed`, never `rollup.all_options`. Quoting the all-options total
+    commits the client to every optional item while presenting it as the baseline price — the exact leak
+    `ESTIMATION-METHOD.md §9.1` exists to prevent. Mechanical: compare the quoted figure against both
+    rollups.
+
+*(Check numbers are historical and deliberately non-contiguous — 17, 19–22 were appended so that
+1–16 keep the numbers other documents already cite. Check 22 is BLOCKING despite its position; the
+grouping headers above, not the numbering, say which class a check is in.)*
 
 ## 4. Waivers
 

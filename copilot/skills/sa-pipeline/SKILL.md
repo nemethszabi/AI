@@ -71,7 +71,7 @@ Lane sequences live in `ARTIFACT-SCHEMAS.md §4.1`; per-step preconditions and o
 | **slop-check** | `@req-slop-detector` | Gate input 2 — the prose is true to them. **Switch model first.** See *Checking a document* below for the two things you must do before dispatching. |
 | **package** | *(no agent — do it yourself)* | See *Packaging* below. **This is where this tool differs most.** |
 | **status** | *(no agent)* | Read-only. Report lane, phase, artifacts vs the lane's expected set, **both** gates with the model each ran on, open `to_clarify` counts, and exactly one recommended next step. |
-| **doc** | *(no agent)* | Consolidate the JSON artifacts into `package.md` — **internal only**, never sent to a client. Never sets `Phase` or `Next`. |
+| **doc** | *(no agent)* | Consolidate the JSON artifacts into `package.md` — **internal only**, never sent to a client. Never sets `Phase` or `Next`. Its Effort section reproduces the estimate's summary block — see *The internal package document* below. |
 | **onepager** | `@req-onepager` | Then render the PDF yourself — see *One-pagers* below. |
 | **help** | *(no agent)* | Point at this file, `PIPELINE.md`, and `docs\SA-WORKFLOW.md`. |
 
@@ -144,6 +144,28 @@ So packaging here does everything the Claude side does **except refuse**:
 confidence of enforcement with none of the substance. **If the deliverable is commercially binding, run the
 packaging step in Claude Code**, where the refusal is real.
 
+### The estimation workbook
+
+**Read every total from `estimation.json.rollup`; never recompute one.** The stored figures are the same
+ones the estimate document, the offer and the one-pager show — a workbook that recomputes them is a fourth
+chance to round one number a fourth way (`ARTIFACT-SCHEMAS.md §4.7`).
+
+- **Tab 1 Summary** — the estimate's own summary block, same rows in the same order
+  (`ESTIMATION-METHOD.md §11.1`), each best/likely/worst: Baseline → + Contingency (% and amount) → + Buffer
+  → **= Committed total** (visually distinct, labelled *the figure quoted*) → Optional (*not included
+  above*) → = If all options taken (**reference only — not a quote**) → Not estimated (`—` with a count,
+  never `0`). Arithmetic rows carry **real cell formulas**, so the sum is checkable in the workbook rather
+  than asserted by it.
+- **Tab 2 Rollups** — `by_phase`, `by_category` (with the **non-build share** as an explicit percentage),
+  `by_k_category`. §11.2's three questions, answered without summing the line table.
+- **Tab 3 Line items** — one row per `L-`, with REQ/component/QA citations, K-category, category and
+  `scope_tier`. Baseline and optional rows visually separated, **never interleaved**, each subtotalling to
+  its Tab 1 row.
+- **Tab 4 Assumptions & exclusions** · **Tab 5 Coverage matrix** (REQ × component × line).
+
+A `traditional` comparison figure, if one exists, sits in its own column labelled "comparison — not the
+delivery model priced" — never merged into one column, never given equal visual weight.
+
 ---
 
 ## Document profiles
@@ -164,6 +186,21 @@ marketing text, never regenerated, reworded, trimmed or machine-translated. Writ
 unexpected extra section is that someone notices; the cost of a silently dropped one is that nobody does.
 
 ---
+
+## The internal package document (`doc`)
+
+`package.md`'s **Effort** section reproduces the estimate's own summary block verbatim — same rows, same
+order (`ESTIMATION-METHOD.md §11.1`), read straight from `estimation.json.rollup` and never recomputed:
+Baseline → + Contingency (% and amount) → + Buffer → **= Committed** → Optional (*not included above*) →
+= If all options taken (**reference only, not a quote**) → Not estimated (`—`, never `0`). Then the three
+sub-rollups from `by_phase`, `by_category` (with the non-build share as a percentage) and `by_k_category`.
+
+**Lead with Committed, not Baseline.** It is the figure an offer quotes, and an internal document that
+leads with the smaller number trains the reader to quote the wrong one.
+
+If `basis.rate_card` is null, state **effort only** — no price, no cost, not even an illustrative one — and
+say why (`ESTIMATION-METHOD.md §5`). A rate card, if one was used, never appears here either; only the
+arithmetic someone chose to show.
 
 ## One-pagers
 
@@ -199,6 +236,14 @@ never hand over a "one-pager" that is two pages.
 - **A screening band is not an estimate and is never quotable** (`ESTIMATION-METHOD.md §8`).
 - **Effort is not price.** No rate card means effort-only output, said plainly; a rate card never appears in
   anything client-facing, only the arithmetic someone chose to show.
+- **One place for the numbers.** Every rendered estimate leads with a single summary table carrying every
+  headline figure and its arithmetic — baseline, + contingency, + buffer, **= committed** (the figure an
+  offer quotes), optional (*not included above*), = if all options taken (**reference only, never a
+  quote**), not estimated (`—`, never `0`). Then three sub-rollups: by phase, by work type with the
+  non-build share as a percentage, and by K-category. A reader must never add two sections together to
+  answer "what does this cost?" (`ESTIMATION-METHOD.md §11`). Every rollup is three-point and is **stored**
+  in `estimation.json.rollup`, so the offer, the XLSX, `doc` and the one-pager all read the same figures
+  rather than each recomputing them.
 - **Internal vs client-facing are different documents.** `doc` → `package.md` is for your team; `onepager`
   is for the meeting; the client path is `offer` → `audit` + `slop-check` → `package`. Never send
   `package.md` to a client.

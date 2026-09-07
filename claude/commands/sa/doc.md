@@ -66,11 +66,16 @@ Read `estimation.json.basis.rate_card`. If it is `null` (or the card exists with
 If a rate card **was** used, present cost as the arithmetic consequence of effort × rate, labelled as an
 input to a pricing decision rather than as the price — and never reproduce the rate card itself.
 
-Lead with the **baseline** (must-have) figure — `estimation.json.rollup.baseline`, AI-assisted, per
-`ESTIMATION-METHOD.md §9.1`. Show `rollup.optional`'s total separately, clearly marked as priced but not
-included. If `basis.model` is `traditional`/`both` (opt-in only, per §2), show the `traditional` figure
-alongside `ai_assisted` labelled as a comparison, never merged into one figure. If `basis.commitment_gate`
-is set, carry it verbatim next to the baseline AI-assisted number.
+Reproduce the estimate's own **summary block** — same rows, same order (`ESTIMATION-METHOD.md §11.1`),
+read straight from `estimation.json.rollup` and never recomputed: Baseline → + Contingency (% and amount)
+→ + Buffer → **= Committed total** → Optional (*not included above*) → = If all options taken (**reference
+only, not a quote**) → Not estimated (`—`, never `0`).
+
+Lead with **Committed**, not Baseline: it is the figure an offer quotes, and an internal document that
+leads with the smaller number trains the reader to quote the wrong one. If `basis.model` is
+`traditional`/`both` (opt-in only, per §2), show the `traditional` figure alongside `ai_assisted` labelled
+as a comparison, never merged into one figure. If `basis.commitment_gate` is set, carry it verbatim next to
+the committed number.
 </step>
 
 <step name="write-package">
@@ -112,10 +117,12 @@ its rationale; every risk with `priced_in: false`; every compliance obligation w
 true`>
 
 ## Effort
-<baseline (must-have) rollup best/likely/worst, AI-assisted, contingency and buffer shown as separate
-figures with their own rationales; the optional (should/could) total shown separately and marked "not
-included above"; `must` coverage; everything in `not_estimated` with its reason; a `traditional`
-comparison figure only if one was explicitly produced — per the commercial basis resolved above>
+<the summary block from `rollup`, verbatim rows in §11.1 order — Baseline / + Contingency (% and amount) /
++ Buffer / **= Committed** / Optional (not included above) / = If all options taken (reference only) /
+Not estimated (`—`). Then the three sub-rollups from `rollup.by_phase`, `by_category` (with the non-build
+share as a percentage) and `by_k_category`. Then `must` coverage, everything in `not_estimated` with its
+reason, and a `traditional` comparison figure only if one was explicitly produced — per the commercial
+basis resolved above>
 
 ## Estimate Critique
 <finding count by severity, the recommended adjustments not yet applied, and any lifecycle gaps from

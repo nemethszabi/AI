@@ -166,12 +166,24 @@ helpers' styling only to content the template has no style for**, per `resolve-t
 
 - **`offer`** → DOCX from `offer.json`, sections in the order of `req-offer`'s own output template, written
   under the profile's `content_sections` where one applies.
-- **`estimation-pack`** → XLSX from `estimation.json` + `rates.yaml` if one was used:
-  Tab 1 Summary — **baseline** best/likely/worst with contingency and buffer shown separately, and a
-  distinct **optional** total below it, clearly labelled "not included above" ·
-  Tab 2 Line items (one row per `L-`, with its REQ/component/QA citations, K-category and
-  `scope_tier` — baseline and optional rows visually separated, never interleaved) ·
-  Tab 3 Assumptions & exclusions · Tab 4 Coverage matrix (REQ × component × line).
+- **`estimation-pack`** → XLSX from `estimation.json` + `rates.yaml` if one was used. **Read every total
+  from `rollup`; never recompute one** (`ARTIFACT-SCHEMAS.md §4.7`) — the stored figures are the same ones
+  the estimate document, the offer and the one-pager show, and a workbook that recomputes them is a fourth
+  chance to round one number a fourth way.
+
+  **Tab 1 Summary** — the estimate's own summary block, same rows in the same order
+  (`ESTIMATION-METHOD.md §11.1`), each as best/likely/worst: Baseline → + Contingency (% and amount) →
+  + Buffer → **= Committed total** (visually distinct, labelled *the figure quoted*) → Optional (labelled
+  *not included above*) → = If all options taken (labelled **reference only — not a quote**) → Not
+  estimated (`—` with a count, never `0`). Arithmetic rows carry real cell formulas, so the sum is
+  checkable in the workbook rather than asserted by it.
+  **Tab 2 Rollups** — by delivery phase, by work type (with the **non-build share** as an explicit
+  percentage), by K-category. §11.2's three questions, answered without summing the line table.
+  **Tab 3 Line items** — one row per `L-`, with REQ/component/QA citations, K-category, category and
+  `scope_tier`. Baseline and optional rows visually separated, **never interleaved**, each subtotalling to
+  its Tab 1 row.
+  **Tab 4 Assumptions & exclusions** · **Tab 5 Coverage matrix** (REQ × component × line).
+
   If a `traditional` comparison figure exists (opt-in only, per `ESTIMATION-METHOD.md §2`), show it
   alongside `ai_assisted` in its own column, labelled "comparison — not the delivery model priced" —
   never merged into one column and never given equal visual weight to the AI-assisted figure.

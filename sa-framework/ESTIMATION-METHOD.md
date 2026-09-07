@@ -458,7 +458,69 @@ less.
 
 ---
 
-**Last revised**: 2026-09-07 (v1.3 — four under-specified rules pinned, each of which an agent could not
+## 11. Presenting the estimate — one place, all the figures
+
+A correct estimate that a reader has to assemble in their head is a defect. The most common way an estimate
+is misread is not a wrong number; it is a **right number read next to the wrong other number** — the
+baseline mistaken for the committed total, the committed total mistaken for the all-in, optional scope
+assumed to be included because it appeared under the same heading.
+
+So the presentation is part of the method, not a formatting preference.
+
+### 11.1 The summary block comes first, and contains everything
+
+Every rendered estimate opens with **one table carrying every headline figure**, before any detail. The
+reader must never add two sections together to answer "what does this cost?". The table has a fixed shape:
+
+| Row | Is | Rule |
+|---|---|---|
+| **Baseline** | `must` scope, bare-minimum sized | three-point |
+| **+ Contingency** | §3, against the baseline only | shows the percentage **and** the derived amount |
+| **+ Buffer** | §3, separately justified | usually zero — shown as `—`, not omitted |
+| **= Committed total** | **the figure an offer quotes** | marked as such, visually distinct |
+| **Optional** | `should`/`could`, priced separately | labelled *not included above* |
+| **= If all options taken** | committed + optional | labelled *reference only, not a quote* |
+| **Not estimated** | no figure exists | shown as `—` with a count, never as zero |
+
+Rows that are arithmetic on the rows above show that arithmetic. A reader who wants to check the sum should
+be able to, in the table, without a calculator.
+
+### 11.2 Three sub-rollups, because three questions are always asked
+
+Immediately after the summary, and before line detail:
+
+- **By delivery phase** — *what ships when, and what is each package worth.*
+- **By work type** (`build`/`integration`/`test`/`pm`/`docs`/`infra`) — *how much of this is not build
+  work?* This is the first question anyone senior asks, and an estimate that cannot answer it in one glance
+  invites the assumption that test and PM were forgotten. State the **non-build share as a percentage**
+  explicitly.
+- **By K-category** — *is the AI-leverage mix plausible?* This is where a `K3` integration line compressed
+  like a `K1` screen becomes visible to a human rather than only to `req-estimate-critic`.
+
+### 11.3 Never present a number without its scope tier
+
+Any figure appearing anywhere — a summary, a one-pager, an offer, a chat message — carries which tier it
+belongs to. "179 man-days" is not an answer; "179 MD baseline, 206 committed with contingency" is.
+
+**The all-options total is the one figure most likely to be misused**, because it is the largest and the
+most quotable-looking. It exists so nobody has to do mental arithmetic across two sections — not so anyone
+can quote it. It is always labelled *reference only*, and `req-auditor` blocks an offer that presents it as
+the committed figure.
+
+### 11.4 Zero and absent are different, and are shown differently
+
+`0` means measured as zero. `—` means no figure exists. An unestimated item shown as `0` silently claims it
+is free, which is the same class of error as §9.1's zero-baseline case — and it survives being forwarded
+without its caveat, which is what makes it expensive.
+
+---
+
+**Last revised**: 2026-09-07 (v1.4 — added §11, presentation discipline: the mandatory single summary block
+with every headline figure and its arithmetic, the three sub-rollups answering the three questions always
+asked, the rule that no figure appears without its scope tier, and zero-vs-absent. Written after a review
+found the rendered estimate scattered its related figures across four sections, so answering "what does this
+cost?" required the reader to add up numbers themselves — which is where a baseline gets mistaken for a
+committed total. v1.3 — four under-specified rules pinned, each of which an agent could not
 previously apply consistently: §1 rounding precision (per-line, PERT, rollup, percentages, and round-on-
 output-never-in-storage); §4 the no-calibration-source case, resolving a three-way contradiction between
 this file, `req-estimator`'s rules and `req-estimate-critic` dimension 10 that, followed literally, made

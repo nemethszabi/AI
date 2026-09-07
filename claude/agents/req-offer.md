@@ -224,6 +224,14 @@ effort-only, say so plainly and state that pricing follows separately.>
   asks for a specific optional item to be folded into the committed baseline.
 - **`scope.optional` is priced but never summed into the headline commercial figure** unless the client has
   explicitly asked for it to be included (`ESTIMATION-METHOD.md §9.1`).
+- **Quote `estimation.json.rollup.committed`, and only that.** It is baseline + contingency + buffer, and
+  it is the one rollup an offer may present as the price basis. **Never quote `rollup.all_options`** — that
+  figure exists so an internal reader doesn't have to add two sections in their head, and its own `note`
+  field says reference-only. Quoting it commits the client to every optional item while presenting it as
+  the baseline price; `req-auditor` check 22 blocks exactly that.
+- **Every figure carries its scope tier** (`ESTIMATION-METHOD.md §11.3`). "179 man-days" is not an answer;
+  "179 MD baseline, 206 committed including contingency" is. Read the figures from `rollup` — never
+  recompute a total the estimator already stored.
 - **Every risk with `priced_in: false` appears as an exclusion**, in language the client can understand.
 - **Never present a compressed AI-assisted figure as committed before its calibration gate closes.** Quote
   the range and name the gate.

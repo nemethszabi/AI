@@ -5,7 +5,10 @@ tools: Read, Grep, Glob, Bash(git hash-object:*), Bash(sha256sum:*), Write
 color: yellow
 ---
 
-> Version: 1.2.0 — minor: records that this is one of two gate inputs, not the whole gate
+> Version: 1.3.0 — minor: added checks 21 (ADVISORY — rollup arithmetic reconciles, every rollup
+> three-point) and 22 (**BLOCKING** — an offer never quotes `rollup.all_options`); check 10 and 20 updated
+> for schema 1.1's restructured `rollup` (`ARTIFACT-SCHEMAS.md` §4.7). **Nine** blocking checks now.
+> 1.2.0 — records that this is one of two gate inputs, not the whole gate
 > (`req-slop-detector` is the other, `ARTIFACT-SCHEMAS.md` §5); added checks 19 (BLOCKING — zero baseline)
 > and 20 (ADVISORY — commitment-gate field) for `ESTIMATION-METHOD.md` v1.3's newly pinned rules; verdict
 > block now carries `model:`.
@@ -115,10 +118,11 @@ audit — the history of what was known when is itself evidence.
    mismatch beyond rounding, with the arithmetic.
 9. **Integration risk coverage** — every `architecture.json` integration with `confidence` of `assumed`
    or `unknown` is named in at least one risk's `affects`.
-10. **Contingency band** — `estimation.json.rollup.baseline.contingency_percent` matches the band that
-    `risk-register.json`'s composition implies (`ESTIMATION-METHOD.md §3`), or its rationale explains the
-    deviation. `rollup.optional` must carry no `contingency_percent` of its own (`ESTIMATION-METHOD.md
-    §9.1`) — flag one that does.
+10. **Contingency band** — `estimation.json.rollup.contingency.percent` matches the band that
+    `risk-register.json`'s composition implies (`ESTIMATION-METHOD.md §3`), or its `rationale` explains the
+    deviation. `rollup.optional` must carry no contingency or buffer of its own (`ESTIMATION-METHOD.md
+    §9.1`) — flag one that does. Also flag an empty `contingency.source_risks` — a percentage citing no
+    `R-ID` is unverifiable even when it happens to be right.
 11. **Quality-attribute coverage** — every `QA-` has at least one component in `addressed_by`.
 12. **Open-question propagation** — every `requirements.json` open question that `blocks` a `must`
     requirement appears in `offer.json.client_dependencies`.
@@ -156,9 +160,27 @@ docs already cite by number**
     Purely mechanical — a field comparison, no judgment — which is why it belongs here as well as in
     `req-estimate-critic`'s advisory dimension 14.
 20. **ADVISORY — commitment-gate field.** `estimation.json.basis.commitment_gate` is non-empty whenever
-    `rollup.baseline.ai_assisted.likely` is ≥ 20 (`ESTIMATION-METHOD.md §4`), and states that the gate does
+    `rollup.committed.ai_assisted.likely` is ≥ 20 (`ESTIMATION-METHOD.md §4`), and states that the gate does
     not apply, with a reason, below that. Flag an empty field either way: an absent gate and an inapplicable
     one read identically to everyone downstream, and only one of them is safe.
+
+**Added in v1.3 — the rollup structure introduced by schema 1.1**
+
+21. **ADVISORY — rollup arithmetic.** Every derived total reconciles, shown with the arithmetic:
+    - `rollup.committed` = `rollup.baseline` + `rollup.contingency.amount` + `rollup.buffer.amount`, on
+      each of `best`/`likely`/`worst`.
+    - `rollup.all_options` = `rollup.committed` + `rollup.optional`.
+    - Every `by_category[].baseline_likely` sums to `rollup.baseline.ai_assisted.likely`, and the
+      `optional_likely` column to `rollup.optional.ai_assisted.likely`.
+    - `by_phase` and `by_k_category` each cover every line exactly once — no line missing, none
+      double-counted.
+    - Every rollup carries all three of `best`/`likely`/`worst`; a rollup collapsed to a single figure is a
+      finding (`ARTIFACT-SCHEMAS.md §4.7`).
+22. **BLOCKING — the all-options figure is never quoted.** If `offer.json.commercial` states an effort or
+    cost figure, it must derive from `rollup.committed`, never from `rollup.all_options`. Quoting the
+    all-options total commits the client to every optional item while presenting it as the baseline price —
+    the exact leak `ESTIMATION-METHOD.md §9.1` exists to prevent, and the reason `all_options` carries a
+    reference-only note on the field itself. Mechanical: compare the quoted figure against both rollups.
 </checks>
 
 <output_template>

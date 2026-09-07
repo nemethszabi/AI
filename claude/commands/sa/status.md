@@ -10,9 +10,11 @@ allowed-tools:
 argument-hint: "[slug]"
 ---
 
-> Version: 1.2.0 — minor: `screen.md` reported alongside `brief.md` on its own advisory line, per the
-> two-entry `ARTIFACT-SCHEMAS.md` §6 carve-out. 1.1.0 — `brief.md` reported on its own advisory line and
-> excluded from `extra`.
+> Version: 1.3.0 — minor: reports both gates (`sa-audit` and `sa-slop`) separately with the model each ran
+> on, the resolved document profile, and `onepager/` as advisory non-artifact #3
+> (`ARTIFACT-SCHEMAS.md` §5, §6, §8, §9). 1.2.0 — `screen.md` reported alongside `brief.md` on its own
+> advisory line, per the then two-entry §6 carve-out. 1.1.0 — `brief.md` reported on its own advisory line
+> and excluded from `extra`.
 
 <objective>
 `/sa:status [slug]` answers "where am I in this engagement?" It reads `ai/sa/<slug>/STATE.md` and
@@ -55,9 +57,9 @@ Counts and comparisons only — no analysis of content.
     packaged files under `deliverables/`
   - `full-design` → the above plus `review.json`, `detailed-design.json`, and files under `diagrams/`
   Mark each present or missing. An artifact outside the lane's expected set that exists anyway is listed
-  as extra, not as an error. **`brief.md` and `screen.md` are never `extra`** — both are advisory
-  non-artifacts (`ARTIFACT-SCHEMAS.md` §6), optional on every lane; report each on its own line as present
-  or absent, and never as unexpected.
+  as extra, not as an error. **`brief.md`, `screen.md` and `onepager/` are never `extra`** — all three are
+  advisory non-artifacts (`ARTIFACT-SCHEMAS.md` §6), optional on every lane; report each on its own line as
+  present or absent, and never as unexpected.
 - **Open `to_clarify`**: requirements with `"status": "to_clarify"` in `requirements.json`, plus
   `open_questions[]` entries in `engagement.json` and `requirements.json`, plus any field in
   `engagement.json` still literally valued `to_clarify`. Report the three sub-counts, not one blended
@@ -71,9 +73,17 @@ Counts and comparisons only — no analysis of content.
   ```
 
   Outside a git repo fall back to `sha256sum` (PowerShell equivalent: `Get-FileHash -Algorithm SHA256`).
-  Compare against the `inputs_hash:` recorded in the latest `audit/` `sa-verdict` block. Match → `fresh`;
-  differ or absent → `stale`. Content-based, never mtime. Rendered `.md` files, `deliverables/`,
-  `diagrams/` and snapshots are excluded from the hash.
+  Compare the one computed hash against the `inputs_hash:` recorded in **both** gates' latest verdict
+  blocks — the newest `audit/audit-*.md` (`gate: sa-audit`) and the newest `audit/slop-*.md`
+  (`gate: sa-slop`). Match → `fresh`; differ or absent → `stale`. Report the two separately and never
+  blend them into one "gates" line: a fresh audit beside a stale slop scan is the exact state a reader
+  needs to see, and an aggregate hides it. Match reports to gates by their `gate:` field, never by
+  filename. Content-based, never mtime. Rendered `.md` files, `deliverables/`, `diagrams/`, `onepager/`
+  and snapshots are excluded from the hash.
+- **Review-model separation**: for each gate and review artifact present, note the `model:` its verdict
+  block or report header recorded, if any. Report it beside the verdict — a same-model review is worth
+  less than a cross-model one (`ARTIFACT-SCHEMAS.md §9`) and this is the only place a reader sees it
+  without opening the report.
 - **Staleness of rendered Markdown**: for each `<name>.json` present, note whether the paired `<name>.md`
   is missing. Report it; do not regenerate it.
 </step>
@@ -97,9 +107,10 @@ Recommend exactly one command, first match wins:
 | `estimation.json` | `/sa:estimate` | all |
 | `estimate-review.json` | `/sa:estimate-review` | `offer-sow`, `full-design` |
 | `offer.json` | `/sa:offer` | all |
-| no fresh `audit/` verdict | `/sa:audit` | `offer-sow`, `full-design` |
+| no fresh `sa-audit` verdict | `/sa:audit` | `offer-sow`, `full-design` |
+| no fresh `sa-slop` verdict | `/sa:slop-check` | `offer-sow`, `full-design` |
 | `deliverables/` empty | `/sa:package` | `offer-sow`, `full-design` |
-| everything present | done — or `/sa:doc` for an internal consolidation | all |
+| everything present | done — or `/sa:doc` for an internal consolidation, `/sa:onepager` for a management page | all |
 
 Skip any row whose lane column doesn't include this engagement's lane. Diagrams have no `/sa:` command —
 recommend `/diagram` where the design named diagrams that `diagrams/` doesn't contain.
@@ -120,6 +131,7 @@ Artifacts (lane expects <n>):
   ...              <one line per expected artifact, in lane pipeline order>
   brief (advisory) <present | not run — /sa:brief>
   screen (advisory)<present | not run — /sa:screen>
+  onepager (adv.)  <types and versions present, or "not run — /sa:onepager">
   extra            <any present-but-unexpected artifact, or —>
 
 Open items:
@@ -127,11 +139,19 @@ Open items:
   open questions   <n engagement · n requirements>
   unrendered .md   <n or —>
 
-Gates:
-  Audit:         <PASS | PASS-WITH-WAIVERS | BLOCKED | not-run> (<ts>, <fresh | stale — inputs changed>)
+Gates (both required by /sa:package):
+  sa-audit:      <PASS | PASS-WITH-WAIVERS | BLOCKED | not-run> (<ts>, <fresh | stale — inputs changed>) [model: <m or —>]
+  sa-slop:       <PASS | PASS-WITH-WAIVERS | BLOCKED | not-run> (<ts>, <fresh | stale — inputs changed>) [model: <m or —>]
+
+Document profile: <name → template filename | none — deliverables will be unbranded>
 
 Next: <one command> — <one-line rationale>
 ```
+
+Add one further line **only when it applies**: if both gates pass but either recorded no `model:`, or
+recorded the same model, print
+`Note: <gate(s)> ran on the authoring model — consider a cross-model re-run before this goes out.`
+Omit it entirely otherwise. A note that prints every time is a note nobody reads.
 </step>
 </process>
 

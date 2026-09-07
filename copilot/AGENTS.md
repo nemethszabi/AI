@@ -18,6 +18,17 @@ kept thin so it stays readable, never inline the doctrine itself in this file.
   `~/.copilot/README.md` (or `d:\_AI_GIT\copilot\README.md`, the staged source) for why, and what porting
   would take.
 
+## Rules that apply here even with no `req-*` agent ported
+Two `AGENT-CONDUCT-BASELINE.md` sections added 2026-09-07 are **general agent conduct**, not `sa:`-pipeline
+mechanics, so they bind any agent run on this tool — including ad-hoc work with no agent file at all:
+- **Section D — groundedness & slop.** Every factual claim is sourced, derived, assumed, or declared absent;
+  there is no fifth kind. A *specific* unsourced detail (a version number, a percentage, a named capability)
+  is the dangerous case, because specificity reads as evidence. Never invent content to complete a table,
+  a section, or a list.
+- **B10 — cross-model review.** An independent review runs on a different model than produced the work.
+  Copilot CLI's model selector is the equivalent of Claude Code's `--model`; the rule is the same and so is
+  the honest caveat that sibling models share blind spots.
+
 ## Getting started
 - Repo source of truth (staged, not live): `d:\_AI_GIT\copilot\README.md`.
 - Claude Code carries the full-fidelity version of this framework — `d:\_AI_GIT\claude\README.md` — if a

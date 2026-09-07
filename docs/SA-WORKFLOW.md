@@ -121,10 +121,12 @@ small bid costs a few hours; under-delivering on a large one costs the bid.
 | `/sa:estimate` | `estimation.json` — three-point best/likely/worst **AI-assisted** effort per line; `must`-only bare-minimum baseline with contingency, `should`/`could` priced separately as Optional; stricter on `rom` | `req-estimator` |
 | `/sa:estimate-review` | `estimate-review.json` — optimism bias, coverage, lifecycle gaps | `req-estimate-critic` |
 | `/sa:offer` | `offer.json` — the client-facing content | `req-offer` |
-| `/sa:audit` | `audit/audit-<ts>.md` — **the gate** | `req-auditor` |
-| `/sa:package` | `deliverables/*.docx`, `*.xlsx`, `*.pptx` | — |
+| `/sa:audit` | `audit/audit-<ts>.md` — **gate input 1**: do the JSON artifacts agree with each other, by ID? | `req-auditor` |
+| `/sa:slop-check` | `audit/slop-<ts>.md` — **gate input 2**: is the prose a human will read grounded, consistent and free of machine-tells? | `req-slop-detector` |
+| `/sa:package` | `deliverables/*.docx`, `*.xlsx`, `*.pptx`, built into the branded template | — |
 | `/sa:status` | Where you are and the single next command | — |
 | `/sa:doc` | `package.md` — **internal** consolidation | — |
+| `/sa:onepager` | `onepager/<type>-v<NN>.html` + `.pdf` — a dense single page for management *(advisory)* | `req-onepager` |
 | `/sa:help` | Static reference | — |
 
 **`/sa:doc` and `/sa:offer` are not the same thing.** `/sa:doc` is an internal consolidation for your own
@@ -154,7 +156,7 @@ re-running `/sa:triage`.
 
 ---
 
-## Five design decisions worth understanding
+## Eight design decisions worth understanding
 
 ### 1. Every artifact is written twice
 
@@ -226,17 +228,34 @@ and `likely` is never rounded up "to be safe" — the first number said out loud
 expectations harder than any later, better-informed one, so the response to having the least information of
 any lane is more estimating discipline, not less.
 
-### 6. One hard gate, in one place
+### 6. One refusal point, two gate inputs
 
-`/sa:package` refuses to build a client deliverable unless `/sa:audit` shows `PASS` or
-`PASS-WITH-WAIVERS` **on a matching content hash**. Change any artifact and the gate goes stale — by
-content, never by timestamp, so touching a file without changing it doesn't invalidate anything.
+`/sa:package` refuses to build a client deliverable unless **both** gates show `PASS` or
+`PASS-WITH-WAIVERS` **on a matching content hash**. Change any artifact and both go stale — by content,
+never by timestamp, so touching a file without changing it doesn't invalidate anything.
 
-`req-auditor` is deliberately **mechanical**: it checks that artifacts agree with each other, never
-whether a judgment was good. That's what makes the gate unarguable. Judgment lives in `/sa:review` and
+There is still exactly **one place that refuses**. What changed on 2026-09-07 is that it reads two
+verdicts, because the two check surfaces that don't overlap:
+
+| | `/sa:audit` (`gate: sa-audit`) | `/sa:slop-check` (`gate: sa-slop`) |
+|---|---|---|
+| Reads | the `.json` artifacts | the rendered `.md` and extracted deliverable text |
+| Asks | do these agree with each other, by ID? | is what the human will read true to them? |
+| Method | set operations and arithmetic | claim tracing, contradiction scan, pattern/density scan |
+| Catches | `REQ-014` is `must` and nothing estimates it | the exec summary quotes "40% faster" and no artifact says so |
+
+The concrete failure this closes: an offer whose every ID resolves — a clean `req-auditor` PASS — while its
+executive summary carries an invented benchmark, a phase duration contradicting the delivery plan two pages
+later, and the client's name with its diacritics flattened. All four are structurally invisible to an
+ID-integrity check, and all four reach the client.
+
+Both agents are deliberately **mechanical or evidenced**: `req-auditor` checks that artifacts agree, never
+whether a judgment was good; `req-slop-detector` cites the search it performed rather than asserting that
+something "reads like AI". That's what keeps both unarguable. Judgment lives in `/sa:review` and
 `/sa:estimate-review`, and neither of those blocks anything.
 
-Seven checks are **blocking and unwaivable**, each one a defect that would otherwise reach a client:
+**Eight `sa-audit` checks are blocking and unwaivable**, each one a defect that would otherwise reach a
+client:
 
 1. An offer scope line with no traceability
 2. A `must` requirement with no estimate and no reasoned deferral
@@ -246,6 +265,42 @@ Seven checks are **blocking and unwaivable**, each one a defect that would other
    `scope.optional`, not `in_scope` — decision 5)
 6. A price stated with no rate card behind it
 7. A `traditional`/`both` delivery model recorded on the `rom` lane (decision 5 forbids it outright)
+8. A `0` baseline where no `must` requirement exists — it must be `null` with the reason stated, because a
+   quoted commitment of nothing is arithmetically defensible and completely misleading
+
+On the `sa-slop` side, blocking is decided by **audience**: an ungrounded quantity, a fabricated specific,
+a contradiction between two client-facing figures, or a flattened diacritic in the client's own name blocks
+when it appears in `offer.md`, a one-pager, or a built deliverable. The same defect in `architecture.md` is
+advisory. A gate that blocked on an internal working note would be a gate people learn to route around.
+
+### 7. The independent checks should run on a different model
+
+Four agents here exist to catch what an earlier agent got wrong — `req-reviewer`, `req-estimate-critic`,
+`req-auditor`, `req-slop-detector`. Each enforces independence carefully against reading the author's
+*reasoning*, and each, by default, runs on the author's *model*. That is a real gap: the model that found an
+assumption reasonable enough to write down is the one least likely to challenge it, and a sentence that felt
+right to generate feels right to read.
+
+All four commands take `--model=<sonnet|opus|haiku|fable>`, per-invocation only, and each reports which model
+actually ran. Spend it where it pays: `/sa:slop-check` and `/sa:estimate-review` first, `/sa:review` next,
+`/sa:audit` last (mechanical checks barely vary by model).
+
+Said honestly, and the doctrine says it too (`ARTIFACT-SCHEMAS.md` §9): sibling models share training
+lineage and therefore share some blind spots, so this reduces correlated error rather than delivering real
+independence. You remain the reviewer of record, and nothing here may be described as "independently
+verified".
+
+### 8. Deliverables build into a branded template
+
+`/sa:triage` resolves a **document profile** from `<config-root>\document-data\templates.yaml` — language
+and locale map to a `.docx` shell — and writes it into `engagement.json`. `/sa:package` then *fills* that
+template's placeholders and never restyles it, keeping approved boilerplate (confidentiality statements,
+disclaimers, company introductions) verbatim.
+
+The template paths live in a gitignored file at the config root rather than in any command, the same
+indirection as the rate card, which is what lets a generic pipeline produce organization-branded output
+without any command knowing an absolute path. No profile configured means unbranded output — **said out
+loud in the relay**, never discovered later in Word.
 
 ---
 
@@ -269,10 +324,16 @@ Seven checks are **blocking and unwaivable**, each one a defect that would other
 /sa:risk    <slug>              # → every assumed integration becomes a scored risk
 /sa:estimate <slug>             # → AI-assisted three-point effort; must-only baseline + priced optional;
                                 #   contingency from the register
-/sa:estimate-review <slug>      # → optimism bias, lifecycle gaps
+/sa:estimate-review <slug> --model=sonnet
+                                # → optimism bias, lifecycle gaps. Note the --model: run the critique
+                                #   on something other than what produced the estimate (decision 7).
 /sa:offer   <slug>              # → client-facing content
-/sa:audit   <slug>              # → the gate
-/sa:package <slug> all          # → DOCX + XLSX under deliverables/
+/sa:audit   <slug>              # → gate 1: do the artifacts agree, by ID?
+/sa:slop-check <slug> --model=sonnet
+                                # → gate 2: is the prose grounded? Ungrounded figures, contradictions,
+                                #   AI tells, flattened diacritics. Both gates must pass.
+/sa:package <slug> all          # → DOCX + XLSX under deliverables/, in the branded template
+/sa:onepager <slug> summary     # → one page for the internal conversation the offer starts
 ```
 
 Run `/sa:status <slug>` at any point to see the lane, the phase, which artifacts exist, whether the gate
@@ -307,15 +368,32 @@ Copy-Item "d:\_AI_GIT\estimation-data\rates.yaml.example" `
 A filled-in rate card is commercially sensitive. Keep it in `~\.claude\`, never in this repo — the repo's
 `.gitignore` already excludes `estimation-data/rates.yaml`.
 
+```powershell
+# Document profiles — unbranded deliverables until this exists
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\document-data\templates" | Out-Null
+Copy-Item "d:\_AI_GIT\document-data\templates.yaml"   "$env:USERPROFILE\.claude\document-data\"
+Copy-Item "d:\_AI_GIT\document-data\templates\*.docx" "$env:USERPROFILE\.claude\document-data\templates\"
+# repeat for each config root you use (see claude\README.md's Rollout — there are three)
+```
+
+Same reasoning as the rate card: the brand templates and the profile map are organization property with
+machine-specific paths, so both are gitignored and live only at the config roots. Without them `/sa:package`
+still works — it just builds unbranded, and says so.
+
 For diagram rendering, `mmdc` (`@mermaid-js/mermaid-cli`) must be on `PATH`, otherwise `/sa:package`
 reports figures as unrendered rather than silently omitting them.
+
+For one-pager PDFs, `/sa:onepager` uses headless Edge or Chrome — already present on a normal Windows
+machine, no install needed. If neither is found the HTML is still written and you print it yourself
+(`Ctrl+P` → Landscape → Margins: None → Background graphics: on); the HTML is the artifact, the PDF is a
+rendering of it.
 
 ---
 
 ## Deliberate divergences from the reference framework
 
-This pipeline was built after reading `d:\_GEOMANT_GIT\agentic-dev-framework\`. Four things in it were
-**not** copied, on purpose:
+This pipeline was built after reading `d:\_GEOMANT_GIT\agentic-dev-framework\`. Four things in it are
+still deliberately **not** copied:
 
 | Not copied | Why |
 |---|---|
@@ -324,12 +402,34 @@ This pipeline was built after reading `d:\_GEOMANT_GIT\agentic-dev-framework\`. 
 | Hardcoded vendor/domain agents | Their `solution-architect` and `project-estimator` bake in one company's platform and market. The schemas and rules were taken; the agents were rewritten generic. |
 | Unattended multi-phase autonomy | Their `/dev:auto` runs phases without a human checkpoint. See below. |
 
-Their **slop-check** phrase bank was also left out — the contradiction, citation and locale layers are
-genuinely useful and now live in `req-auditor`'s checks 13–15, but the em-dash-density and word-frequency
-heuristics produce false positives.
+A fifth thing was left out and **has since been reversed** — recorded here rather than quietly edited away,
+because the reasoning behind the original omission is a good illustration of how a partly-correct argument
+loses a whole capability.
+
+The reference framework's `sa-slop-detector` was not ported when its sibling `sa-completeness-auditor`
+became `req-auditor`. The note here said its "contradiction, citation and locale layers now live in
+`req-auditor`'s checks 13–15", and that the phrase bank was skipped because "the em-dash-density and
+word-frequency heuristics produce false positives."
+
+The second half was right; the first half was not, and it hid the cost:
+
+- `req-auditor` reads **`.json` artifacts**. `sa-slop-detector` read the **rendered prose and the extracted
+  deliverable text**. Checks 13–15 catch a phase duration that differs between two JSON fields; they cannot
+  see a sentence in the exec summary that no JSON field contains. Those are different surfaces, and calling
+  one a home for the other's checks was the error.
+- The em-dash objection was specific and correct — em-dash density and sentence length catch competent human
+  prose as readily as machine prose. But it was applied to the **entire agent**, discarding the groundedness
+  and locale layers along with the two bad heuristics.
+
+The result: for four weeks the pipeline had an ID-integrity gate and no prose-integrity gate at all, and
+nothing checked whether a client-facing document said anything the artifacts didn't support.
+`req-slop-detector` (2026-09-07) is the port, with the em-dash and sentence-length heuristics deliberately
+**still** excluded and that exclusion written into its own rules, so the correct half of the original
+objection survives without taking the rest of the agent with it.
 
 What *was* taken, and improved on: the lane model, the content-hash freshness gate, the JSON-as-source-
-of-truth data model, the estimate-critic's quantified heuristics, and the compliance register.
+of-truth data model, the estimate-critic's quantified heuristics, the compliance register, and — belatedly
+— the four-layer prose scan.
 
 ---
 

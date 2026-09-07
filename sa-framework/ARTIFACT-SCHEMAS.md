@@ -119,7 +119,9 @@ The only artifact a command writes directly rather than an agent. Everything dow
   "locale": "sr-RS",
   "deliverable_language": "English",
   "currency": "EUR",
-  "template_path": null,
+  "vendor_org": "geomant",
+  "document_profile": "geomant-eng",
+  "template_path": "C:/Users/<user>/.claude/document-data/templates/template_ENG.docx",
   "file_naming": "<ORG>-<YYYY>-<CLIENT>-<NNN>-<artifact>-v<NN>.<ext>",
   "delivery_model_intent": "both",
   "commercial_size": "to_clarify",
@@ -135,17 +137,30 @@ The only artifact a command writes directly rather than an agent. Everything dow
 because `req-risk-officer` runs *before* `req-estimator` and needs to know whether the AI-delivery
 calibration and compression-misreading risks apply — there is no `estimation.json` to read at that point.
 
+`vendor_org`, `document_profile` and `template_path` select the branded document shell `/sa:package` builds
+into — see §8. `vendor_org` is the *selling* organization (never the client); `document_profile` names a
+profile in `document-data/templates.yaml`; `template_path` is the resolved absolute path to that profile's
+`.docx`, written by `/sa:triage` so every later command reads a path rather than re-resolving a lookup. All
+three are `null`/`to_clarify` when no profile matches, and packaging then falls back to unbranded output and
+says so.
+
 `lane` drives rigor and deliverables everywhere downstream:
 
 | Lane | Pipeline | Deliverables |
 |---|---|---|
 | `rom` | ingest → clarify → estimate → offer | offer (light) |
-| `offer-sow` | ingest → clarify → design → risk → estimate → estimate-review → offer → **audit** → package | offer DOCX + estimation XLSX |
-| `full-design` | all of the above → review → design-detail → diagrams → **audit** → package | + HLD, LLD, pitch deck |
+| `offer-sow` | ingest → clarify → design → risk → estimate → estimate-review → offer → **audit** + **slop-check** → package | offer DOCX + estimation XLSX |
+| `full-design` | all of the above → review → design-detail → diagrams → **audit** + **slop-check** → package | + HLD, LLD, pitch deck |
 
-`audit` is never optional on a lane that packages — `/sa:package` refuses without it (§5). This table is
-the single source of truth for lane sequence; commands cite it rather than restating it, because a
-restated pipeline is what drifts.
+`audit` and `slop-check` are never optional on a lane that packages — `/sa:package` refuses without both
+(§5). They are two independent gate *inputs* to one refusal point, not two refusal points: `audit` checks
+that the JSON artifacts agree with each other by ID, `slop-check` checks that the prose a human will
+actually read is grounded and free of machine-tells. Neither substitutes for the other, and §5 records why.
+This table is the single source of truth for lane sequence; commands cite it rather than restating it,
+because a restated pipeline is what drifts.
+
+`/sa:onepager` appears in no lane's pipeline: a management one-pager is an internal communication artifact
+produced on demand, not a stage anything else depends on. It is the third **advisory non-artifact** (§6).
 
 **Lane is reversible.** Re-running `/sa:triage` updates `engagement.json` in place; it never re-scaffolds
 over existing artifacts. When genuinely ambiguous, classify **up one tier** and say why.
@@ -449,19 +464,50 @@ in place must.
 Rendered `.md` files, `deliverables/`, `diagrams/` and snapshots are **excluded** from the hash — packaging
 its own output must not re-stale the gate that permitted it.
 
-`/sa:audit` writes its verdict as a fenced block:
+`/sa:audit` and `/sa:slop-check` each write their verdict as a fenced block, distinguished by `gate:`:
 
 ````
 ```sa-verdict
+gate: sa-audit
 verdict: PASS
 inputs_hash: requirements:abc123def456,estimation:789abc012def
 generated_at: 2026-08-12T14:30:00Z
 ```
 ````
 
-`/sa:package` refuses unless the verdict is `PASS` or `PASS-WITH-WAIVERS` **and** the recorded
+`/sa:package` refuses unless **both** gates report `PASS` or `PASS-WITH-WAIVERS` **and** each recorded
 `inputs_hash` matches a freshly computed one. Refusal is correct behavior, not pedantry — per
 `CONSTITUTION.md` Article III, the fix is to re-run the gate, never to weaken it.
+
+### Two gate inputs, one refusal point
+
+This is deliberately **not** a second gate in the pipeline. Refusal still happens in exactly one place —
+`/sa:package` — and `/sa:review` and `/sa:estimate-review` remain findings-only, as §4.5 records. What
+changed is that the single refusal now reads two verdicts, because the two check genuinely disjoint
+surfaces and neither can see the other's defects:
+
+| | `/sa:audit` → `req-auditor` | `/sa:slop-check` → `req-slop-detector` |
+|---|---|---|
+| Reads | the `.json` artifacts | the rendered `.md`, and extracted text of anything already in `deliverables/` |
+| Asks | do the artifacts agree with each other, by ID? | is what the human will read grounded, consistent and free of machine-tells? |
+| Method | set operations and arithmetic over IDs | claim tracing, contradiction scan, pattern/density scan, locale integrity |
+| Catches | `REQ-014` is `must` and no line cites it | the offer's exec summary states "40% faster" and no artifact contains that figure |
+| Cannot catch | a fabricated figure that appears in no ID field | a `must` requirement silently missing from the estimate |
+
+The concrete failure this closes: an offer whose every ID resolves — a clean `req-auditor` PASS — while its
+executive summary carries an invented benchmark, a flattened client name, and a phase duration that
+contradicts the delivery plan two pages later. All four are invisible to an ID-integrity check and all four
+reach the client.
+
+`gate:` is mandatory in every verdict block and is what `/sa:package` keys on. A block without it, or with
+an unrecognized value, is treated as a missing gate — never guessed at from the report's filename or prose.
+
+**Both gates hash the same input set** (the JSON list above), so one recomputation serves both comparisons.
+`req-slop-detector` additionally *reads* rendered `.md` files and `deliverables/` extracts, but those are
+still **excluded from the hash** for the reason already given: packaging's own output must not re-stale the
+gate that permitted it. The consequence is worth stating plainly rather than discovering: **editing a
+rendered `.md` by hand does not stale either gate.** That is not a hole, it is the dual-output rule (§1)
+holding — a hand-edited `.md` is already a contract violation, and the next agent run overwrites it.
 
 ---
 
@@ -483,11 +529,19 @@ ai/sa/<slug>/
   estimate-review.md     estimate-review.json     ← req-estimate-critic
   offer.md               offer.json               ← req-offer
   audit/                 audit-<ts>.md            ← /sa:audit
+                         slop-<ts>.md             ← /sa:slop-check
+                         extract/*.txt            ← /sa:slop-check (regenerable scan input)
                          WAIVERS.md               ← human-authored; Rationale + Approved-by + Date
   diagrams/              *.mmd  *.png             ← mermaid-diagram-maker
+  onepager/              <type>-v<NN>.html/.pdf   ← /sa:onepager (advisory — see below)
   deliverables/          *.docx *.xlsx *.pptx     ← /sa:package
     .snapshots/          <type>-v<NN>.json
 ```
+
+`audit/extract/` holds plain-text extractions of built binary deliverables, written by `/sa:slop-check` so
+its read-only agent can scan them. It is **regenerable scratch, not evidence** — unlike `inputs/`, it may be
+deleted and rebuilt freely, and nothing ever cites it as a source. The reports beside it (`audit-<ts>.md`,
+`slop-<ts>.md`) are the evidence, and those are never overwritten.
 
 `inputs/` is **immutable** — never edited after ingest. Rendered `.md` files are **generated** — never
 hand-edited, because the next agent run overwrites them from JSON.
@@ -501,25 +555,37 @@ pipeline's contracts: no JSON source of truth, no IDs, cited by nothing. There a
 |---|---|---|
 | `brief.md` | `/sa:brief` → `doc-briefer` | *What does this document actually say?* |
 | `screen.md` | `/sa:screen` → `req-screener` | *Can we do it, and roughly what would it cost?* |
+| `onepager/*` | `/sa:onepager` → `req-onepager` | *What does management need to see on one page?* |
 
-Both sit before the pipeline's binding work: one before the lane is chosen, the other before anyone decides
-to bid at all. Three consequences apply to each, all intentional:
+The first two sit before the pipeline's binding work: one before the lane is chosen, the other before anyone
+decides to bid at all. The third sits **beside** it — a one-pager is composed from artifacts that already
+exist and is regenerated whenever they change, so it is downstream in time but upstream of nothing. Three
+consequences apply to each, all intentional:
 
-- **Not in the `inputs_hash`** (§5). Re-running either can never stale a packaging gate.
+- **Not in the `inputs_hash`** (§5). Re-running any of them can never stale a packaging gate.
 - **No `STATE.md` phase** — an explicit and documented divergence from this section's own "every pipeline
   command updates it" rule, in the same spirit as `review.json`'s documented divergence from
-  `AGENT-CONDUCT-BASELINE.md` B7 (§4.5). Neither `brief` nor `screen` is a value in the phase enum, and
-  adding one would make `/sa:status` report a phase the lane model doesn't contain. (`/sa:screen` *does*
-  update `STATE.md` for the `triage`/`ingest`/`clarify` steps it runs, because those write real artifacts —
-  the screen step itself records nothing.)
-- **`/sa:status` must not list either as `extra`.** Both are expected-but-optional on every lane, not
-  unexpected artifacts.
+  `AGENT-CONDUCT-BASELINE.md` B7 (§4.5). None of `brief`, `screen` or `onepager` is a value in the phase
+  enum, and adding one would make `/sa:status` report a phase the lane model doesn't contain. (`/sa:screen`
+  *does* update `STATE.md` for the `triage`/`ingest`/`clarify` steps it runs, because those write real
+  artifacts — the screen step itself records nothing.)
+- **`/sa:status` must not list any of them as `extra`.** All three are expected-but-optional on every lane,
+  not unexpected artifacts.
 
-A further advisory command follows the same three rules. Anything that defines an ID other artifacts cite,
+Any further advisory command follows the same three rules. Anything that defines an ID other artifacts cite,
 or that a deliverable is built from, is **not** advisory and belongs in the schemas above — which is
 precisely why `/sa:screen` writes a real `requirements.json` but no `estimation.json`: the requirements are
 cited downstream, the band is not, and a coarse number sitting in the file an offer is generated from is the
 exact failure this distinction prevents.
+
+**`onepager/` is advisory but not ungated**, and the distinction matters because a one-pager is the single
+artifact in this folder most likely to be shown to a decision-maker. It carries no *packaging* gate because
+nothing is built from it; it inherits the *groundedness* discipline in full — every figure on the page cites
+the artifact it came from, and `/sa:onepager` refuses to render a figure it cannot trace. See §9.
+
+**`audit/slop-<ts>.md` is not advisory**, despite living beside `audit-<ts>.md` and being a "report". It
+carries a `sa-verdict` block that `/sa:package` refuses on, which makes it a gate output, not an advisory
+non-artifact. The test is the one above: does anything refuse on it? If yes, it is not advisory.
 
 ### `STATE.md` — canonical shape
 
@@ -531,7 +597,7 @@ future orchestrator can parse it:
 
 - **Lane**: `<rom | offer-sow | full-design>`
 - **Phase**: <triage | ingest | clarify | design | review | design-detail | risk | estimate |
-  estimate-review | offer | audit | package>
+  estimate-review | offer | audit | slop-check | package>
 - **Last command**: `/sa:<command>`
 - **Last update**: <ISO 8601 UTC>
 - **Next**: <exactly one recommended command>
@@ -567,7 +633,157 @@ framework's `/dev:auto` is exactly the pattern this one declines to copy.
 
 ---
 
-**Last revised**: 2026-09-03 (v1.3 — §4.7 `estimation.json`: `basis.model` defaults to `ai-assisted`
+## 8. Document profiles — branded templates for `/sa:package`
+
+A client deliverable that arrives in default Word styling has already told the client how much attention it
+got. `/sa:package` therefore builds **into a branded template** whenever one applies, rather than generating
+a document from scratch and styling it inline.
+
+### The indirection, and why
+
+Template files are organization-specific and live at absolute paths on one machine. Putting either into a
+`req-*` agent or a `/sa:*` command would make a generic artifact machine-specific — the placement test in
+`CONSTITUTION.md` Article IX and `README.md`'s generic-vs-project rule both reach the same conclusion. So
+the pipeline uses the same indirection already proven by `estimation-data/rates.yaml` and
+`framework-data/scope.yaml`:
+
+- **`document-data/templates.yaml.example`** is staged in the repo — structure only, no real paths.
+- **`<config-root>/document-data/templates.yaml`** carries the real profiles, alongside the `.docx` files
+  themselves in `<config-root>/document-data/templates/`. Both are gitignored.
+- Agents and commands read the **profile name**; only the yaml knows the path.
+
+**Finding `<config-root>` — do not assume `~/.claude`.** This machine runs three independent Claude Code
+config roots (the default plus the `claude-scm` and `claude-nsz` profiles, each redirected via
+`CLAUDE_CONFIG_DIR` with no fallback). Resolve in this order, first hit wins:
+
+1. `$CLAUDE_CONFIG_DIR/document-data/templates.yaml` when that variable is set — it is, in every profile
+   session, and it is the only correct answer there.
+2. `~/.claude/document-data/templates.yaml`.
+3. `d:/_AI_GIT/document-data/templates.yaml` — the canonical staged copy, as a last resort.
+
+Getting this wrong fails **silently**: no file found reads as "no profile configured", and the deliverable
+comes out unbranded. That is why the fallback chain is written here rather than left to each command, and
+why `/sa:package` must say out loud when it built unbranded.
+
+It lives in `document-data/` rather than in `sa-framework/` for a concrete reason worth recording:
+`_scripts/check-sync.ps1` compares `skills/`, `dev-framework/` and `sa-framework/` byte-for-byte between the
+repo and every live root, so a live-only file inside `sa-framework/` would be reported as `EXTRA` on every
+run forever. `estimation-data/` and `framework-data/` already sit outside that comparison for exactly this
+reason; `document-data/` is the third of the same kind, not a new idea.
+
+### Schema
+
+```yaml
+version: 1
+default_org: geomant          # used when engagement.json has no vendor_org
+
+orgs:
+  geomant:
+    display_name: "Geomant-Algotech Zrt."
+    doc_id_prefix: "GEO"       # feeds file_naming's <ORG>
+    profiles:
+      geomant-hun:
+        language: Hungarian
+        locales: [hu-HU]
+        template: "templates/template_HUN.docx"
+        boilerplate_sections: ["Cégbemutató", "Titoktartás", "Felelősségkizárás"]
+        content_sections:     ["Ajánlatkérés tárgya", "A megoldás áttekintése", "Árajánlat"]
+        demo_sections:        ["Technikai áttekintés"]
+        placeholders: { "[Dokumentum címe]": project, "[Customer Name]": client }
+      geomant-eng:
+        language: English
+        locales: [en-US, en-GB, sr-RS, ro-RO]
+        template: "templates/template_ENG.docx"
+        boilerplate_sections: ["Statement of Confidentiality", "Disclaimer"]
+        content_sections:     ["Scope of the Request", "Solution Overview", "Commercial Proposal"]
+        demo_sections:        ["Introduction", "Solution Overview"]
+        placeholders: { "[Document Title]": project, "[Customer Name]": client }
+    default_profile: geomant-eng
+```
+
+`template:` is resolved relative to the yaml's own directory, so the whole `document-data/` folder stays
+relocatable. A profile whose `template:` doesn't resolve is reported as broken at triage, not discovered at
+packaging.
+
+The three section lists partition the template's own headings, and the partition is **explicit on purpose**:
+
+| List | `/sa:package` does | Why not inferred |
+|---|---|---|
+| `boilerplate_sections` | keeps verbatim | approved legal/marketing text — regenerating it is a legal risk, not a style choice |
+| `content_sections` | writes the engagement's content under each | these are the document's actual argument |
+| `demo_sections` | deletes heading and body | typography samples shipped with the shell |
+
+Anything the template contains that is in **none** of the three is **kept**. That default is deliberate: a
+template edit that adds a section can then never silently lose it, and the failure mode of an unexpected
+extra section (someone notices) is far cheaper than the failure mode of a silently dropped one (nobody
+does).
+
+### Resolution order
+
+`/sa:triage` resolves the profile once and writes the result into `engagement.json`:
+
+1. An explicit `--profile=<name>` argument, or a `template_path` the human already set — always wins.
+2. `engagement.json.deliverable_language` matched against each profile's `language`.
+3. `engagement.json.locale` matched against each profile's `locales`.
+4. The org's `default_profile`.
+5. No `templates.yaml`, or no match → all three fields `null`, and packaging falls back to unbranded output
+   **saying so in its relay**. Silent unbranded output is the failure this step exists to prevent.
+
+### Rules that bind `/sa:package`
+
+- **Fill the template's placeholders; never restyle it.** `[Document Title]`, `[Customer Name]`, `[Date]`,
+  `[REF-YYYY-NNN]`, `[Author Name]` and their localized equivalents are replaced from `engagement.json`.
+  Fonts, colours, numbering, header and footer are the template's, not the generator's.
+- **Keep the boilerplate sections the template already carries.** A profile's `boilerplate_sections` are
+  legal and marketing text someone approved — they are preserved verbatim, never regenerated, never
+  "improved", and never translated on the fly.
+- **A profile is a shell, not content.** Every substantive section still comes from the engagement's JSON
+  artifacts and is still subject to §9 and to the `/sa:slop-check` gate — a branded wrapper around an
+  ungrounded claim is worse than an unbranded one, because it looks authoritative.
+- **`deliverable_language` decides the profile; it does not authorize translation.** An artifact written in
+  one language is not machine-translated into another to fit a profile. A mismatch is reported at triage so
+  the human decides, per `req-auditor`'s locale-preservation check.
+
+---
+
+## 9. Independent review runs on a different model
+
+`AGENT-CONDUCT-BASELINE.md` B10 is the generic rule. This section is its binding instance for this pipeline,
+because this pipeline is where the consequence is commercial rather than merely embarrassing.
+
+Four agents here exist to catch what an earlier agent got wrong — `req-reviewer`, `req-estimate-critic`,
+`req-auditor`, `req-slop-detector`. Every one of them enforces independence carefully *against reading the
+author's reasoning*, and every one of them, by default, runs on the author's **model**. That is a real gap:
+the same model that found an integration assumption reasonable enough to write down is the model least
+likely to challenge it, and an estimate that felt right to produce will feel right to review.
+
+**The rule**: every command that dispatches one of the four accepts `--model=<sonnet|opus|haiku|fable>`,
+passes it as the `Agent` dispatch's `model` parameter, and **reports in its relay which model actually ran**.
+Where no override was given, the relay says so and names a suggested override. Neither the command nor the
+agent may write a `model:` line into the agent's own frontmatter — pinning a reviewer's model makes it wrong
+the moment the *author's* model changes, which is the opposite of what this rule is for.
+
+**Where it matters most, in order**: `/sa:slop-check` and `/sa:estimate-review` (both read prose or numbers
+a same-model reviewer will find agreeable), then `/sa:review`, then `/sa:audit` — the auditor last precisely
+because it is mechanical, and mechanical checks are the least model-sensitive thing in the pipeline.
+
+**Stated honestly**, per B10: sibling models in one vendor's family share training lineage and therefore
+share some blind spots, so this reduces correlated error rather than eliminating it. It does not make the
+review independent in the sense a second human would be. The human remains the reviewer of record, and no
+command may describe a cross-model pass as "independently verified".
+
+---
+
+**Last revised**: 2026-09-07 (v1.4 — §5 packaging gate now reads **two** verdict blocks, `sa-audit` and the
+new `sa-slop`, keyed on a mandatory `gate:` field: one refusal point, two disjoint gate inputs, with the
+comparison table recording why neither substitutes for the other. §4.1: added `vendor_org`,
+`document_profile` and a resolved `template_path`; lane table updated for `slop-check`. §6: added
+`audit/slop-<ts>.md`, `audit/extract/`, `onepager/`; `onepager/*` added as advisory non-artifact #3, with
+the "does anything refuse on it?" test recorded so `slop-<ts>.md` isn't mistaken for one; `slop-check` added
+to the `STATE.md` phase enum. New §8 (document profiles — branded templates via the `templates.yaml`
+indirection, resolution order, and the fill-don't-restyle rule) and new §9 (independent review runs on a
+different model — the binding instance of `AGENT-CONDUCT-BASELINE.md` B10).
+v1.3, 2026-09-03 — §4.7 `estimation.json`: `basis.model` defaults to `ai-assisted`
 (`traditional`/`both` now opt-in, with `basis.model_rationale`); added `lines[].scope_tier` and split
 `rollup` into `baseline`/`optional`, per `ESTIMATION-METHOD.md §9`. §4.9 `offer.json`: added
 `scope.optional[]` mirroring the estimator's optional tier. v1.2 — `screen.md` added as advisory

@@ -35,8 +35,24 @@ Two spread rules, both checked by `req-estimate-critic`:
 - **Implausible confidence**: `worst < 1.5 × best` on anything touching an unconfirmed integration or a
   `to_clarify` requirement. If the inputs are unknown, the range cannot be tight.
 
-Round to sensible precision on output. Carrying `77.00000000000001` into a client document, as an earlier
-workbook did, reads as machine output rather than professional judgment.
+### Rounding, pinned
+
+"Sensible precision" was undefined here until 2026-09-07, which meant every estimate rounded differently and
+`req-estimate-critic`'s precision dimension had no threshold to test against. The rule:
+
+| Figure | Precision |
+|---|---|
+| Per-line `best`/`likely`/`worst` | whole units (man-days), or 0.5 below 5 |
+| Per-line `pert` | one decimal |
+| Any rollup or total | whole units |
+| Percentages (contingency, buffer, PM share) | whole percent |
+
+**Round on output, never in the stored value** — `pert` stays exact in `estimation.json` so the rollup
+sums correctly; the rendered `.md` and any deliverable show the rounded form. Rounding a stored value makes
+every downstream sum drift by a little, and nobody can then tell whether a total is wrong or merely rounded.
+
+Carrying `77.00000000000001` into a client document, as an earlier workbook did, reads as machine output
+rather than professional judgment. So does a total that doesn't equal the sum of the lines above it.
 
 ---
 
@@ -144,8 +160,29 @@ Every risk with `priced_in: false` **must** appear as an exclusion. `/sa:audit` 
 
 An AI-assisted estimate is an extrapolation. It must say what it extrapolates from.
 
-`estimation.json.basis.calibration_source` names the empirical baseline. If none exists, that is stated
-plainly — an AI-assisted figure with no calibration source is a guess wearing a method's clothing.
+`estimation.json.basis.calibration_source` names the empirical baseline.
+
+### When there is no calibration source
+
+This is the normal state on a first engagement with a new client, a new stack or a new team, so it needs a
+workable answer rather than a refusal. **Produce the estimate**, and do all three of:
+
+1. Set `basis.calibration_source` to the literal string `"none — uncalibrated"`, never to a vague gesture
+   at "industry experience". An empty field and a hand-wave are equally unusable; a named absence is
+   auditable.
+2. **Widen every line's `worst`** to reflect that the compression assumption itself is unverified — the
+   uncertainty is in the *method*, not only in the work. A tight range built on an unmeasured compression
+   ratio is exactly the false precision §1 exists to prevent.
+3. State on the face of the estimate that the figure rests on an unmeasured compression assumption, and
+   that the calibration sprint below is therefore not optional but load-bearing.
+
+**This resolves a three-way contradiction that stood until 2026-09-07** and is recorded so it isn't
+reintroduced: this section said "state it plainly" (produce), `req-estimator`'s rules said an uncalibrated
+figure "is not produced" (refuse), and `req-estimate-critic` dimension 10 scored the absence as a `high`
+finding (which presupposes one was produced). Followed literally, the refusal wins and the pipeline cannot
+estimate anything for a new client — which is every first engagement. Produce-and-label is the resolution;
+the critic's `high` finding stands, because "uncalibrated" is genuinely a serious property of an estimate,
+not a clean state.
 
 ### The calibration bias to audit for
 
@@ -157,8 +194,14 @@ same reason. Check for it explicitly, and say what the baseline excluded.
 
 ### The commitment gate
 
-For any AI-assisted estimate above a trivial size, the number is **not committed** until a short
-calibration sprint has measured real velocity on real items from *this* engagement.
+For any AI-assisted estimate **at or above 20 man-days baseline Likely**, the number is **not committed**
+until a short calibration sprint has measured real velocity on real items from *this* engagement.
+
+The threshold is pinned rather than left as "above a trivial size", which it was until 2026-09-07 and which
+was unactionable — an agent cannot apply a judgment nobody defined, and two runs over the same estimate
+would disagree about whether the gate applied. 20 MD is roughly where a wrong compression ratio stops being
+absorbable inside a single sprint. Below it, record in `basis.commitment_gate` that the gate does not apply
+and why; never silently omit the field, because an absent gate and an inapplicable one read identically.
 
 - **Duration**: ~2 weeks, delivering 2–3 representative items end-to-end (not a spike — genuinely done).
 - **Until the gate closes**, quote externally as a **range** with the gate named:
@@ -331,6 +374,28 @@ discipline — but:
 The result is a headline number a client can act on immediately, with everything beyond it priced and
 visible rather than buried inside it.
 
+### When nothing is `must`
+
+An early or loosely-written requirements list can contain no `must`-priority items at all. Read literally,
+the rules above then produce an empty baseline and a headline of zero — a number that is arithmetically
+correct and completely misleading, and the kind of output that gets forwarded before anyone reads the
+caveat.
+
+**Do not estimate a zero baseline.** Instead:
+
+- Produce the `optional` lines normally — that work is real and sizing it is useful.
+- Set the baseline rollup to `null`, not `0`, and state in `basis` that no `must`-priority requirement
+  exists, so there is nothing to commit to.
+- Raise it under `## Blocking questions` in the returned summary: a requirements list with no `must` is
+  almost always a prioritization gap in `req-analyst`'s output, not a genuine finding that the client needs
+  nothing.
+- **Never promote a `should` to fill the gap.** §9.1's no-silent-promotion rule holds exactly here, where
+  the temptation is strongest — reprioritizing is `req-analyst`'s job and the client's, and doing it inside
+  the estimator hides a scope decision inside a number.
+
+`0` and `null` are different claims: `0` says "we costed it and it's free", `null` says "there is nothing
+here to cost". Only the second is true.
+
 ### 9.2 Bare-minimum sizing within the baseline
 
 Every baseline line is sized to the **leanest implementation that still fully satisfies the requirement as
@@ -393,7 +458,15 @@ less.
 
 ---
 
-**Last revised**: 2026-09-03 (v1.2 — §2 rewritten: AI-assisted is now the only delivery model estimated by
+**Last revised**: 2026-09-07 (v1.3 — four under-specified rules pinned, each of which an agent could not
+previously apply consistently: §1 rounding precision (per-line, PERT, rollup, percentages, and round-on-
+output-never-in-storage); §4 the no-calibration-source case, resolving a three-way contradiction between
+this file, `req-estimator`'s rules and `req-estimate-critic` dimension 10 that, followed literally, made
+every first engagement unestimable — produce-and-label, with a widened `worst`, is the resolution; §4 the
+commitment gate's threshold, from "above a trivial size" to 20 MD baseline Likely; §9.1 the
+no-`must`-requirements case, where the baseline is `null` rather than `0` and the gap goes back to
+`req-analyst` rather than being filled by promoting a `should`.
+v1.2, 2026-09-03 — §2 rewritten: AI-assisted is now the only delivery model estimated by
 default, `traditional`/`both` are opt-in and require a stated reason; added §9 (must-only baseline, priced
 optionality, bare-minimum sizing) and §10 (stricter, bare-minimum-mandatory `rom` lane). v1.1 — added §8,
 the screening-band carve-out for `req-screener`. v1.0 — initial codification from the Netrisk

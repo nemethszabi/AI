@@ -1,6 +1,6 @@
 ---
 name: sa:package
-description: Build the client-facing deliverable (DOCX/XLSX/PPTX) from an engagement's JSON artifacts. Refuses to run without a fresh PASS from /sa:audit.
+description: Build the client-facing deliverable (DOCX/XLSX/PPTX) from an engagement's JSON artifacts, into the branded template a document profile resolves. Refuses to run without a fresh PASS from BOTH gates — /sa:audit (the artifacts agree by ID) and /sa:slop-check (the prose is grounded).
 allowed-tools:
   - Read
   - Write
@@ -13,16 +13,27 @@ allowed-tools:
 argument-hint: "<slug> [offer|estimation-pack|hld|lld|pitch|all] [--mode=auto|regenerate|patch]"
 ---
 
-> Version: 1.1.0
+> Version: 2.0.0 — major: the gate now requires **two** verdicts (`sa-audit` and the new `sa-slop`), and
+> builds into a branded template when a document profile resolves (`ARTIFACT-SCHEMAS.md §5, §8`).
 
 <objective>
 `/sa:package <slug> [type] [--mode=]` renders `ai/sa/<slug>/`'s JSON artifacts into the actual
-client-facing files under `ai/sa/<slug>/deliverables/`.
+client-facing files under `ai/sa/<slug>/deliverables/`, inside the engagement's branded document profile
+where one applies (`sa-framework/ARTIFACT-SCHEMAS.md §8`).
 
 This is the only command in the namespace that produces something a client sees, so it is the only one
-with a hard gate: `/sa:audit` must show `PASS` or `PASS-WITH-WAIVERS` on a **matching `inputs_hash`**
-(`sa-framework/ARTIFACT-SCHEMAS.md §5`). Refusing to build from stale artifacts is correct behavior —
-per `CONSTITUTION.md` Article III the fix is to re-run the gate, never to weaken it.
+with a hard gate — and that one gate now reads **two** verdicts, both of which must show `PASS` or
+`PASS-WITH-WAIVERS` on a **matching `inputs_hash`** (§5):
+
+| Verdict | From | Checks |
+|---|---|---|
+| `sa-audit` | `/sa:audit` | do the JSON artifacts agree with each other, by ID? |
+| `sa-slop` | `/sa:slop-check` | is the prose a human will read grounded, consistent and free of machine-tells? |
+
+Two gate **inputs**, still one refusal point. Neither substitutes for the other: an offer whose every ID
+resolves can still quote an invented benchmark, and an offer with beautiful prose can still be missing a
+`must` requirement. §5 records the split. Refusing to build from stale artifacts is correct behavior — per
+`CONSTITUTION.md` Article III the fix is to re-run the gate, never to weaken it.
 </objective>
 
 <process>
@@ -48,27 +59,83 @@ Compute `inputs_hash` fresh, per `ARTIFACT-SCHEMAS.md §5`: `git hash-object` ov
 first 12 characters each, joined in that fixed order. Outside a git repo, fall back to `sha256sum`.
 Content-based — **never** mtimes. Exclude rendered `.md`, `deliverables/`, `diagrams/` and snapshots.
 
-Read the newest `ai/sa/<slug>/audit/audit-*.md` and its fenced ```` ```sa-verdict ```` block. Both must
-hold:
+Read the newest `ai/sa/<slug>/audit/audit-*.md` **and** the newest `ai/sa/<slug>/audit/slop-*.md`, and take
+the fenced ```` ```sa-verdict ```` block from each. Match them by their `gate:` field — `sa-audit` and
+`sa-slop` — never by filename or by prose. A block with no `gate:`, or with an unrecognized one, counts as a
+missing gate; never guess which gate a report belongs to.
 
-1. `verdict` is `PASS` or `PASS-WITH-WAIVERS`.
+All four conditions must hold:
+
+1. `sa-audit` `verdict` is `PASS` or `PASS-WITH-WAIVERS`.
 2. Its recorded `inputs_hash` matches the one just computed.
+3. `sa-slop` `verdict` is `PASS` or `PASS-WITH-WAIVERS`.
+4. Its recorded `inputs_hash` matches too.
 
-If either fails, print and **abort**:
+Both gates hash the same input set, so one computation serves both comparisons.
+
+If any fails, print and **abort**:
 
 ```
 Cannot package — gate failed or stale:
-  Audit: <verdict or "no audit found"> @ <timestamp>
-         <hash match | STALE — artifacts changed since the audit>
+  Audit (sa-audit): <verdict or "not run"> @ <timestamp>
+                    <hash match | STALE — artifacts changed since the audit>
+  Slop  (sa-slop):  <verdict or "not run"> @ <timestamp>  [ran on: <model>]
+                    <hash match | STALE — artifacts changed since the scan>
 
-Run /sa:audit <slug>, then retry.
+Run <the failing command(s)>, then retry.
 ```
+
+Name only the gates that actually failed — telling someone to re-run a gate that passed teaches them to
+skim the message. When `sa-slop` passed but ran on the same model that wrote the artifacts, add one advisory
+line (not a refusal): `slop scan ran on <model>, same family as the author — consider
+/sa:slop-check <slug> --model=<other> before this goes out` (`ARTIFACT-SCHEMAS.md §9`).
 </step>
 
 <step name="read-context">
-Read `engagement.json` for `deliverable_language`, `locale`, `currency`, `template_path` and
-`file_naming` (default `<ORG>-<YYYY>-<CLIENT>-<NNN>-<artifact>-v<NN>.<ext>`). Read every
+Read `engagement.json` for `deliverable_language`, `locale`, `currency`, `vendor_org`, `document_profile`,
+`template_path` and `file_naming` (default `<ORG>-<YYYY>-<CLIENT>-<NNN>-<artifact>-v<NN>.<ext>`). Read every
 `ai/sa/<slug>/*.json` artifact the requested types need.
+</step>
+
+<step name="resolve-template">
+Resolve the branded shell for every DOCX type (`offer`, `hld`, `lld`), per `ARTIFACT-SCHEMAS.md §8`:
+
+1. `engagement.json.template_path` is set and the file exists → use it. `/sa:triage` already resolved it.
+2. Otherwise read `<config-root>/document-data/templates.yaml` — resolving `<config-root>` by
+   `ARTIFACT-SCHEMAS.md §8`'s chain (`$CLAUDE_CONFIG_DIR`, then `~/.claude`, then the staged repo copy;
+   never assume `~/.claude`, since three redirected roots exist) — find `engagement.json.document_profile`
+   (or resolve it fresh by `deliverable_language` → `locales` → the org's `default_profile`), and use that
+   profile's `template`, resolved relative to the yaml's own directory.
+3. No `templates.yaml`, no matching profile, or a `template:` that doesn't resolve → build **unbranded**,
+   and say so explicitly in the relay. Silent unbranded output is the failure this step exists to prevent —
+   a document that quietly lost the client's branding looks like carelessness, and nobody notices until it
+   has been sent.
+
+`<ORG>` in `file_naming` comes from the org's `doc_id_prefix`; fall back to the vendor org's name in caps
+only if no profile resolved.
+
+**A profile is a shell, never content.** When one resolves, the rules in §8 bind this command absolutely:
+
+- **Fill the template's placeholders; never restyle it.** Replace `[Document Title]`, `[Customer Name]`,
+  `[Date]`, `[REF-YYYY-NNN]`, `[Author Name]` and the profile's other mapped placeholders from
+  `engagement.json`. Fonts, colours, heading numbering, header and footer stay the template's. Do not apply
+  `office-doc-builder`'s own styling on top of a branded template — that is precisely how a branded document
+  ends up half-branded.
+- **Keep `boilerplate_sections` verbatim.** Confidentiality statements, disclaimers and company
+  introductions are approved legal and marketing text. Never regenerate, never reword, never translate them
+  on the fly, and never trim them to save a page.
+- **Write the engagement's content under `content_sections`**, and **delete `demo_sections`** — heading and
+  body — since those are typography samples shipped with the shell.
+- **Anything in none of the three lists is kept.** An unlisted section is a section somebody added
+  deliberately; the cost of an unexpected extra section is that someone notices, the cost of a silently
+  dropped one is that nobody does.
+- **`deliverable_language` selects the profile; it does not authorize translation.** If the artifacts are in
+  one language and the profile is another, stop and say so — a machine-translated client document is a
+  decision for the human, not a side effect of packaging.
+
+Patching a template in place needs the `document-skills` plugin, same constraint as `resolve-mode` below.
+When it isn't available, `python-docx` can still open the template, fill placeholders and append content —
+say in the relay which route was taken, since the two differ in what they preserve.
 </step>
 
 <step name="render-diagrams">
@@ -94,9 +161,11 @@ comments, tracked changes and manual formatting in the prior version will not ca
 
 <step name="build-regenerate" condition="mode == regenerate">
 Use the `office-doc-builder` skill's `lib\` helpers — import them, don't write raw
-openpyxl/python-docx/python-pptx styling inline.
+openpyxl/python-docx/python-pptx styling inline. **Where a template resolved, open it and fill it; apply the
+helpers' styling only to content the template has no style for**, per `resolve-template` above.
 
-- **`offer`** → DOCX from `offer.json`, sections in the order of `req-offer`'s own output template.
+- **`offer`** → DOCX from `offer.json`, sections in the order of `req-offer`'s own output template, written
+  under the profile's `content_sections` where one applies.
 - **`estimation-pack`** → XLSX from `estimation.json` + `rates.yaml` if one was used:
   Tab 1 Summary — **baseline** best/likely/worst with contingency and buffer shown separately, and a
   distinct **optional** total below it, clearly labelled "not included above" ·
@@ -149,12 +218,24 @@ the appended phase-history line. Append; never rewrite prior lines.
 <step name="relay">
 Report each file built with its version and size, the mode used, the locale, diagrams rendered, any
 deltas skipped, and any verification finding.
+
+Also report, every time: **which document profile was used, or that the build was unbranded and why**, and
+**which model each gate ran on**. Both are things a reader would otherwise assume went well.
+
+If `onepager/` is empty and this was an `offer` build, mention `/sa:onepager <slug> summary` — the
+management page for the internal conversation the offer is about to start.
 </step>
 </process>
 
 <rules>
-- **No build without a fresh gate PASS.** Refusal is correct, not pedantic — and the remedy is re-running
-  `/sa:audit`, never relaxing the check (`CONSTITUTION.md` Article III).
+- **No build without a fresh PASS from BOTH gates.** Refusal is correct, not pedantic — and the remedy is
+  re-running `/sa:audit` and/or `/sa:slop-check`, never relaxing the check (`CONSTITUTION.md` Article III).
+- **Gates are matched by their `gate:` field**, never by filename. A verdict block without one is a missing
+  gate, not a gate to guess at.
+- **A branded template is filled, never restyled**, and its `boilerplate_sections` are preserved verbatim
+  (`ARTIFACT-SCHEMAS.md §8`).
+- **Unbranded output is announced, never silent.** No profile resolved is a sentence in the relay, not an
+  omission the reader discovers in Word.
 - **Freshness is content-based.** Packaging's own outputs never re-stale the gate that permitted them.
 - **Never overwrite a versioned deliverable** — increment `v<NN>`.
 - **Patch never forces an unsafe edit.** Unmappable deltas are reported and skipped.

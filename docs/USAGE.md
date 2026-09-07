@@ -20,7 +20,9 @@ lighter than a full wave/gate system.
 | Need interface/data-model/deployment-level detail, not just the HLD | `/sa:design-detail <slug>` (`full-design` lane) | Global |
 | **Score risks + compliance obligations, and set contingency** | `/sa:risk <slug>` (before `/sa:estimate`) | Global |
 | **Independent critique of an estimate before it goes out** | `/sa:estimate-review <slug>` | Global |
-| **Write the client-facing offer** | `/sa:offer <slug>` → `/sa:audit` → `/sa:package` | Global |
+| **Write the client-facing offer** | `/sa:offer <slug>` → `/sa:audit` + `/sa:slop-check` → `/sa:package` | Global |
+| **Check a document actually says what the artifacts support**, before it goes out | `/sa:slop-check <slug> --model=<different one>` — ungrounded figures, contradictions, AI tells, flattened diacritics | Global |
+| **One page for management / a steering committee** | `/sa:onepager <slug> [summary\|roadmap\|estimate\|timeline\|architecture]` | Global |
 | **Lost track of where an engagement stands** | `/sa:status <slug>` — tells you the single next command | Global |
 | A project has no `ai/dev/` yet | `/dev:init [path]` | Global |
 | Check a project's current dev-pipeline state | `/dev:status [path]` | Global |
@@ -47,7 +49,7 @@ Each project namespace also has its own `:help` (`/scm:help`, `/merge:help`) onc
 couple of commands — static reference, no live analysis. `/sa:help` and `/dev:help` cover the two global
 namespaces.
 
-**The `/sa:*` namespace is now 17 commands across three lanes** — too much for one table row. Its full
+**The `/sa:*` namespace is now 19 commands across three lanes** — too much for one table row. Its full
 walkthrough, design rationale, and a worked "inbound TSD → offer" example live in **`SA-WORKFLOW.md`**.
 Start there rather than here for any presales/bid work.
 
@@ -57,7 +59,7 @@ One generic agent per role (`dev-backend`, `dev-frontend`, `dev-reviewer`, `dev-
 `solution-analyst`, `mermaid-diagram-maker`, `doc-briefer`, `req-screener`, `req-ingestor`, `req-analyst`,
 `req-architect`,
 `req-reviewer`, `req-detailer`, `req-risk-officer`, `req-estimator`, `req-estimate-critic`, `req-offer`,
-`req-auditor`,
+`req-auditor`, `req-slop-detector`, `req-onepager`,
 `agent-reviewer` — the meta-level counterpart to `dev-reviewer`, reviewing agent/skill/command/prompt
 artifacts themselves rather than application code) — reused
 verbatim across every project, never hardcoding a stack fact or project name. Project specificity lives in
@@ -97,12 +99,18 @@ not a reusable role.
 - **A screening band is not an estimate.** `screen.md`'s number is order-of-magnitude, deliberately wide,
   and **never quotable** — no PERT, no contingency, no compression, no price (`ESTIMATION-METHOD.md` §8).
   `/sa:estimate` is the only route to a number anyone may show a client.
-- **One step *does* block: `/sa:package` refuses without a fresh `/sa:audit` PASS.** This is the one
-  hard gate in the namespace and it is deliberate — it's the only command that produces something a client
-  sees. Freshness is checked by **content hash**, so changing any artifact re-stales the gate and you
-  re-run `/sa:audit`. `/sa:review` and `/sa:estimate-review` remain advisory and block nothing.
-- **`/sa:doc` and `/sa:offer` are not the same document.** `/sa:doc` is an *internal* consolidation for
-  your team. The client-facing path is `/sa:offer` → `/sa:audit` → `/sa:package`. Confusing them is how
+- **One step *does* block: `/sa:package` refuses without a fresh PASS from *both* gates.** `/sa:audit`
+  checks the JSON artifacts agree with each other by ID; `/sa:slop-check` checks the prose a human will read
+  is true to them. Two gate inputs, still one refusal point, and it is deliberate — `/sa:package` is the
+  only command producing something a client sees. Freshness is checked by **content hash**, so changing any
+  artifact re-stales both. `/sa:review` and `/sa:estimate-review` remain advisory and block nothing.
+- **Run the independent checks on a different model than wrote the work.** `/sa:review`,
+  `/sa:estimate-review`, `/sa:audit` and `/sa:slop-check` all take `--model=`. A reviewer on the author's
+  model shares the author's blind spots. Worth it most on `/sa:slop-check` and `/sa:estimate-review`, least
+  on `/sa:audit`. It reduces correlated error; it isn't real independence — you still are.
+- **`/sa:doc`, `/sa:onepager` and `/sa:offer` are three different documents.** `/sa:doc` is an *internal*
+  consolidation for your team; `/sa:onepager` is one dense page for the meeting where nobody read it; the
+  client-facing path is `/sa:offer` → `/sa:audit` + `/sa:slop-check` → `/sa:package`. Confusing them is how
   internal risk language reaches a client.
 - **Estimates are effort, never price.** With no `rates.yaml` configured you get effort-only output, said
   plainly — never an invented number. See `sa-framework/ESTIMATION-METHOD.md §5` and `SETUP.md` for the

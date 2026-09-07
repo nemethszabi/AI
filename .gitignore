@@ -9,3 +9,9 @@ estimation-data/rates.yaml
 # Machine-specific paths (personal roots, exclusions) — only the .example is staged here.
 # Article IX placement test: a file naming d:\WORK\AI\... is specific to this machine, not generic.
 framework-data/scope.yaml
+
+# Brand templates and the profile map that names them — organization property, not framework
+# content, and the paths are machine-specific. Only the .example is staged here.
+# sa-framework/ARTIFACT-SCHEMAS.md §8 records why this lives outside sa-framework/.
+document-data/templates.yaml
+document-data/templates/

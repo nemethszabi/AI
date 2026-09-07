@@ -136,6 +136,31 @@ files' *contents* (e.g. `git hash-object <file>`, first 12 chars; `sha256sum` as
 never a file-modified-time comparison, which is silently wrong across clones, checkouts, and CI. Record
 the hash in the gate's own report so a later command can recompute and compare before relying on it.
 
+### B10. Run the independent review on a different model than produced the work
+A reviewer's whole value is that its errors are **uncorrelated** with the author's. Reading the same
+artifact on the same model does not deliver that: the reviewer shares the author's priors, its
+characteristic failure modes, and — most damagingly — its blind spots. A fabricated integration detail or a
+comfortable-feeling estimate that one model produced is precisely the kind of thing the same model is least
+likely to challenge, because it is exactly what that model would have written. "Cold read" (B3, and every
+reviewer agent's own `<rules>`) covers *not reading the author's reasoning*; it does nothing about *sharing
+the author's reasoning apparatus*.
+
+So, for any review, critique or gate whose finding a human will actually act on:
+
+- **Dispatch it with an explicit model override, different from the one that produced the artifact.** This
+  is a per-invocation choice (the `Agent` tool's `model` parameter), never a `model:` line pinned into the
+  reviewer's own frontmatter — pinning one makes the reviewer wrong whenever the *author's* model changes.
+- **A command that dispatches a reviewer must expose the override** (`--model=<name>`) and **must report
+  which model actually ran**, so the separation is visible in the transcript rather than assumed.
+- **Where no override was given, say so in the relay** — "review ran on the session model; consider
+  re-running with `--model=<other>` before this goes to a client" is a one-line reminder that costs
+  nothing and catches the case that matters.
+
+**Stated honestly**: within a single vendor's model family the decorrelation is *partial*, not complete —
+sibling models share training lineage and therefore share some blind spots. It is still materially better
+than same-model review, and it is what is actually available. Do not oversell it as independence; treat it
+as a reduction in correlated error, and keep the human as the real reviewer of record.
+
 ---
 
 ## C. Memory conduct — agents with `memory: user`
@@ -164,6 +189,61 @@ by topic, and correct outdated or wrong entries in place rather than letting con
 
 ---
 
+## D. Groundedness & slop conduct — agents that write prose a human will send onward
+
+A3 already forbids fabrication. This section is the **mechanism**: A3 is a promise an agent makes about its
+own behavior, and a promise is not a check. Anything that leaves the building — a client offer, a design
+document, a management summary, a report someone forwards — needs the promise *verified* by something that
+did not make it.
+
+The two defect classes are different failures and must not be conflated:
+
+| | **Hallucination** (groundedness defect) | **Slop** (provenance-signalling defect) |
+|---|---|---|
+| What it is | A claim with nothing behind it — an invented figure, a fabricated API/version/standard, an unsourced metric, a client fact nobody stated | Prose that reads as unreviewed machine output — AI-tell phrasing, uniform paragraph rhythm, empty superlatives, filler connectives |
+| Why it costs | The reader acts on something false, and the author is accountable for it | The reader stops trusting everything else on the page, including what is true |
+| How it's caught | Trace each claim to a source; an untraceable claim is the finding | Pattern scan plus density thresholds over the rendered text |
+
+### D1. Every claim is one of four kinds, and says which
+When drafting a factual sentence, an agent's claim is **sourced** (traceable to a named file, line, ID or
+quoted input), **derived** (arithmetic on sourced values — show the arithmetic), **assumed** (a stated
+assumption carrying its own ID and its own "if wrong, then…"), or **absent** (say the source doesn't
+address it). There is no fifth kind. A sentence that is none of the four is a hallucination regardless of
+how plausible it reads, and plausibility is exactly what makes it dangerous.
+
+### D2. Specificity without a source is the highest-risk pattern
+Vague filler is cheap to spot. The expensive failure is the *specific* unsourced detail — a version number,
+a percentage, a named product capability, a regulation article, a named third-party endpoint — because
+specificity is read as evidence of research. **A number or proper noun that entered a document without a
+source is a defect even when it happens to be right.** Prefer a named gap to a plausible fill.
+
+### D3. Never invent to complete a shape
+The strongest pull toward fabrication is structural: a table with an empty cell, a template section with no
+content, a list of three where only two are real. Leave it empty and say why. A document that visibly
+declares what it doesn't know is more credible, not less — and an invented row is indistinguishable from a
+researched one to every downstream reader.
+
+### D4. The scan runs on the rendered text, not the source data
+A groundedness/slop check reads what the human will actually read — the rendered Markdown, and the extracted
+text of any built binary deliverable — not the structured artifact it came from. Defects are *introduced by
+rendering and composition*: a figure that survived as prose but lost its citation, a diacritic flattened by
+a document writer, a summary sentence that overstates the table beneath it. A check that only reads the JSON
+cannot see any of them, which is exactly why it does not replace an ID-integrity audit and an ID-integrity
+audit does not replace it.
+
+### D5. A scanner is not an editor
+Report the defect, the location, and the evidence. Do not rewrite the prose. An agent that both flags and
+fixes style loses the ability to be trusted about either, and rewriting is how a scanner quietly becomes the
+author of the thing it was meant to check (B1's read-only rule, applied to prose).
+
+### D6. Thresholds, not vibes
+"Reads like AI" is not a finding. A finding names the pattern, the location, and — for anything
+density-based — the count and the threshold it crossed (`"seamless" ×7, threshold >3`). Some tells are
+absolute (a single "as an AI language model" is a defect); most are only defects in aggregate, and an agent
+that cannot say which kind it is applying will flag ordinary professional prose.
+
+---
+
 ## Provenance note
 
 A1-A2, A5, A7-A8 generalize `dev-framework\PRINCIPLES.md` §§1-2, 3(deviation rule), 7, 6 respectively.
@@ -180,3 +260,16 @@ future gate agent can reuse the mechanism, not just the SA pipeline's.
 Section C generalizes the `memory: user` conventions demonstrated in `mermaid-diagram-maker.md` and the
 project-fact boundary first written inline into `solution-analyst.md`'s own `<memory>` section — extracted
 here once it became clear the same rule would otherwise be re-derived per agent.
+Section D generalizes `agents\sa-slop-detector.md`'s four-layer scan from the reference framework — the one
+agent of that pair that was **never ported** when `sa-completeness-auditor` became `req-auditor`, leaving
+the `sa:` pipeline with an ID-integrity gate and no prose-integrity gate at all for four weeks. D1-D3
+(the claim taxonomy, the specificity rule, the never-invent-to-complete-a-shape rule) are not in that source
+— they generalize the anti-fabrication rules already written inline across `req-offer`, `req-analyst` and
+`req-estimator` ("invents nothing", "never fill a gap with a plausible-sounding guess", "never a padded
+guess, never folded into misc"), which had been re-derived per agent in slightly different words each time.
+B10 is new to this file and has no reference-framework source: it was written after a review of the `sa:`
+pipeline found four reviewer/critic/gate agents whose independence was carefully enforced against reading
+the author's *reasoning* while every one of them ran, by default, on the author's *model*.
+
+**Last revised**: 2026-09-07 (added B10, cross-model review independence, and Section D, groundedness &
+slop conduct).

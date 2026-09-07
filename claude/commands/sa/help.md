@@ -4,7 +4,10 @@ description: Static reference for the sa: command namespace. No live analysis, n
 allowed-tools: []
 ---
 
-> Version: 2.4.0 — minor: `/sa:estimate`'s row updated for the AI-assisted-only default and the
+> Version: 3.0.0 — major: `/sa:package`'s gate now takes **two** verdicts — `/sa:slop-check` (new) joins
+> `/sa:audit`, checking the prose rather than the IDs; `/sa:onepager` (new) documented as advisory
+> non-artifact #3; the cross-model review rule and document profiles added to Shared conventions
+> (`ARTIFACT-SCHEMAS.md` §5, §8, §9). 2.4.0 — `/sa:estimate`'s row updated for the AI-assisted-only default and the
 > must-only-baseline/priced-optional split (`ESTIMATION-METHOD.md §2, §9`). 2.3.0 — `/sa:screen` (the
 > bid/no-bid pass) documented, the advisory non-artifact pair
 > and the screening-band-is-not-an-estimate boundary added to Shared conventions. 2.2.0 — `/sa:brief`'s
@@ -36,7 +39,7 @@ it. The lane decides how much rigor you do and what the client ends up holding.
 | If the ask is… | Lane | Pipeline | Deliverables |
 |---|---|---|---|
 | A ballpark for a call or an email, sub-day turnaround | `rom` | ingest → clarify → estimate → offer | a light offer, effort range only |
-| A written priced offer, multi-day turnaround, standard rigor | `offer-sow` | ingest → clarify → design → risk → estimate → estimate-review → offer → audit → package | offer DOCX + estimation XLSX |
+| A written priced offer, multi-day turnaround, standard rigor | `offer-sow` | ingest → clarify → design → risk → estimate → estimate-review → offer → audit + slop-check → package | offer DOCX + estimation XLSX |
 | A full design package, multi-week, high commercial weight | `full-design` | everything in `offer-sow`, plus review → design-detail → diagrams | the above plus HLD, LLD, pitch deck |
 
 Genuinely ambiguous? `/sa:triage` classifies **up one tier** and states why — over-delivering on rigor is
@@ -71,8 +74,9 @@ re-run `/sa:triage` to change it, and it never re-scaffolds over existing artifa
 | `/sa:design <slug>` | `architecture.json` + `architecture.md` — the HLD: approach with weighed alternatives, components, quality attributes, integrations, phasing, full traceability matrix. | `req-architect` |
 | `/sa:risk <slug>` | `risk-register.json` + `risk-register.md` — probability × impact scored risks, compliance obligations, and the `contingency_recommendation` that `/sa:estimate` consumes. Run it **before** estimating. | `req-risk-officer` |
 | `/sa:estimate-review <slug>` | `estimate-review.json` + `estimate-review.md` — an independent critique of the estimate against `ESTIMATION-METHOD.md`. Advisory; blocks nothing. | `req-estimate-critic` |
-| `/sa:audit <slug>` | `audit/audit-<ts>.md` ending in a fenced `sa-verdict` block with a content-based `inputs_hash`. The only gate in the namespace. | `req-auditor` |
-| `/sa:package <slug> [type] [--mode=]` | `deliverables/*.docx`, `*.xlsx`, `*.pptx` — the actual files a client receives. Refuses to build without a `PASS`/`PASS-WITH-WAIVERS` from `/sa:audit` on a **matching** hash. | none (direct, via `office-doc-builder`) |
+| `/sa:audit <slug> [--model=]` | `audit/audit-<ts>.md` ending in a fenced `sa-verdict` block (`gate: sa-audit`) with a content-based `inputs_hash`. Checks the **JSON artifacts against each other, by ID** — mechanical, never editorial. | `req-auditor` |
+| `/sa:slop-check <slug> [--model=]` | `audit/slop-<ts>.md` ending in a fenced `sa-verdict` block (`gate: sa-slop`). Checks the **prose a human will read** — ungrounded claims, contradictions, AI-tell slop, locale regressions — across the rendered `.md` and the extracted text of anything already built. **The command most worth a `--model` override.** | `req-slop-detector` |
+| `/sa:package <slug> [type] [--mode=]` | `deliverables/*.docx`, `*.xlsx`, `*.pptx` — the actual files a client receives, built into the engagement's branded template where one resolved. Refuses without a `PASS`/`PASS-WITH-WAIVERS` from **both** gates on a **matching** hash. | none (direct, via `office-doc-builder`) |
 
 ### Added by `full-design`
 
@@ -89,17 +93,22 @@ into `ai/sa/<slug>/diagrams/`. `/sa:package` renders any `.mmd` there to `.png` 
 | Command | What it produces | Dispatches to |
 |---|---|---|
 | `/sa:doc <slug>` | `package.md` — one consolidated **internal** read of the engagement for your own team. Not a client deliverable. | none (direct) |
+| `/sa:onepager <slug> [type] [--lang=] [--model=]` | `onepager/<type>-v<NN>.html` + `.pdf` — a dense single A4-landscape page for people who won't read the artifacts. Five types: `summary` (the ask, the number, the decisions — the default), `roadmap`, `estimate`, `timeline`, `architecture`, or `all`. Every figure cites its artifact; an untraceable figure is printed as a named gap. Advisory; gates nothing. | `req-onepager` |
 
 ## Internal vs. client-facing — do not confuse these
 
 Two different documents, two different audiences:
 
-- **Internal**: `/sa:doc` → `ai/sa/<slug>/package.md`. For your team, your manager, your handover. It may
-  carry raw effort, coverage gaps and open questions.
-- **Client-facing**: `/sa:offer` → `/sa:audit` → `/sa:package` → `ai/sa/<slug>/deliverables/`. Reviewed,
-  gated, versioned, and what the client actually receives.
+- **Internal, long form**: `/sa:doc` → `ai/sa/<slug>/package.md`. For your team, your manager, your
+  handover. It may carry raw effort, coverage gaps and open questions.
+- **Internal, one page**: `/sa:onepager` → `ai/sa/<slug>/onepager/`. For the meeting where nobody read the
+  long form. Dense, cited, and honest about what it doesn't include.
+- **Client-facing**: `/sa:offer` → `/sa:audit` + `/sa:slop-check` → `/sa:package` →
+  `ai/sa/<slug>/deliverables/`. Reviewed, doubly gated, versioned, and what the client actually receives.
 
-Never send `package.md` to a client, and never treat `/sa:doc` as a substitute for the gated path.
+Never send `package.md` to a client, and never treat `/sa:doc` as a substitute for the gated path. A
+one-pager sits in between: internal by default, but the one artifact here most likely to be forwarded, so
+`/sa:slop-check` scans it as client-facing text whenever it exists.
 
 ## Shared conventions
 
@@ -113,23 +122,51 @@ Never send `package.md` to a client, and never treat `/sa:doc` as a substitute f
   `/sa:clarify`, two steps *after* the lane was chosen. Either triage blind or run `/sa:brief <path>`
   first. It is advisory, so it never appears in any `STATE.md` `Next`: triage and ingest offer it, and
   choosing it is always yours.
-- **Two advisory non-artifacts, both optional, both before the binding work.** `brief.md` (`/sa:brief`)
-  answers *what does this document say*; `screen.md` (`/sa:screen`) answers *can we do it and roughly what
-  would it cost*. Neither has a JSON source of truth, neither defines an ID, nothing cites either, both are
-  excluded from `inputs_hash`, and neither is a phase — see `ARTIFACT-SCHEMAS.md` §6.
+- **Three advisory non-artifacts, all optional.** `brief.md` (`/sa:brief`) answers *what does this document
+  say*; `screen.md` (`/sa:screen`) answers *can we do it and roughly what would it cost*; `onepager/*`
+  (`/sa:onepager`) answers *what does management need on one page*. None has a JSON source of truth, none
+  defines an ID, nothing cites any of them, all are excluded from `inputs_hash`, and none is a phase — see
+  `ARTIFACT-SCHEMAS.md` §6. The test for whether something belongs here: **does anything refuse on it?** If
+  yes it is a gate output, not advisory — which is why `audit/slop-<ts>.md` sits beside `audit-<ts>.md`
+  rather than in this list.
 - **A screening band is not an estimate and is never quotable.** `ESTIMATION-METHOD.md` §8: no PERT, no
   contingency, no compression, no calibration — by specification, not by shortfall. `/sa:estimate` is the
   only path to a number anyone may put in front of a client, and it never reads the band.
 - **`STATE.md` is the shared state file.** Every command updates it — lane, phase, last command, and a
   `Next` naming exactly one command. Phase history is appended to, never rewritten.
-- **One gate, at the end.** `/sa:review` and `/sa:estimate-review` produce findings, not verdicts. Refusal
-  lives in `/sa:package`, and the remedy is always to re-run `/sa:audit`, never to weaken the check.
-- **Freshness is content-based**, never mtime — change an artifact and the gate goes stale until re-audited.
+- **One refusal point, two gate inputs.** `/sa:review` and `/sa:estimate-review` produce findings, not
+  verdicts. Refusal lives in `/sa:package`, which requires **both** `/sa:audit` (`gate: sa-audit`) and
+  `/sa:slop-check` (`gate: sa-slop`) to pass on a matching hash. The remedy is always to re-run the failing
+  gate, never to weaken the check. The two are not redundant and neither covers the other:
+
+  | | `/sa:audit` | `/sa:slop-check` |
+  |---|---|---|
+  | Reads | the `.json` artifacts | the rendered `.md` and extracted deliverable text |
+  | Catches | `REQ-014` is `must` and nothing estimates it | the exec summary quotes "40% faster" and no artifact says so |
+  | Misses | a fabricated figure that sits in no ID field | a `must` requirement missing from the estimate |
+
+- **Run the independent checks on a different model than wrote the work.** `/sa:review`,
+  `/sa:estimate-review`, `/sa:audit` and `/sa:slop-check` all take `--model=<sonnet|opus|haiku|fable>`,
+  per-invocation only. A reviewer on the author's model shares the author's blind spots — the sentence that
+  felt reasonable to write feels reasonable to read. Worth it most on `/sa:slop-check` and
+  `/sa:estimate-review`, least on `/sa:audit` (mechanical checks barely vary by model). Each command reports
+  which model actually ran, and reminds you when none was set. Honestly: sibling models share training
+  lineage, so this reduces correlated error rather than delivering real independence — you are still the
+  reviewer of record. See `ARTIFACT-SCHEMAS.md` §9.
+- **Deliverables are built into a branded template** when a document profile resolves —
+  `document-data/templates.yaml` at the config root maps language and locale to a `.docx` shell.
+  `/sa:triage` resolves it once and writes it into `engagement.json`; `/sa:package` fills the template's
+  placeholders and **never restyles it**, keeping its approved boilerplate verbatim. No profile means
+  unbranded output, said out loud rather than discovered in Word. See `ARTIFACT-SCHEMAS.md` §8.
+- **Freshness is content-based**, never mtime — change an artifact and both gates go stale until re-run.
+  Editing a rendered `.md` by hand stales neither: the `.md` is generated, and hand-editing it was already
+  a contract violation the next agent run will overwrite.
 - **Effort is not price.** No rate card found means effort-only output, stated plainly; a rate card never
   appears in a client-facing file, only the arithmetic someone chose to show.
 - **Nothing here commits.** Writing artifacts is the pipeline's job; `git add`/`git commit` is yours.
 - **Agents are `req-`-prefixed** (`req-analyst`, `req-architect`, `req-detailer`, `req-reviewer`,
-  `req-risk-officer`, `req-estimator`, `req-estimate-critic`, `req-offer`, `req-auditor`, `req-ingestor`)
+  `req-risk-officer`, `req-estimator`, `req-estimate-critic`, `req-offer`, `req-auditor`, `req-ingestor`,
+  `req-screener`, `req-slop-detector`, `req-onepager`)
   specifically to avoid colliding with same-named agents from other installed frameworks. **`doc-briefer`
   is a deliberate exception, not a naming slip** — it is reusable outside this pipeline entirely (that's
   what `/doc-brief` exists for), so prefixing it `req-` would misdescribe it. Don't "fix" it.

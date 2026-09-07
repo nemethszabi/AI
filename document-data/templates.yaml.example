@@ -1,0 +1,87 @@
+# Document profiles — branded templates for /sa:package
+#
+# Copy this file to <config-root>\document-data\templates.yaml and edit it THERE, not here.
+# Put the .docx files themselves in <config-root>\document-data\templates\.
+# Both the filled-in yaml and the templates are gitignored: a brand template is an organization's
+# property, and the paths in it are machine-specific.
+#
+# Contract: sa-framework\ARTIFACT-SCHEMAS.md §8.
+# Same indirection as estimation-data\rates.yaml and framework-data\scope.yaml — a generic command
+# reads a profile NAME; only this file knows a path.
+#
+# Why document-data\ and not sa-framework\: _scripts\check-sync.ps1 compares sa-framework\ byte-for-byte
+# against every live root, so a live-only file there would be reported EXTRA on every run forever.
+
+version: 1
+
+# Used when engagement.json carries no vendor_org. The SELLING organization, never the client.
+default_org: acme
+
+orgs:
+  acme:
+    display_name: "ACME Solutions Ltd."
+
+    # Feeds the <ORG> slot in engagement.json's file_naming, and the document-ID block on a one-pager.
+    doc_id_prefix: "ACM"
+
+    # Which profile applies when language and locale both fail to match one below.
+    default_profile: acme-eng
+
+    profiles:
+      acme-eng:
+        language: English
+        # engagement.json.locale values this profile serves. A non-English locale can legitimately
+        # map to an English profile — a Serbian client often wants an English document.
+        locales: [en-US, en-GB]
+        # Resolved relative to THIS file's directory, so document-data\ stays relocatable.
+        template: "templates/acme_ENG.docx"
+        # Approved legal/marketing text the template already carries. /sa:package preserves these
+        # verbatim: never regenerated, never "improved", never machine-translated (§8).
+        boilerplate_sections:
+          - "Statement of Confidentiality"
+          - "Disclaimer"
+        # Headings the generator OWNS — it writes the engagement's content under each.
+        content_sections:
+          - "Scope of the Request"
+          - "Solution Overview"
+          - "Commercial Proposal"
+        # Style-demo headings shipped with the template to show off its typography. These are
+        # DELETED, heading and body. Listing them explicitly beats guessing: an unlisted heading is
+        # kept, so a template edit that adds a section can never silently lose it.
+        demo_sections:
+          - "Introduction"
+          - "Background"
+        # Placeholder strings in the template, mapped to their engagement.json source.
+        # /sa:package fills these and changes nothing else about the template.
+        placeholders:
+          "[Document Title]":   "project"
+          "[Document Subtitle]": "artifact_title"
+          "[Customer Name]":    "client"
+          "[Date]":             "generated_date"
+          "[REF-YYYY-NNN]":     "document_ref"
+          "[Author Name]":      "prepared_by"
+
+      acme-hun:
+        language: Hungarian
+        locales: [hu-HU]
+        template: "templates/acme_HUN.docx"
+        boilerplate_sections:
+          - "Cégbemutató"
+          - "Titoktartás"
+          - "Felelősségkizárás"
+        content_sections:
+          - "Ajánlatkérés tárgya"
+          - "A megoldás áttekintése"
+          - "Árajánlat"
+        demo_sections:
+          - "Technikai áttekintés"
+        placeholders:
+          "[Dokumentum címe]": "project"
+          "[Alcím]":           "artifact_title"
+          "[Customer Name]":   "client"
+          "[Date]":            "generated_date"
+          "[REF-YYYY-NNN]":    "document_ref"
+          "[Author Name]":     "prepared_by"
+
+# A second selling organization would be another key under orgs:, with its own profiles.
+# Nothing in the pipeline assumes there is only one.

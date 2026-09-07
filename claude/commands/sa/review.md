@@ -1,6 +1,6 @@
 ---
 name: sa:review
-description: Review a design (HLD and/or LLD) against its requirements list, via req-reviewer — severity-rated findings with a coverage count, no pass/fail gate here (/sa:audit is the gate). Writes review.json plus a rendered review.md.
+description: Review a design (HLD and/or LLD) against its requirements list, via req-reviewer — severity-rated findings with a coverage count, no pass/fail gate here (refusal lives at /sa:package, on the /sa:audit and /sa:slop-check verdicts). Writes review.json plus a rendered review.md. Takes --model; run it on a different model than produced the design.
 allowed-tools:
   - Read
   - Write
@@ -12,7 +12,8 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify> [--model=sonnet|opus|haiku|fable]"
 ---
 
-> Version: 2.0.0
+> Version: 2.1.0 — minor: `--model` guidance rewritten from "stronger model" to "different model than
+> produced the design" (`ARTIFACT-SCHEMAS.md` §9), and a reminder added when no override was given.
 
 <objective>
 `/sa:review <slug> [--model=<model>]` reviews `ai/sa/<slug>/architecture.json` (and `detailed-design.json`
@@ -25,8 +26,13 @@ against the HLD as well.
 `--model` is optional, opt-in only — omit it and the review runs on whatever model the session is already
 using. Review is a judgment-heavy critic role (catching a weak alternatives-considered table, a
 disproportionate component, a missed integration risk), which is exactly the case worth overriding for on a
-high-stakes or client-facing pass — `opus` is the recommended override when it matters; don't set it as a
-default for routine internal passes.
+high-stakes or client-facing pass.
+
+**Pick a model different from the one that produced the design, not merely a stronger one**
+(`sa-framework/ARTIFACT-SCHEMAS.md §9`, `AGENT-CONDUCT-BASELINE.md` B10). The point is decorrelated error:
+the model that found an architectural assumption reasonable enough to write down is the one least likely to
+challenge it. If the HLD was written on `opus`, review on `sonnet` — a same-family `opus → opus` pass is the
+weakest configuration available, and "stronger model" is not a substitute for "different model".
 </objective>
 
 <process>
@@ -61,9 +67,17 @@ Append only. Never rewrite or drop a prior history line, and never leave `Next` 
 <step name="relay">
 Return the agent's summary (what was in `scope_reviewed` with revisions, finding count by severity, the
 coverage headline naming every `must_untraced` REQ-ID), which model actually ran the review (so a
-`--model=opus` request is visibly confirmed, not just assumed), and both file paths written. Remind the
+`--model` request is visibly confirmed, not just assumed), and both file paths written. Remind the
 user this produces findings for their own disposition, not a gate — nothing here blocks the `Next` command;
-refusal in this pipeline happens at `/sa:audit`, which is a deliberate split, not an oversight.
+refusal in this pipeline happens at `/sa:package`, on the `/sa:audit` and `/sa:slop-check` verdicts, which is
+a deliberate split, not an oversight.
+
+If `--model` was not given, add one line:
+
+```
+Review ran on the session model — the same one that produced the design.
+Re-run with --model=<a different one> before this design underwrites a priced offer.
+```
 </step>
 </process>
 

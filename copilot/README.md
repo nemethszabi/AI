@@ -32,6 +32,36 @@ possible in principle, not blocked by a tooling gap. It's deliberately not done 
 Revisit this once there's a concrete near-term case for running actual `/sa:*` steps through Copilot, not
 speculatively.
 
+### 2026-09-07 — what the SA review changed here, and what it deliberately didn't
+
+A substantial pass over the `/sa:*` pipeline added two agents (`req-slop-detector`, `req-onepager`), two
+commands (`/sa:slop-check`, `/sa:onepager`), a second gate input at `/sa:package`, branded document
+profiles, and four newly-pinned estimation rules. **Ported to Copilot: the doctrine. Not ported: the
+agents and commands.** Both halves are deliberate.
+
+**Ported** — these are shared files this branch already copies, so they arrive with the normal rollout:
+
+| File | What changed |
+|---|---|
+| `..\AGENT-CONDUCT-BASELINE.md` | New **B10** (independent review runs on a different model) and new **Section D** (groundedness & slop conduct — the four-kinds-of-claim taxonomy, the specificity rule, never-invent-to-complete-a-shape, scan-the-rendered-text, scanner-is-not-an-editor, thresholds-not-vibes). Both are **general agent conduct** and bind Copilot work directly, with or without a `req-*` agent — see `AGENTS.md`'s new section. |
+| `..\sa-framework\ARTIFACT-SCHEMAS.md` | Two-verdict packaging gate, `vendor_org`/`document_profile`/`template_path`, `onepager/` as advisory non-artifact #3, new §8 (document profiles) and §9 (cross-model review). |
+| `..\sa-framework\ESTIMATION-METHOD.md` | Four under-specified rules pinned: rounding precision, the no-calibration-source case, the commitment gate's 20 MD threshold, the no-`must`-requirements case. |
+
+**Not ported, and this is the intended state** — the same standing scope decision recorded above, applied
+consistently rather than relaxed because the new artifacts happen to be interesting:
+
+| Artifact | Why not |
+|---|---|
+| `req-slop-detector` + `/sa:slop-check` | It is a **gate**, and the blocking-gate gap named above is exactly its problem: Copilot CLI has no "refuse to run without a fresh PASS" mechanism, so a port would be a scanner whose verdict nothing enforces. That is worse than no port — it looks like a gate and isn't one. |
+| `req-onepager` + `/sa:onepager` | Reads `estimation.json`/`architecture.json`, which only exist because the Claude-side pipeline wrote them. With no `req-*` agents here there is nothing to compose from. |
+| `document-data\templates.yaml` | Consumed only by `/sa:package`, which is Claude-side. Copying it would put brand templates at a config root nothing reads. |
+
+Recorded in this table for the reason the `framework-review` incident above established: **a deliberate
+absence has to be written somewhere a tool reads, or the next reviewer "fixes" it.** `check-sync.ps1` needs
+no new `$copilotNotPorted` entries — these are agents and commands, and this branch's `agents\`/`commands\`
+comparison only covers what `copilot\` itself stages, so an unported Claude agent is structurally invisible
+to it rather than reported as drift.
+
 ## Rollout — approved and run 2026-09-03
 
 The steps below mirror `..\docs\SETUP.md`'s "Install — GitHub Copilot CLI" section exactly, so you land on

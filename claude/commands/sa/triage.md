@@ -9,10 +9,13 @@ allowed-tools:
   - Grep
   - Glob
   - AskUserQuestion
-argument-hint: "[path-or-description]"
+argument-hint: "[path-or-description] [--profile=<document-profile>]"
 ---
 
-> Version: 1.1.0 — minor: offers `/sa:brief` in the confirm step when inbound documents were classified
+> Version: 1.2.0 — minor: resolves the engagement's document profile at intake and writes `vendor_org`,
+> `document_profile` and `template_path` into `engagement.json` (`ARTIFACT-SCHEMAS.md` §8), so `/sa:package`
+> builds branded without re-deriving a lookup and a broken profile surfaces here rather than on deliverable
+> day. 1.1.0 — offers `/sa:brief` in the confirm step when inbound documents were classified
 > unread, without making it a `Next` (the advisory carve-out, `ARTIFACT-SCHEMAS.md` §6).
 
 <objective>
@@ -65,6 +68,35 @@ material already states. Candidates:
 - New prospect or existing client; incumbent platform or greenfield.
 
 Anything left unanswered is `to_clarify` in the JSON. Never fill a gap with a plausible-sounding guess.
+</step>
+
+<step name="resolve-document-profile">
+Resolve the branded document shell now, so `/sa:package` reads a path rather than repeating a lookup, and so
+a broken profile surfaces at intake instead of at 6pm on deliverable day.
+
+Read `<config-root>/document-data/templates.yaml`, resolving `<config-root>` by
+`ARTIFACT-SCHEMAS.md §8`'s fallback chain — **`$CLAUDE_CONFIG_DIR` first, `~/.claude` second**, the staged
+repo copy last. Do not assume `~/.claude`: this machine runs three redirected config roots and a profile
+session that checks the wrong one finds nothing, which is indistinguishable from "no profile configured"
+and produces a silently unbranded deliverable.
+
+If no file is found on any of the three, set `vendor_org`, `document_profile` and `template_path` to `null`,
+say once that deliverables will be unbranded, and move on — this is a normal state, not an error.
+
+When it does exist, resolve in this fixed order and stop at the first hit:
+
+1. An explicit `--profile=<name>` in `$ARGUMENTS`, or a `template_path` a human already set in an existing
+   `engagement.json` — a human's choice always wins and is never re-derived on a re-triage.
+2. `deliverable_language` matched against each profile's `language`.
+3. `locale` matched against each profile's `locales`.
+4. The org's `default_profile`.
+
+`vendor_org` is the **selling** organization — yours — taken from `default_org` unless the intake said
+otherwise. It is never the client, and confusing the two puts the client's name on your own letterhead.
+
+Write the resolved profile name and the **absolute** path to its `template:`. If the file doesn't resolve on
+disk, set `template_path` to `null` and say which profile is broken and which path it named — a profile that
+points at a missing file is a configuration bug worth fixing once, not working around each time.
 </step>
 
 <step name="classify">
@@ -126,7 +158,9 @@ schema's own example shows `null`:
   "locale": "<e.g. sr-RS, hu-HU, en-US, or to_clarify>",
   "deliverable_language": "<e.g. English, or to_clarify>",
   "currency": "<e.g. EUR, or to_clarify>",
-  "template_path": null,
+  "vendor_org": "<the SELLING org's key in templates.yaml, or null>",
+  "document_profile": "<the resolved profile name, or null>",
+  "template_path": "<absolute path to that profile's .docx, or null>",
   "file_naming": "<ORG>-<YYYY>-<CLIENT>-<NNN>-<artifact>-v<NN>.<ext>",
   "commercial_size": "<band or to_clarify>",
   "turnaround": "<date or relative, or to_clarify>",
@@ -162,6 +196,8 @@ of what you intended to write (`ARTIFACT-SCHEMAS.md` §1):
 | Locale | <locale> |
 | Deliverable language | <deliverable_language> |
 | Currency | <currency> |
+| Selling org | <vendor_org or "none configured"> |
+| Document profile | <document_profile or "none — deliverables will be unbranded"> |
 | Template | <template_path or "none"> |
 | File naming | `<file_naming>` |
 | Commercial size | <commercial_size> |
@@ -207,6 +243,7 @@ Print, and nothing more:
 ```
 Triaged <slug> as <lane> (rev <n>).
 <n> open questions · <n> fields marked to_clarify.
+Document profile: <name> → <template filename>  |  none — deliverables will be unbranded
 Scaffolded: ai/sa/<slug>/
 
 Next: <the same command written into STATE.md's Next>

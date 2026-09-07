@@ -353,6 +353,34 @@ That's not hedging — it's the more defensible commercial position, and it's wh
 
 ---
 
+## The same pipeline on GitHub Copilot CLI
+
+Since 2026-09-07 this pipeline runs on both tools. Everything above — the lanes, the artifacts, the eight
+design decisions, the two-verdict gate — is identical, because the contracts are **one set of files copied
+to both config roots**: `ARTIFACT-SCHEMAS.md` (shape), `ESTIMATION-METHOD.md` (method) and `PIPELINE.md`
+(sequence, preconditions, gate rules, and a conformance checklist defining what "same functionality" means).
+
+What differs is only the mechanics:
+
+| | Claude Code | Copilot CLI |
+|---|---|---|
+| Command layer | 19 slash commands (`/sa:*`) | one `sa-pipeline` skill — `~/.copilot/commands/` has no documented discovery behaviour, so 19 files there would silently not exist |
+| Agents | 22 in `~/.claude/agents/` | 17 `.agent.md` siblings, dispatched `@req-estimator` |
+| Model for a checking step | `--model=` per dispatch | `/model` **before** dispatching — session-level, so switch back after |
+| Packaging gate | **refuses** | checks, reports, prints STOP — **advisory, never a gate** |
+| Read-only agents | `disallowedTools` enforces it | `write` without `shell`; the rest is a written rule |
+
+**Engagements are portable.** `ai/sa/<slug>/` lives in the project, not in a tool's config, and conforms to
+one schema — so an engagement triaged in Claude Code can be clarified in Copilot CLI and packaged back.
+That was the deciding argument for porting at all; the honest cost is that a material change to a Claude
+`req-*` agent needs the same change in its sibling, and nothing automated enforces that.
+
+**Run commercially binding packaging in Claude Code.** Not a preference — Copilot has no mechanism to
+refuse, and a gate that looks like a gate and isn't is worse than an acknowledged manual check.
+Full detail: `..\copilot\PORT-NOTES.md`.
+
+---
+
 ## Setup
 
 Optional but recommended before your first priced offer:

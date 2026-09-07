@@ -11,23 +11,35 @@ kept thin so it stays readable, never inline the doctrine itself in this file.
 - Every `dev-*` agent follows `~/.copilot/dev-framework/PRINCIPLES.md`.
 - Why it's shaped this way, the `ai/dev/` state schema, and non-goals: `~/.copilot/dev-framework/DESIGN.md`.
 
-## `req-*` agent family / `sa:` pipeline (requirement → offer)
-- Artifact data contract, estimation method: `~/.copilot/sa-framework/ARTIFACT-SCHEMAS.md`,
-  `~/.copilot/sa-framework/ESTIMATION-METHOD.md`. Binding wherever a `req-*` agent exists.
-- **Current status**: no `req-*`/`sa:` agent has been ported to Copilot CLI yet — doctrine-only tier. See
-  `~/.copilot/README.md` (or `d:\_AI_GIT\copilot\README.md`, the staged source) for why, and what porting
-  would take.
+## `req-*` agent family / `sa:` pipeline (requirement → offer) — **live here since 2026-09-07**
+- **Run it via the `sa-pipeline` skill** — that is this tool's command layer (19 steps in one file), not a
+  set of slash commands. It tells you which agent each step dispatches and what it must do before and after.
+- Binding contracts, shared byte-for-byte with the Claude side and **cited, never restated**:
+  `~/.copilot/sa-framework/PIPELINE.md` (sequence, preconditions, gate rules, conformance),
+  `ARTIFACT-SCHEMAS.md` (artifact shape), `ESTIMATION-METHOD.md` (how numbers are derived).
+- Standing divergences for the whole family: `~/.copilot/PORT-NOTES.md`. **Read it once before running any
+  step** — six of them, and two change what you can rely on.
+- Agents dispatch with `@agent-name`. Fourteen `req-*`/support agents are live; see
+  `d:\_AI_GIT\copilot\agents\README.md` for the inventory and what is deliberately absent.
 
-## Rules that apply here even with no `req-*` agent ported
+## Two things this tool cannot do, and must not pretend to
+- **Packaging cannot refuse.** The two-verdict gate is checked and reported here, but nothing stops a
+  session told to continue. It is an **advisory check, never a gate**. Run packaging in Claude Code for
+  anything commercially binding (`PORT-NOTES.md` D6).
+- **Read-only cannot be enforced structurally** — no `disallowedTools`, no scoped tool grants. Read-only
+  roles get `write` without `shell`, and the rest is a written rule (`PORT-NOTES.md` D2).
+
+## Rules that bind every agent here, `sa:` or not
 Two `AGENT-CONDUCT-BASELINE.md` sections added 2026-09-07 are **general agent conduct**, not `sa:`-pipeline
-mechanics, so they bind any agent run on this tool — including ad-hoc work with no agent file at all:
+mechanics, so they apply to any work on this tool — including ad-hoc work with no agent file at all:
 - **Section D — groundedness & slop.** Every factual claim is sourced, derived, assumed, or declared absent;
   there is no fifth kind. A *specific* unsourced detail (a version number, a percentage, a named capability)
   is the dangerous case, because specificity reads as evidence. Never invent content to complete a table,
   a section, or a list.
 - **B10 — cross-model review.** An independent review runs on a different model than produced the work.
-  Copilot CLI's model selector is the equivalent of Claude Code's `--model`; the rule is the same and so is
-  the honest caveat that sibling models share blind spots.
+  Here that means `/model` **before** dispatching a checking agent — selection is session-level, not
+  per-dispatch — and switching back afterwards. Same rule, same honest caveat: sibling models share
+  training lineage, so this reduces correlated error rather than delivering independence.
 
 ## Getting started
 - Repo source of truth (staged, not live): `d:\_AI_GIT\copilot\README.md`.

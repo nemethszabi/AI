@@ -188,8 +188,23 @@ confirmed). Matches `copilot\README.md`'s own rollout section verbatim.
   sequential-thinking, and filesystem are **not yet wired** — deliberately scoped to Geomant only for now;
   add the rest the same way, one `copilot mcp add` call per server, when actually needed.
 
-**Support tier, current as of 2026-09-03**: Copilot CLI has real subagent dispatch (`/fleet` + `@agent-name`)
-and reads the same open `SKILL.md` format Claude Code does, so full parity is possible in principle — but
-no `req-*`/`sa:` port exists yet (`copilot\README.md` has the full reasoning). Today, running the steps
-above only makes the shared doctrine legible to Copilot; it does not run the `/sa:*`/`/dev:*` pipeline —
-there is no Copilot equivalent to dispatch yet.
+**Support tier, current as of 2026-09-07 (Copilot CLI v1.0.82)**: the `sa:` pipeline **now runs on Copilot
+too**. 17 agents are live at `~\.copilot\agents\`, and the command layer is the `sa-pipeline` skill —
+invoke it by describing the step ("triage this RFP", "estimate this", "check this offer before I send it")
+and it dispatches the right `@req-*` agent. The `dev-*` family is still deliberately Claude-only.
+
+Three things to know before relying on it, all documented in `copilot\PORT-NOTES.md`:
+
+- **Packaging cannot refuse.** Copilot has no mechanism for a skill to hard-stop a session, so the
+  two-verdict gate is checked and reported but is an *advisory check, never a gate*. **Run
+  commercially binding deliverables in Claude Code**, where the refusal is real.
+- **Model selection is session-level.** The cross-model review rule (`ARTIFACT-SCHEMAS.md §9`) is satisfied
+  with `/model <other>` **before** dispatching a checking agent, then switching back — not a per-dispatch
+  parameter. Convenient accident worth not relying on: Copilot here runs `claude-sonnet-5` while Claude Code
+  runs Opus, so artifacts authored there and checked here are cross-model by default.
+- **Engagements are portable.** `ai/sa/<slug>/` is project-scoped and conforms to one shared schema, so an
+  engagement triaged in Claude Code can be clarified in Copilot CLI and packaged back. That portability was
+  the deciding argument for doing the port at all.
+
+The rollout copies `document-data\` to the **Claude roots only** — it feeds `/sa:package`, which is where
+binding deliverables belong regardless.

@@ -116,7 +116,10 @@ foreach ($f in @('CONSTITUTION.md', 'AGENT-CONDUCT-BASELINE.md', 'DESIGN-PRINCIP
     $p = Join-Path $repoRoot $f
     if (Test-Path $p) { $copilotStaged[$f] = Get-Sha256 $p }
 }
-foreach ($f in @('AGENT-TEMPLATE-BASELINE.md', 'AGENTS.md', 'COPILOT.md')) {
+# PORT-NOTES.md added 2026-09-07 with the full sa: pipeline port - it carries the six standing
+# divergences every ported req-* agent cites instead of restating, so it is load-bearing at the live
+# root, not repo-side documentation.
+foreach ($f in @('AGENT-TEMPLATE-BASELINE.md', 'AGENTS.md', 'COPILOT.md', 'PORT-NOTES.md')) {
     $p = Join-Path $repoRoot "copilot\$f"
     if (Test-Path $p) { $copilotStaged[$f] = Get-Sha256 $p }
 }
@@ -212,7 +215,7 @@ if (-not (Test-Path $copilotRoot)) {
 } else {
     $copilotLive = Get-FileHashMap $copilotRoot @('agents', 'commands', 'skills', 'dev-framework', 'sa-framework')
     foreach ($f in @('CONSTITUTION.md', 'AGENT-CONDUCT-BASELINE.md', 'DESIGN-PRINCIPLES-BASELINE.md',
-                     'AGENT-TEMPLATE-BASELINE.md', 'AGENTS.md', 'COPILOT.md')) {
+                     'AGENT-TEMPLATE-BASELINE.md', 'AGENTS.md', 'COPILOT.md', 'PORT-NOTES.md')) {
         $p = Join-Path $copilotRoot $f
         if (Test-Path $p) { $copilotLive[$f] = Get-Sha256 $p }
     }

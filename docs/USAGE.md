@@ -108,6 +108,12 @@ not a reusable role.
   `/sa:estimate-review`, `/sa:audit` and `/sa:slop-check` all take `--model=`. A reviewer on the author's
   model shares the author's blind spots. Worth it most on `/sa:slop-check` and `/sa:estimate-review`, least
   on `/sa:audit`. It reduces correlated error; it isn't real independence — you still are.
+- **The `sa:` pipeline runs on both tools, and engagements are portable between them.** Claude Code has 19
+  slash commands; Copilot CLI has the same 19 steps in one `sa-pipeline` skill plus 17 `@`-dispatchable
+  agents. `ai/sa/<slug>/` is project-scoped and conforms to one shared schema, so an engagement triaged in
+  one can be continued in the other. **Two things differ**: Copilot's packaging step cannot *refuse* (it
+  checks and reports, so run binding deliverables in Claude Code), and its model selection is session-level
+  (`/model` before dispatching a checking agent). `copilot\PORT-NOTES.md` has all six divergences.
 - **`/sa:doc`, `/sa:onepager` and `/sa:offer` are three different documents.** `/sa:doc` is an *internal*
   consolidation for your team; `/sa:onepager` is one dense page for the meeting where nobody read it; the
   client-facing path is `/sa:offer` → `/sa:audit` + `/sa:slop-check` → `/sa:package`. Confusing them is how

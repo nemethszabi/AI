@@ -1,59 +1,109 @@
 # Copilot CLI — agent/skill file-shape reference
 
 The `copilot\` branch's mirror of `..\claude\AGENT-TEMPLATE-BASELINE.md` — documents the **file shapes**
-Copilot CLI actually reads, so a future port of a Claude agent/skill has a concrete target instead of
-guesswork. Governs shape, not behavior — pairs with the shared `..\AGENT-CONDUCT-BASELINE.md` for conduct,
-same split as the Claude side.
+Copilot CLI actually reads. Governs shape, not behavior; pairs with the shared `..\AGENT-CONDUCT-BASELINE.md`
+for conduct, the same split as the Claude side.
 
-**Provenance**: verified against `copilot --help`, `copilot help commands`, `copilot help config`, and
-public docs during the design session that produced this scaffold (2026-09-03). Re-verify against a
-current `copilot --help`/`copilot mcp --help` before relying on anything below past a few months old —
-Copilot CLI has moved fast (the "no subagents" belief this repo held before 2026-09 was already stale by
-the time it was checked).
+**Provenance**: verified against `copilot --version` (**v1.0.82**), `copilot --help`,
+`copilot help commands`, `copilot help config` and the live `~/.copilot/` tree on **2026-09-07**, during the
+`sa:` pipeline port. The 2026-09-03 scaffold recorded much of this as unverified guesswork; the rows below
+now distinguish **verified** from **still unverified**, because a table that doesn't say which is which is
+the reason a port gets built on an assumption.
+
+---
 
 ## `.agent.md` — custom agents
 
-- **Location**: `~/.copilot/agents/` (global/personal — the direct analog of `~\.claude\agents\`) or
-  `.github/agents/` (repo-scoped, analog of a project's own `.claude\agents\`).
-- **Frontmatter**: YAML — `name`, `description`, `tools` (list), `model` (optional). Structurally close to
-  Claude Code's own agent frontmatter.
-- **Body**: Markdown prose describing role/process/rules — a Claude agent's `<role>`/`<process>`/`<rules>`
-  content is largely reusable text for a port, not a rewrite, modulo the tag-vs-heading convention (Copilot
-  agents are plain Markdown headings, not Claude's XML-tag sections).
-- **Dispatch**: an orchestrating Copilot session calls out to a named custom agent via `@agent-name` (or
-  `/fleet` for multi-agent orchestration) as an isolated subagent — the rough equivalent of Claude's `Agent`
-  tool.
+- **Location** — `~/.copilot/agents/` (global) or `.github/agents/` (repo-scoped). **Verified**: 17 agents
+  live at the global path and are selectable.
+- **Frontmatter** — `name`, `description`, `tools` (YAML list), `model` (optional). **Verified**: the
+  ported family uses exactly this.
+- **Body** — plain Markdown headings. **Not** Claude's XML-tag sections. A Claude agent's
+  `<role>`/`<process>`/`<rules>` *content* ports largely as-is; the tags become `# Role`, `# Process`,
+  `# Rules`.
+- **Dispatch** — `@agent-name` from an orchestrating session; `/agent [name]` selects one interactively;
+  `/fleet` enables parallel subagent execution. **Verified** in `copilot help commands`.
+
+### Tool names — verified
+
+`~/.copilot/permissions-config.json` records approvals by **kind**, and the two kinds observed in the live
+file are `write` and `commands`. In `.agent.md` frontmatter these are written:
+
+| Claude tool | Copilot equivalent | Status |
+|---|---|---|
+| `Read`, `Grep`, `Glob` | *(implicit — no grant needed; every agent can read and search)* | Verified by the working ports |
+| `Write` / `Edit` | `write` | **Verified** |
+| `Bash` | `shell` | **Verified** |
+| `Agent` (subagent dispatch) | `@agent-name` / `/fleet` | **Verified** |
+| `AskUserQuestion` | **No equivalent, and none needed** | **Verified** — see below |
+| MCP tools (`mcp__*`) | `~/.copilot/mcp-config.json` | **Verified** — `azure-devops-geomant` configured and enabled |
+
+`AskUserQuestion`'s absence is not a gap to work around: a dispatched agent cannot ask on *either* tool
+(on Claude the tool exists but is unavailable inside a subagent). The contract is identical — proceed on
+the least-committal reading, record the question in the artifact, repeat blocking ones under
+`## Blocking questions`, and let the dispatching layer raise them. See `PORT-NOTES.md` D4.
+
+### Fields Copilot does NOT have — and what each costs
+
+The Claude side's `AGENT-TEMPLATE-BASELINE.md` §1a builds real enforcement out of frontmatter fields. Most
+have no Copilot equivalent, so a rule that is *structural* there is *instructional* here. Say so in the
+agent rather than letting the reader assume parity:
+
+| Claude field | Copilot | What is lost |
+|---|---|---|
+| `disallowedTools` | **absent** | A read-only agent's promise cannot be enforced by a deny-list. Mitigation: grant `write` only, no `shell`, and state the rule. See `PORT-NOTES.md` D2. |
+| Scoped tool grants (`Bash(git hash-object:*)`) | **absent** | `shell` is all-or-nothing. `req-auditor` is the live casualty — its narrowing is a written rule here, not a grant. |
+| `effort` | **absent** | No per-agent reasoning-depth control. |
+| `memory` | **absent** | No cross-session agent memory; state conventions in the artifact instead. |
+| `model` per-dispatch | frontmatter `model` exists, but selection is **session-level** (`/model`) | The cross-model review rule (`ARTIFACT-SCHEMAS.md §9`) is satisfied by switching the session before dispatching. `PORT-NOTES.md` D5. |
+| `permissionMode`, `maxTurns`, `hooks`, `isolation` | **absent** | No per-agent circuit-breakers or lifecycle hooks. |
 
 ## `SKILL.md` — skills
 
-- **Open, cross-tool standard** (agentskills.io), not Copilot-specific — Claude Code and Copilot CLI both
-  read it natively. A `SKILL.md` written for one works in the other essentially unmodified; each tool
-  ignores frontmatter extras it doesn't recognize.
-- **Location**: `~/.copilot/skills/` (global) or `.github/skills/` (repo-scoped) — confirm the exact
-  personal-scope path against current `copilot help` output before first use; early research also surfaced
-  `.agents/skills/` as a possible alternate, unconfirmed as of this writing.
-- **Frontmatter**: `name`, `description`, `license` — no `tools:`/`allowed-tools:` field in the open spec
-  itself (unlike a Claude Code *command*'s `allowed-tools:`), so a skill carries no enforced tool-allowlist
-  on either tool.
+- **Open, cross-tool standard** (agentskills.io). Claude Code and Copilot CLI both read it natively; each
+  ignores frontmatter extras it doesn't recognize. **Verified** — five shared skill folders are live at
+  `~/.copilot/skills/` and work unmodified.
+- **Location** — `~/.copilot/skills/<name>/SKILL.md` (global) or `.github/skills/`. **Verified.**
+- **Frontmatter** — `name`, `description`. No `tools:`/`allowed-tools:` in the open spec, so a skill carries
+  no enforced tool allowlist on either tool.
+- **Managed via** `/skills`. **Verified** in `copilot help commands`.
 
-## Claude tool name → Copilot tool name mapping
+## `commands\` — **still unverified, and treat it as unsupported**
 
-**Unverified — confirm each row against a current `copilot --help`/`copilot mcp --help` before authoring
-anything that depends on it.** Recorded here as a starting point, not a settled fact:
+`~/.copilot/commands/*.md` appears in **no** `copilot --help`, `copilot help commands` or
+`copilot help config` output as of v1.0.82. One file (`usage.md`) was staged there in the 2026-09-03
+scaffold on the assumption it worked; that assumption has never been confirmed, and the built-in `/usage`
+command would shadow it regardless.
 
-| Claude tool | Copilot CLI equivalent (best known, unconfirmed) |
-|---|---|
-| `Read` | Copilot's built-in file-read capability |
-| `Write` / `Edit` | Copilot's built-in file-write/edit capability |
-| `Bash` | Copilot's shell/terminal execution capability |
-| `Grep` / `Glob` | Copilot's built-in search/file-listing capability |
-| `AskUserQuestion` | No confirmed direct equivalent — Copilot's interactive-mode prompting may or may not expose this to a dispatched agent; verify before porting any agent that relies on it |
-| `Agent` (subagent dispatch) | `@agent-name` / `/fleet` |
-| MCP tools (`mcp__*`) | Configured via `~/.copilot/mcp-config.json` — Copilot CLI supports MCP natively, same protocol as Claude Code |
+**Do not build on this mechanism.** The `sa:` pipeline's command layer is a skill
+(`copilot\skills\sa-pipeline\SKILL.md`) for exactly this reason — nineteen step files on an unverified
+discovery path would produce a pipeline that silently does not exist. If custom commands are later
+confirmed, splitting that skill is mechanical.
 
-## Why this file exists, and why it's this thin
+## Always-loaded instructions
 
-Per the standing scope decision (`..\README.md`, `copilot\README.md`): the Copilot branch is a
-**doctrine-only scaffold** right now — no `req-*`/`sa:` agent has actually been ported. This file exists so
-that *if and when* a port is approved, the frontmatter shapes and tool mapping don't need to be
-re-researched from scratch — not because a port is imminent.
+`~/.copilot/AGENTS.md` is Copilot CLI's analog of `CLAUDE.md` — the thin, always-loaded pointer file.
+`COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (set to `%USERPROFILE%\.copilot` on 2026-09-03) governs which
+directories are read; the exact multi-file discovery behaviour **has still not been observed working
+end to end** and is worth a real check next time Copilot CLI is used for substantive work.
+
+---
+
+## Porting checklist
+
+Walk this when bringing a Claude agent across. Conformance target for the `sa:` family:
+`..\sa-framework\PIPELINE.md §5`.
+
+1. **Frontmatter** — `name`, `description`, `tools` (minimum the role needs; `write` only for read-only
+   roles). Drop every field from the "does not have" table above.
+2. **Tags → headings** — `<role>` → `# Role`, and so on.
+3. **Paths** — `~/.claude/` → `~/.copilot/` throughout. Engagement artifacts (`ai/sa/<slug>/`) stay put:
+   they are project-scoped and shared between tools.
+4. **Header block** — name the Claude original, its version, and the port date. State that they are
+   siblings, not a copy and its cache.
+5. **Mark `[Copilot]` divergences inline**, but only those specific to that agent — the family-wide ones
+   live once in `PORT-NOTES.md`.
+6. **Re-check what the frontmatter used to enforce.** Every `disallowedTools`, scoped grant, `effort` or
+   `memory` line on the Claude side is a promise that now needs a written rule and an honest note that it
+   is weaker.
+7. **Record the port** in `agents\README.md`'s inventory and in `README.md`'s status section.

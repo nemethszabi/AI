@@ -31,24 +31,36 @@ repo*. What needs to happen after an edit:
 So: commit → hook fires → log tells you if something drifted → you decide when to actually promote it.
 Nothing pushes a change live without that manual step, on purpose.
 
-## `copilot\` branch (currently a doctrine-only scaffold)
+## `copilot\` branch (full `sa:` pipeline since 2026-09-07)
 
-**No automatic sync exists here yet, and there is deliberately nothing to sync** — `copilot\agents\` and
-`copilot\skills\` hold only stub `README.md` files, and the proposed rollout (`copilot\README.md`) hasn't
-been run even once, so there's no live `~\.copilot\` config to drift against. `_scripts\check-sync.ps1`
-has a comment marking exactly where a Copilot check would be added:
+**Same pattern as the Claude side, and `check-sync.ps1` has covered it since 2026-09-05**: it reports
+`MISSING`/`STALE`/`EXTRA` for `~\.copilot\` against `copilot\agents\`, `copilot\skills\`,
+`copilot\commands\`, the shared `skills\`/`dev-framework\`/`sa-framework\`, and the doctrine files. Drift
+detection is automatic; promotion stays a deliberate `Copy-Item` step, run from `copilot\README.md`'s
+Rollout block.
 
-```
-# Copilot side (copilot\agents\, copilot\skills\) is intentionally not checked yet - nothing to sync
-# until it holds real files. Add a matching check here once the first Copilot agent/skill is authored.
-```
+Three things about this branch that the Claude side has no equivalent of:
 
-**When this changes** (a `req-*`/`sa:` port is approved and `copilot\agents\`/`copilot\skills\` start
-holding real files): extend `check-sync.ps1` with a fourth destination entry for `$env:USERPROFILE\.copilot`
-and a matching `Get-FileHashMapRemapped` call for `copilot\agents`/`copilot\skills`, mirroring exactly how
-the Claude side already works (see the function's own doc-comment) — at that point the same
-"automatic drift detection, manual promotion" pattern above applies to Copilot too, with no new design
-needed, just wiring in the destination.
+- **The blanket `skills\*` copy pulls in what must not be there.** `framework-review` dispatches
+  `framework-strategist`, which is Claude-side only, so the `Remove-Item` line immediately after the copy
+  is load-bearing — not tidy-up. `check-sync.ps1`'s `$copilotNotPorted` keeps it from being reported
+  `MISSING` and "fixed" back into existence, which is exactly what happened on 2026-09-07 before the list
+  existed.
+- **`document-data\` is deliberately not rolled out here.** It feeds `/sa:package`, which is where binding
+  deliverables should be built anyway. Copying it would put brand templates at a root nothing reads.
+- **Claude↔Copilot parity is not checked by anything.** `check-sync.ps1` compares *staged versus live per
+  tool*; it has no notion of whether `copilot\agents\req-estimator.agent.md` still matches
+  `claude\agents\req-estimator.md`. **When you change a Claude `req-*` agent materially, change its
+  sibling too** — the conformance checklist in `sa-framework\PIPELINE.md §5` is what to walk, and a
+  periodic `/framework-review` is currently the only mechanism that would catch the drift.
+
+## What is shared, and therefore what one edit changes twice
+
+`CONSTITUTION.md`, both `*-BASELINE.md` files at the root, `dev-framework\`, `sa-framework\` (including
+`PIPELINE.md`) and the root `skills\` are **one set of files copied to both tools' roots**. Editing any of
+them changes behaviour on both sides at the next rollout — which is the point, but it means a change that
+looks Claude-shaped can land on Copilot too. The test before editing a shared file: *would this sentence
+still be true if the other tool did not exist?* If not, it belongs in a branch.
 
 ## What this deliberately does *not* do
 

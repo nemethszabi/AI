@@ -22,8 +22,17 @@ allowed-tools: []
 Global and generic — works in any project, or standalone with no project at all. Each engagement lives in
 its own `ai/sa/<slug>/` folder, so many bids and change requests coexist side by side. Every artifact is
 written twice: a `.json` (source of truth) and a rendered `.md` (what humans read).
-`sa-framework/ARTIFACT-SCHEMAS.md` is the binding contract for both; `sa-framework/ESTIMATION-METHOD.md`
-governs how numbers are derived and what they may be used for.
+
+Three binding contracts, all shared byte-for-byte with the Copilot CLI implementation:
+`sa-framework/ARTIFACT-SCHEMAS.md` (artifact **shape**), `sa-framework/ESTIMATION-METHOD.md` (how numbers
+are derived and what they may be used for), and `sa-framework/PIPELINE.md` (the tool-agnostic **sequence** —
+preconditions, dispatch targets, state transitions, gate rules, and the conformance checklist).
+
+**The same pipeline runs on GitHub Copilot CLI** via the `sa-pipeline` skill and 17 `.agent.md` agents.
+Engagements are portable between the two: `ai/sa/<slug>/` is project-scoped and conforms to one schema, so
+an engagement triaged here can be clarified there and packaged back here. Two things differ and are
+documented in `copilot/PORT-NOTES.md` — Copilot cannot *refuse* at packaging (advisory check only, so run
+binding deliverables here), and its model selection is session-level rather than per-dispatch.
 
 **v1 is human-driven.** One command per step, with human review in between, and none of them commit. The
 single exception is **`/sa:screen`**, which chains the shallow front half (scaffold → ingest → clarify →

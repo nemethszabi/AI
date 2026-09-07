@@ -1,145 +1,139 @@
-# `copilot/` — GitHub Copilot CLI branch (doctrine-only scaffold)
+# `copilot/` — GitHub Copilot CLI branch
 
-The Copilot CLI branch of `_AI_GIT`, sibling to `..\claude\`. **Currently a doctrine-only scaffold**: the
-shared doctrine (`..\CONSTITUTION.md`, both remaining baselines, `..\dev-framework\`, `..\sa-framework\`,
-`..\skills\`) is made legible to Copilot CLI via the files here, but no `req-*`/`sa:` agent has actually
-been ported — `agents\` and `skills\` below are empty stubs. That's a deliberate, separate scope decision
-(you're using Claude Code as the default/preferred tool today), not an oversight.
+The Copilot CLI branch of `_AI_GIT`, sibling to `..\claude\`. **As of 2026-09-07 this is a full-pipeline
+branch, not a doctrine-only scaffold**: the shared doctrine plus 17 agents and the `sa:` pipeline's command
+layer are live at `~/.copilot/`.
+
+The design target is *"share the method, separate the mechanics"*: `CONSTITUTION.md`, both baselines and
+`..\sa-framework\` are **one set of files copied to two roots** — never forks — while agents and commands
+are tool-native siblings, because the two tools' formats and dispatch mechanics are genuinely
+incompatible and pretending otherwise produces files that work on neither.
 
 ## Repository layout
 
 | Path | What it is |
 |---|---|
 | `README.md` | This file — human-facing documentation of the branch. |
-| `AGENTS.md` | **Machine-facing** — the file Copilot CLI itself reads as its always-loaded pointer, merged into `~/.copilot/AGENTS.md`. Same spirit as `..\claude\CLAUDE.md`, distinct purpose from this README. |
-| `AGENT-TEMPLATE-BASELINE.md` | `.agent.md`/`SKILL.md` frontmatter shapes, install locations, and a Claude-tool-name → Copilot-tool-name mapping table — the reference for porting a Claude agent later. |
-| `agents\` | Empty — stub `README.md` only. Would hold `.agent.md` twins of `..\claude\agents\*.md` if a port is ever approved. |
-| `skills\` | Empty — stub `README.md` only. `..\skills\` (shared, root-level) already covers cross-tool skills; anything here would be Copilot-only. |
+| `AGENTS.md` | **Machine-facing** — Copilot CLI's always-loaded pointer, merged into `~/.copilot/AGENTS.md`. Same spirit as `..\claude\CLAUDE.md`, distinct purpose from this README. |
+| `AGENT-TEMPLATE-BASELINE.md` | `.agent.md`/`SKILL.md` shapes, the **verified** tool-name mapping, the fields Copilot lacks and what each costs, and the porting checklist. Re-verified against v1.0.82 on 2026-09-07. |
+| `PORT-NOTES.md` | **Read once.** The six standing divergences that apply to every ported `req-*` agent and to the whole `sa:` pipeline. Not repeated per file — a divergence documented in fourteen places gets corrected in fourteen inconsistent ways. |
+| `agents\` | 17 `.agent.md` files. Siblings of `..\claude\agents\*.md`, each naming its original and marking `[Copilot]` divergences. See that folder's `README.md` for the inventory and what is deliberately absent. |
+| `skills\` | Copilot-only skills — chiefly `sa-pipeline\SKILL.md`, this branch's command layer. Cross-tool skills live in the shared `..\skills\`. |
+| `commands\` | One legacy file, kept but **not built on** — see the warning below. |
+| `scripts\` | Copilot usage-tracking PowerShell. Repo-side only, not rolled out. |
 
-## Why doctrine-only, for now
+## What is shared, and what is not
 
-Copilot CLI (`copilot`, v1.0.64+, standalone winget package) is a genuinely agentic CLI with real subagent
-dispatch (`/fleet` + `@agent-name`) and native support for the open `SKILL.md` standard — so a full port is
-possible in principle, not blocked by a tooling gap. It's deliberately not done yet because:
+| Layer | Shared? | Why |
+|---|---|---|
+| `CONSTITUTION.md`, `AGENT-CONDUCT-BASELINE.md`, `DESIGN-PRINCIPLES-BASELINE.md` | **Shared, byte-identical** | Prose doctrine. Both tools' agents read it as-is. |
+| `sa-framework\ARTIFACT-SCHEMAS.md`, `ESTIMATION-METHOD.md`, `PIPELINE.md` | **Shared, byte-identical** | The artifact schema, the estimation method, and the pipeline contract are statements about the *work*, not about a tool. `PIPELINE.md` was extracted during this port precisely so 19 command files did not become 38. |
+| `skills\` (root) | **Shared** | `SKILL.md` is an open cross-tool standard; both tools read it natively. |
+| Agents | **Separate siblings** | XML-tag sections vs Markdown headings; `tools: Read, Write` vs `tools: [write]`; `disallowedTools`/`effort`/`memory` exist on one side only. |
+| Command layer | **Separate, and differently shaped** | 19 slash commands on Claude; **one skill** here — see below. |
+| `document-data\` | **Claude-side only** | Consumed by `/sa:package`, which is where binding deliverables should be built anyway. |
 
-- Claude Code is, and will stay, the default/preferred tool for this pipeline.
-- Porting the `/sa:*` pipeline (12 `req-*`-family agents, JSON artifact schemas, PERT estimation math, the
-  `/sa:audit` blocking gate) is real, non-trivial work with an ongoing maintenance cost — every future edit
-  to a Claude `req-*` agent would need a matching Copilot edit, or the two drift.
-- `/sa:audit` as a **hard blocking gate** has no Copilot equivalent — Copilot has no "refuse to run without
-  a fresh PASS" mechanism, so it would become a manual-discipline convention, a real capability loss.
+## The command layer is a skill, not commands
 
-Revisit this once there's a concrete near-term case for running actual `/sa:*` steps through Copilot, not
-speculatively.
+`~/.copilot/commands/*.md` has **no documented discovery behaviour** — it appears in no `copilot --help`,
+`copilot help commands` or `copilot help config` output as of v1.0.82, and the built-in `/usage` would
+shadow the one file staged there in 2026-09-03 regardless. That file predates the check and is kept only so
+its removal is a deliberate act rather than a side effect.
 
-### 2026-09-07 — what the SA review changed here, and what it deliberately didn't
+So the `sa:` pipeline's 19 steps live in **`skills\sa-pipeline\SKILL.md`**, a documented and verified
+mechanism. Nineteen step files built on an unverified discovery path would produce a pipeline that silently
+does not exist, which is worse than a differently-shaped one that works. If custom commands are later
+confirmed, splitting that skill is mechanical.
 
-A substantial pass over the `/sa:*` pipeline added two agents (`req-slop-detector`, `req-onepager`), two
-commands (`/sa:slop-check`, `/sa:onepager`), a second gate input at `/sa:package`, branded document
-profiles, and four newly-pinned estimation rules. **Ported to Copilot: the doctrine. Not ported: the
-agents and commands.** Both halves are deliberate.
+## The two things this tool genuinely cannot do
 
-**Ported** — these are shared files this branch already copies, so they arrive with the normal rollout:
+Recorded prominently because both were reasons this port was deferred, and neither has gone away — they are
+now *handled*, not solved.
 
-| File | What changed |
+1. **The packaging gate cannot refuse.** `/sa:package` on the Claude side refuses to build without two
+   fresh passing verdicts. Copilot CLI has no mechanism by which a skill can hard-stop a session told to
+   continue. The skill therefore performs every check, prints a prominent **STOP** block on failure, and
+   **calls itself an advisory check rather than a gate** — because a gate that looks like a gate and isn't
+   produces the confidence of enforcement with none of the substance. **Run packaging in Claude Code for
+   anything commercially binding.** (`PORT-NOTES.md` D6, `..\sa-framework\PIPELINE.md §3`.)
+2. **Read-only cannot be enforced structurally.** No `disallowedTools`, no scoped grants. Mitigated by
+   granting `write` without `shell` to every read-only role, which is the half that *is* enforceable, and
+   by stating the rest as rules. `req-auditor` is the sharpest case: its Claude sibling holds a shell grant
+   scoped to hashing; here it holds full `shell` and a written narrowing. (`PORT-NOTES.md` D2.)
+
+A third divergence is milder but bites daily: **model selection is session-level**, so the cross-model
+review rule (`ARTIFACT-SCHEMAS.md §9`) is satisfied by `/model` *before* dispatching, not by a per-dispatch
+parameter. (`PORT-NOTES.md` D5.)
+
+## Why the port happened
+
+The 2026-09-03 scaffold deferred it on three grounds. Two were overtaken:
+
+| Original reason | Status |
 |---|---|
-| `..\AGENT-CONDUCT-BASELINE.md` | New **B10** (independent review runs on a different model) and new **Section D** (groundedness & slop conduct — the four-kinds-of-claim taxonomy, the specificity rule, never-invent-to-complete-a-shape, scan-the-rendered-text, scanner-is-not-an-editor, thresholds-not-vibes). Both are **general agent conduct** and bind Copilot work directly, with or without a `req-*` agent — see `AGENTS.md`'s new section. |
-| `..\sa-framework\ARTIFACT-SCHEMAS.md` | Two-verdict packaging gate, `vendor_org`/`document_profile`/`template_path`, `onepager/` as advisory non-artifact #3, new §8 (document profiles) and §9 (cross-model review). |
-| `..\sa-framework\ESTIMATION-METHOD.md` | Four under-specified rules pinned: rounding precision, the no-calibration-source case, the commitment gate's 20 MD threshold, the no-`must`-requirements case. |
+| "Claude Code is and will stay the default tool" | **Still true**, and unchanged by this. Copilot now has the same capability; which tool you reach for is a separate question. |
+| "Porting is real work with an ongoing maintenance cost — every future edit to a Claude `req-*` agent needs a matching Copilot edit, or the two drift" | **Still true and still unmitigated by tooling.** Reduced, not removed: extracting `PIPELINE.md` moved the most drift-prone content (preconditions, gate rules, state transitions) into one shared file both sides cite. What remains duplicated is each agent's own process prose. |
+| "`/sa:audit` as a hard blocking gate has no Copilot equivalent" | **Confirmed true** — and now handled explicitly rather than used as a reason not to start. See above. |
 
-**Not ported, and this is the intended state** — the same standing scope decision recorded above, applied
-consistently rather than relaxed because the new artifacts happen to be interesting:
+The decisive argument for porting was **engagement portability**: `ai/sa/<slug>/` is project-scoped and
+conforms to one shared schema, so an engagement triaged in Claude Code can be clarified in Copilot CLI and
+packaged back in Claude Code. That only works if both sides implement the same contract, which is what
+`PIPELINE.md §5`'s conformance checklist now defines.
 
-| Artifact | Why not |
+## Rollout
+
+**Status**: doctrine rolled out 2026-09-03; full pipeline rolled out 2026-09-07.
+
+```powershell
+# Run from the repo root.
+$copilotDest = "$env:USERPROFILE\.copilot"
+New-Item -ItemType Directory -Path "$copilotDest\agents" -Force | Out-Null
+New-Item -ItemType Directory -Path "$copilotDest\skills" -Force | Out-Null
+
+Copy-Item copilot\agents\*.agent.md   "$copilotDest\agents\" -Force
+Copy-Item copilot\skills\*            "$copilotDest\skills\" -Recurse -Force
+Copy-Item skills\*                    "$copilotDest\skills\" -Recurse -Force
+# ...then remove the skills deliberately NOT ported (see the table below):
+Remove-Item "$copilotDest\skills\framework-review" -Recurse -Force -ErrorAction SilentlyContinue
+Copy-Item AGENT-CONDUCT-BASELINE.md, DESIGN-PRINCIPLES-BASELINE.md "$copilotDest\" -Force
+Copy-Item copilot\AGENT-TEMPLATE-BASELINE.md, copilot\PORT-NOTES.md "$copilotDest\" -Force
+Copy-Item CONSTITUTION.md             "$copilotDest\" -Force
+Copy-Item dev-framework               "$copilotDest\" -Recurse -Force
+Copy-Item sa-framework                "$copilotDest\" -Recurse -Force
+```
+
+`copilot\agents\README.md` and `copilot\scripts\` are repo-side documentation, not part of the rollout;
+`check-sync.ps1` excludes them.
+
+### Skills deliberately not ported
+
+`skills\*` is a blanket copy, so anything that must *not* land here has to be removed after it — the
+`Remove-Item` line above, kept adjacent to the copy so the two never drift apart. `_scripts\check-sync.ps1`
+carries the same list in `$copilotNotPorted` and will not report these as `MISSING`.
+
+| Skill | Why not |
 |---|---|
-| `req-slop-detector` + `/sa:slop-check` | It is a **gate**, and the blocking-gate gap named above is exactly its problem: Copilot CLI has no "refuse to run without a fresh PASS" mechanism, so a port would be a scanner whose verdict nothing enforces. That is worse than no port — it looks like a gate and isn't one. |
-| `req-onepager` + `/sa:onepager` | Reads `estimation.json`/`architecture.json`, which only exist because the Claude-side pipeline wrote them. With no `req-*` agents here there is nothing to compose from. |
-| `document-data\templates.yaml` | Consumed only by `/sa:package`, which is Claude-side. Copying it would put brand templates at a config root nothing reads. |
+| `framework-review` | Thin dispatcher to `framework-strategist`, which is Claude-side only. Copied here it produces a command that dispatches an agent that does not exist. |
 
-Recorded in this table for the reason the `framework-review` incident above established: **a deliberate
-absence has to be written somewhere a tool reads, or the next reviewer "fixes" it.** `check-sync.ps1` needs
-no new `$copilotNotPorted` entries — these are agents and commands, and this branch's `agents\`/`commands\`
-comparison only covers what `copilot\` itself stages, so an unported Claude agent is structurally invisible
-to it rather than reported as drift.
+Learned the hard way on 2026-09-07: the first run of the new Copilot sync check reported this skill as
+`MISSING`, it was rolled out to clear the finding, and that produced exactly the broken command the
+2026-09-05 review had recommended avoiding. **A deliberate absence has to be recorded somewhere a tool
+reads, or the next tool that notices it will "fix" it.** That lesson is why `agents\README.md` and
+`PORT-NOTES.md` both carry explicit not-ported sections.
 
-## Rollout — approved and run 2026-09-03
+### Environment and MCP
 
-The steps below mirror `..\docs\SETUP.md`'s "Install — GitHub Copilot CLI" section exactly, so you land on
-the same information starting from either file.
+- **Done 2026-09-03** — `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` set to `%USERPROFILE%\.copilot` via `setx`
+  (permanent, user-level; needs a new terminal). **The exact multi-file discovery behaviour still has not
+  been observed working end to end** — worth a real check next time Copilot CLI is used for substantive
+  work, and doubly so now that 17 agents depend on the doctrine actually being read.
+- **Partially done 2026-09-03** — `~/.copilot/mcp-config.json` confirmed as the right location;
+  `azure-devops-geomant` added and verified enabled. Deliberately not yet added: `azure-devops-netsolve`,
+  Playwright, draw.io, sequential-thinking, filesystem.
 
-**Status**: approved and run 2026-09-03. `~/.copilot/` already existed as Copilot CLI's own live runtime
-state (`session-store.db`, `config.json`, `servers/`, etc. — confirmed empty/no pre-existing doctrine
-before copying, so this was a clean additive copy, nothing clobbered) — the doctrine files and
-`copilot\AGENTS.md` now sit alongside that runtime state. Two pieces are **not** done yet:
-- **`COPILOT_CUSTOM_INSTRUCTIONS_DIRS`** — blocked by the permission classifier as a permanent
-  shell-environment change that hadn't been separately confirmed (this file's own "unverified, check at
-  install time" flag turned out to matter). Needs an explicit go-ahead before it's set.
-- **MCP server wiring** — not attempted yet. `~/.copilot/servers/` exists and is empty; the exact file
-  shape Copilot CLI expects there (vs. a single `mcp-config.json`, as first assumed) wasn't confirmed
-  before this scaffold was built, so this needs a quick check against current `copilot mcp --help` output
-  before wiring anything in.
+## Maintenance — the standing obligation
 
-- **Destination**: `~/.copilot/` (global/personal). Confirmed: `COPILOT_HOME` is the direct analog of
-  Claude Code's `CLAUDE_CONFIG_DIR` — so if a second Copilot identity is ever added, the same
-  `copilot-work`/`copilot-personal` PowerShell-function-per-identity pattern already used for Claude drops
-  in unchanged. Today there's one Copilot login, so one destination.
-  ```powershell
-  # Run from the repo root. Pre-create destinations first, same reasoning as the Claude rollout.
-  $copilotDest = "$env:USERPROFILE\.copilot"
-  New-Item -ItemType Directory -Path "$copilotDest\agents" -Force | Out-Null
-  New-Item -ItemType Directory -Path "$copilotDest\skills" -Force | Out-Null
-
-  Copy-Item copilot\agents\*.agent.md   "$copilotDest\agents\" -Force -ErrorAction SilentlyContinue
-  Copy-Item copilot\skills\*            "$copilotDest\skills\" -Recurse -Force -ErrorAction SilentlyContinue
-  Copy-Item skills\*                    "$copilotDest\skills\" -Recurse -Force
-  # ...then remove the skills that are deliberately NOT ported (see the note below this block):
-  Remove-Item "$copilotDest\skills\framework-review" -Recurse -Force -ErrorAction SilentlyContinue
-  Copy-Item AGENT-CONDUCT-BASELINE.md, DESIGN-PRINCIPLES-BASELINE.md   "$copilotDest\" -Force
-  Copy-Item copilot\AGENT-TEMPLATE-BASELINE.md   "$copilotDest\" -Force
-  Copy-Item CONSTITUTION.md             "$copilotDest\" -Force
-  Copy-Item dev-framework               "$copilotDest\" -Recurse -Force
-  Copy-Item sa-framework                "$copilotDest\" -Recurse -Force
-  ```
-
-  **Skills deliberately not ported.** `skills\*` is a blanket copy, so anything that must *not* land here
-  has to be removed after it — the `Remove-Item` line above, kept adjacent to the copy so the two never
-  drift apart. `_scripts\check-sync.ps1` carries the same list in `$copilotNotPorted` and will not report
-  these as `MISSING`.
-
-  | Skill | Why not | Would need |
-  |---|---|---|
-  | `framework-review` | Thin dispatcher to `framework-strategist`, which is Claude-side only. Copied here it produces a `/framework-review` that dispatches an agent that does not exist. | A Copilot `framework-strategist` port, which is out of the current Copilot scope. |
-
-  Learned the hard way on 2026-09-07: the first run of the new Copilot sync check reported this skill as
-  `MISSING`, it was rolled out to clear the finding, and that produced exactly the broken command the
-  2026-09-05 review had recommended avoiding. A deliberate absence has to be *recorded* somewhere a tool
-  reads, or the next tool that notices it will "fix" it.
-
-  **Resolved 2026-09-07** — `doc-brief` and `review-agent` had the same defect: both are thin dispatchers,
-  and their agents (`doc-briefer`, `agent-reviewer`) didn't exist on this side, so both skills were inert
-  here. Both agents are now ported to `copilot\agents\*.agent.md` and rolled out. Document work on Copilot
-  was the deciding use case; `agent-reviewer` came along because a half-ported pair leaves one skill broken
-  either way.
-
-  The ports are **siblings, not copies** — each names its Claude original and version in its own body, and
-  marks every deliberate divergence `[Copilot]`. Real divergences so far: no `/sa:*` slug input (that
-  pipeline is Claude-side), PDF text via `pdftotext -layout` instead of native paged reads, and — in
-  `agent-reviewer` — a checklist genuinely adapted to Copilot's own rules (plain-Markdown bodies, the
-  `.agent.md` suffix, `shell`/`write` tool names, and a port-fidelity dimension the Claude side has no need
-  for). **When a Claude original changes materially, its port needs the same change**; nothing automated
-  enforces that today.
-- **Done** — merged `copilot\AGENTS.md` into `~/.copilot/AGENTS.md` (no pre-existing file there, so this
-  was a plain copy, not an actual merge).
-- **Done 2026-09-03** — `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (permanent, user-level) set to
-  `%USERPROFILE%\.copilot` via `setx`, approved explicitly. Requires a new terminal to take effect (`setx`
-  doesn't affect already-open shells). The exact multi-file-per-dir discovery behavior still hasn't been
-  independently observed working end-to-end — worth a real check (open a fresh terminal, run `copilot` from
-  outside `_AI_GIT`, confirm it's actually reading the doctrine) next time Copilot CLI is used for real.
-- **Partially done 2026-09-03** — confirmed via `copilot mcp --help` that `~/.copilot/mcp-config.json` is
-  indeed the right location (the earlier assumption held; `~/.copilot/servers/` was something else, unused
-  here). Added `azure-devops-geomant` only (`copilot mcp add azure-devops-geomant --env ... --
-  npx -y @tiberriver256/mcp-server-azure-devops`, values read straight from Claude's own
-  `azure-devops-geomant` entry — same org URL, PAT, auth method), verified via `copilot mcp get
-  azure-devops-geomant` (Status: Enabled). Deliberately **not yet done**: `azure-devops-netsolve`,
-  Playwright, draw.io, sequential-thinking, filesystem — scoped down to Geomant only for now, add the rest
-  the same way (`copilot mcp add <name> --env KEY=VALUE ... -- <command> [args...]`) when actually needed.
+**When a Claude original changes materially, its Copilot sibling needs the same change.** Nothing automated
+enforces this: `check-sync.ps1` compares *staged versus live per tool*, never *Claude versus Copilot
+parity*. The conformance checklist in `..\sa-framework\PIPELINE.md §5` is what a periodic
+`/framework-review` should walk to catch divergence, and that is currently the only mechanism there is.

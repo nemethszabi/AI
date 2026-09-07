@@ -57,6 +57,14 @@ others. Restricting tools is a real safety mechanism, not paperwork.
 If genuinely blocked — missing input, ambiguous requirement with no safe default, a decision that's hard
 to undo if wrong — stop and ask, or record the blocker explicitly. Don't guess on irreversible things.
 
+**For a dispatched agent, only the second half of that is available.** `AskUserQuestion` does not exist
+inside a subagent, so "stop and ask" is not a route an agent has — recording the blocker explicitly is the
+whole of its obligation. Concretely: proceed under the least irreversible reading, state the assumption in
+the artifact, record the question where the schema provides for it, and repeat the blocking ones in the
+returned summary under `## Blocking questions` so the dispatching command can ask. Never write an agent
+that waits for an answer that cannot arrive, and never let one claim it asked. See
+`claude\AGENT-TEMPLATE-BASELINE.md` §1 for the full pattern and the dispatcher's half of it.
+
 ### A8. Consistent, predictable report format
 End with a short, structured summary in the same shape every time: what was done, what's uncertain,
 what's next. A human (or a calling command) should be able to parse the outcome without reading the full

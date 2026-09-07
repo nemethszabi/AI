@@ -12,7 +12,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify> [--model=<name>, optional] [--apply-review[=<severity>], optional — revise the existing HLD against ai/sa/<slug>/review.json's findings at or above <severity> (default: high)]"
 ---
 
-> Version: 2.0.0
+> Version: 2.1.0
 
 <objective>
 `/sa:design <slug>` produces a High-Level Design (HLD) from `ai/sa/<slug>/requirements.json` via
@@ -83,6 +83,12 @@ unaddressed `must`-priority requirement) and `mermaid-diagram-maker`'s summary (
 both file paths written for the HLD. If this was an `--apply-review` run, also relay which findings were
 applied (by `F-` ID) and any new IDs introduced, and remind the user to re-run `/sa:review`. Otherwise name
 the `Next` command you just wrote into `STATE.md`.
+
+If `req-architect`'s summary ends with a `## Blocking questions` section, put those to the user via
+`AskUserQuestion` before naming the next command. The agent cannot ask — `AskUserQuestion` does not exist
+inside a dispatched agent — so it proceeds on the lower-commitment option and hands the fork here. This
+command is the only place it can reach a human. Re-run `/sa:design` with the answer to rebuild on the
+chosen option.
 </step>
 </process>
 

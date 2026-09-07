@@ -3,7 +3,7 @@ name: framework-review
 description: Review the whole agentic AI framework itself — audit it against its own doctrine, check staged-versus-live sync across every config root, research what has changed in industry practice, reconcile the tracked gap register, propose new agentic use cases for professional and personal work, and produce a dated report with a ranked, human-gated changelist. Use for a periodic health-and-strategy pass on the framework, or when asked to "review my AI setup", "what should I improve in my agent framework", "is my Claude setup still current", "what else could I automate with agents". Not for reviewing one drafted agent or skill — that is review-agent.
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0
 
 # Framework Review
 
@@ -68,15 +68,20 @@ Then edit it. The entries that matter most:
 | `report_dir` | Where the dated report lands. |
 
 Without the file the agent still runs. It bootstraps what it can from the environment and the global
-instruction file, reports which roots it could not resolve, and — on an attended run only — offers to
-write the scope file from your answers. An unattended run never stops to ask; it reports and continues
+instruction file, reports which roots it could not resolve, and — on an attended run — asks you for the
+missing ones *through this skill*, since a dispatched agent cannot ask anything itself. An unattended run
+skips that exchange entirely; it reports and continues
 reduced.
 
 ## How to run it
 
 1. Resolve the mode from the argument, defaulting to a full review.
-2. Dispatch `framework-strategist` with the mode and whether the run is attended. Say explicitly when the
-   run is unattended or backgrounded, so the agent writes proposals instead of stopping to ask.
+2. Dispatch `framework-strategist` with the mode and whether the run is attended. The agent cannot ask you
+   anything either way — `AskUserQuestion` does not exist inside a dispatched agent — so telling it the run
+   is attended only changes what it hands back for you to ask, never whether it stops. On an attended run
+   it ends its summary with a `## Decisions needed` section; **you** put those to the user with
+   `AskUserQuestion`, here, while they are still at the keyboard. Do not skip that step and bury the
+   decisions in the report — that is exactly what happened on the 2026-09-05 run.
 3. Relay the summary. The agent's full report is not shown to the user, so surface the numbers that
    change what they do: findings by severity, what was applied and to which files, the top proposed
    changes, the top opportunities, and the report path.

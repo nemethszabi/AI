@@ -12,7 +12,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:triage>"
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0
 
 <objective>
 `/sa:offer <slug>` composes a client-facing solution offer from `ai/sa/<slug>/`'s completed artifacts via
@@ -49,6 +49,12 @@ history.
 Return the agent's summary — commercial basis and why, headline effort or range, scope and exclusion
 counts, the `must`-coverage check, client dependencies raised — plus the file paths written. Then remind
 the user that `/sa:audit` must pass before `/sa:package` will build a deliverable.
+
+If the summary ends with a `## Blocking questions` section, put those to the user via `AskUserQuestion`
+**before** that reminder, and say plainly that the offer is not ready to package until they are answered.
+The agent cannot ask — `AskUserQuestion` does not exist inside a dispatched agent — so it composes the
+conservative reading and flags it in Assumptions. These are commercial judgments on a client-facing
+document; one reaching `/sa:package` unanswered is the failure this step exists to prevent.
 </step>
 </process>
 

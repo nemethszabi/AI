@@ -558,8 +558,10 @@ they must be preserved by anything added to this pipeline:
 3. **Content-hash freshness.** An orchestrator can compute exactly which downstream artifacts are stale
    after a change, and re-run only those.
 
-A future `/sa:run <slug>` is then a loop over the lane's sequence, stopping at any `AskUserQuestion`, any
-`to_clarify` that blocks a `must`, or any gate failure. **Do not add autonomous multi-phase execution
+A future `/sa:run <slug>` is then a loop over the lane's sequence, stopping at any `## Blocking questions`
+section an agent returns, any `to_clarify` that blocks a `must`, or any gate failure. (It could not stop
+"at an `AskUserQuestion`", as this said before 2026-09-05: a dispatched agent has no such tool and cannot
+interrupt anything. Stopping is the orchestrator's job, on the signal the agent hands back.) **Do not add autonomous multi-phase execution
 without a human checkpoint** — `CONSTITUTION.md` Articles VII and III both apply, and the reference
 framework's `/dev:auto` is exactly the pattern this one declines to copy.
 

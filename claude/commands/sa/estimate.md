@@ -12,7 +12,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:triage>"
 ---
 
-> Version: 2.0.0
+> Version: 2.1.0
 
 <objective>
 `/sa:estimate <slug>` produces a three-point effort estimate from `ai/sa/<slug>/`'s `requirements.json`,
@@ -53,6 +53,12 @@ Append to phase history; never rewrite prior lines.
 Return the agent's summary — models estimated and their Likely totals, the contingency percentage and
 where it came from, the must-coverage check, `not_estimated` count, and whether a rate card was found —
 plus the file paths written.
+
+If the summary ends with a `## Blocking questions` section, put those to the user via `AskUserQuestion`.
+The agent cannot ask — `AskUserQuestion` does not exist inside a dispatched agent — so it defaults to
+AI-assisted, effort-only output and hands the question here. The usual one is whether a
+`traditional`/`both` comparison figure is actually wanted; re-run `/sa:estimate` with the answer if it is.
+Never ask this on the `rom` lane — `ESTIMATION-METHOD.md §10` settles it.
 </step>
 </process>
 

@@ -49,9 +49,11 @@ discounting it.
 `estimation.json.basis.model` **defaults to `"ai-assisted"` and this is normally the only value it takes.**
 `traditional` and `both` are opt-in, never the default, and exist only for the rare case where a client or
 internal stakeholder explicitly needs a non-AI comparison figure — e.g. a procurement process that
-requires a "business as usual" baseline for contrast. `req-estimator` **asks before producing one**
-(`AskUserQuestion`) rather than computing it just because the schema allows it, and records the reason in
-`basis.model_rationale`. A `traditional` figure, when produced, is labelled on its face as a **comparison
+requires a "business as usual" baseline for contrast. `req-estimator` **never produces one unasked** rather
+than computing it just because the schema allows it, and records the reason in `basis.model_rationale`.
+When it cannot tell whether a comparison figure is wanted, it omits it and raises the question under
+`## Blocking questions` in its returned summary; `/sa:estimate` is what puts that to the human, because a
+dispatched agent has no `AskUserQuestion` and cannot ask anything itself. A `traditional` figure, when produced, is labelled on its face as a **comparison
 figure, not the delivery model being priced** — it is never the number an offer quotes.
 
 **On the `rom` lane, `traditional`/`both` are never produced, full stop** — see §10.

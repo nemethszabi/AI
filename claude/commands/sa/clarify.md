@@ -8,10 +8,11 @@ allowed-tools:
   - Grep
   - Glob
   - Agent
+  - AskUserQuestion
 argument-hint: "<slug, or a requirement/change-request description>"
 ---
 
-> Version: 1.1.0
+> Version: 1.2.0
 
 <objective>
 `/sa:clarify <slug-or-description>` turns ingested source material and/or a free-form requirement or change
@@ -59,7 +60,16 @@ starts at `/sa:triage`.
 <step name="relay">
 Return the agent's summary (requirement count, must/should/could split, `to_clarify` count, open questions
 raised) and both file paths written, plus the slug it chose — the human needs that slug for every later
-command on this topic. Then name the one next command that went into `STATE.md`.
+command on this topic.
+
+If the agent's summary ends with a `## Blocking questions` section, put those to the user via
+`AskUserQuestion` before naming the next command. The agent cannot ask — `AskUserQuestion` does not exist
+inside a dispatched agent — so it records each as a `D-NNN` open question, proceeds on the safest reading,
+and hands the blocking ones here. Answered now, they save a wasted design or estimation pass; re-run
+`/sa:clarify` with the answers and it merges rather than renumbering. Do **not** put the full `to_clarify`
+list to the user this way — only what the agent marked blocking.
+
+Then name the one next command that went into `STATE.md`.
 </step>
 </process>
 

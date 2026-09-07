@@ -62,12 +62,42 @@ before copying, so this was a clean additive copy, nothing clobbered) — the do
   Copy-Item copilot\agents\*.agent.md   "$copilotDest\agents\" -Force -ErrorAction SilentlyContinue
   Copy-Item copilot\skills\*            "$copilotDest\skills\" -Recurse -Force -ErrorAction SilentlyContinue
   Copy-Item skills\*                    "$copilotDest\skills\" -Recurse -Force
+  # ...then remove the skills that are deliberately NOT ported (see the note below this block):
+  Remove-Item "$copilotDest\skills\framework-review" -Recurse -Force -ErrorAction SilentlyContinue
   Copy-Item AGENT-CONDUCT-BASELINE.md, DESIGN-PRINCIPLES-BASELINE.md   "$copilotDest\" -Force
   Copy-Item copilot\AGENT-TEMPLATE-BASELINE.md   "$copilotDest\" -Force
   Copy-Item CONSTITUTION.md             "$copilotDest\" -Force
   Copy-Item dev-framework               "$copilotDest\" -Recurse -Force
   Copy-Item sa-framework                "$copilotDest\" -Recurse -Force
   ```
+
+  **Skills deliberately not ported.** `skills\*` is a blanket copy, so anything that must *not* land here
+  has to be removed after it — the `Remove-Item` line above, kept adjacent to the copy so the two never
+  drift apart. `_scripts\check-sync.ps1` carries the same list in `$copilotNotPorted` and will not report
+  these as `MISSING`.
+
+  | Skill | Why not | Would need |
+  |---|---|---|
+  | `framework-review` | Thin dispatcher to `framework-strategist`, which is Claude-side only. Copied here it produces a `/framework-review` that dispatches an agent that does not exist. | A Copilot `framework-strategist` port, which is out of the current Copilot scope. |
+
+  Learned the hard way on 2026-09-07: the first run of the new Copilot sync check reported this skill as
+  `MISSING`, it was rolled out to clear the finding, and that produced exactly the broken command the
+  2026-09-05 review had recommended avoiding. A deliberate absence has to be *recorded* somewhere a tool
+  reads, or the next tool that notices it will "fix" it.
+
+  **Resolved 2026-09-07** — `doc-brief` and `review-agent` had the same defect: both are thin dispatchers,
+  and their agents (`doc-briefer`, `agent-reviewer`) didn't exist on this side, so both skills were inert
+  here. Both agents are now ported to `copilot\agents\*.agent.md` and rolled out. Document work on Copilot
+  was the deciding use case; `agent-reviewer` came along because a half-ported pair leaves one skill broken
+  either way.
+
+  The ports are **siblings, not copies** — each names its Claude original and version in its own body, and
+  marks every deliberate divergence `[Copilot]`. Real divergences so far: no `/sa:*` slug input (that
+  pipeline is Claude-side), PDF text via `pdftotext -layout` instead of native paged reads, and — in
+  `agent-reviewer` — a checklist genuinely adapted to Copilot's own rules (plain-Markdown bodies, the
+  `.agent.md` suffix, `shell`/`write` tool names, and a port-fidelity dimension the Claude side has no need
+  for). **When a Claude original changes materially, its port needs the same change**; nothing automated
+  enforces that today.
 - **Done** — merged `copilot\AGENTS.md` into `~/.copilot/AGENTS.md` (no pre-existing file there, so this
   was a plain copy, not an actual merge).
 - **Done 2026-09-03** — `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (permanent, user-level) set to

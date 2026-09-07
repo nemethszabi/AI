@@ -12,7 +12,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify>"
 ---
 
-> Version: 2.0.0
+> Version: 2.1.0
 
 <objective>
 `/sa:design-detail <slug>` produces a Low-Level Design from `ai/sa/<slug>/architecture.json` (the HLD) via
@@ -80,6 +80,12 @@ Append only. Never rewrite or drop a prior history line, and never leave `Next` 
 Return `req-detailer`'s summary (`C-` IDs detailed and any left out of scope, any open question that could
 invalidate the HLD) and `mermaid-diagram-maker`'s summary (diagram file paths, if any were generated), plus
 both file paths written and the `Next` command you wrote into `STATE.md`.
+
+If `req-detailer`'s summary ends with a `## Blocking questions` section, put those to the user via
+`AskUserQuestion` before naming the next command. The agent cannot ask — `AskUserQuestion` does not exist
+inside a dispatched agent. This is also where a partial pass surfaces: with more than ~8 components the
+agent details the earliest-phase subset and reports what re-running would add, rather than asking which
+subset you wanted.
 </step>
 </process>
 

@@ -26,12 +26,65 @@ what a minimal command looks like).
 |---|---|---|---|
 | `name` | kebab-case, no project prefix if generic | kebab-case; may include namespace (`sa:help`) | See `README.md`'s generic-vs-project rule |
 | `description` | One paragraph: what it does + when to use it. Add `Use PROACTIVELY when...` if it should be auto-invoked without being asked by name. | One line: what running it produces | This is the *only* thing the orchestrator sees before deciding to invoke it — write for that, not for a human skimming |
-| `tools:` | comma list, agents only | — | Minimum the role needs — see `AGENT-CONDUCT-BASELINE.md` A6 |
+| `tools:` | comma list, agents only | — | Minimum the role needs — see `AGENT-CONDUCT-BASELINE.md` A6. **Never grant `AskUserQuestion` to an agent** — see the note below the table |
 | `allowed-tools:` | — | YAML list, commands only | Different key name from `tools:` — confirmed distinct, not a typo |
 | `argument-hint` | — | optional, commands only | e.g. `[path, optional]` |
 | `color` | optional | — | Cosmetic only; doesn't gate behavior |
 | `model` | optional | — | Set only when the role genuinely needs a specific tier (e.g. a cheap high-volume scanner vs. a judgment-heavy critic) — don't pin a model by default |
-| `memory: user` | optional | — | Only when cross-session, cross-project learning has real value — see `AGENT-CONDUCT-BASELINE.md`'s Memory conduct section before adding this |
+| `memory` | optional | — | `user` (`~/.claude/agent-memory/<name>/`), `project` (`.claude/agent-memory/<name>/`) or `local` (`.claude/agent-memory-local/<name>/`). Only when cross-session learning has real value — see `AGENT-CONDUCT-BASELINE.md`'s Memory conduct section first. Prefer `project`/`local` for anything project-bound; `user` leaks one project's facts into every other session |
+| `disallowedTools` | optional | — | Deny-list applied *after* `tools:`/inheritance. This is how a read-only agent's promise becomes structural instead of a sentence in `<rules>` |
+| `permissionMode` | optional | — | `default` \| `acceptEdits` \| `auto` \| `dontAsk` \| `bypassPermissions` \| `plan` \| `manual`. **Never `bypassPermissions` on an agent that writes** — that deletes Article II's confirmation requirement wholesale |
+| `maxTurns` | optional | — | Positive integer. Cheap circuit-breaker for survey/scanning agents that could otherwise loop |
+| `skills` | optional | — | Skills preloaded into the agent's context at startup. This is the mechanism `AGENT-CONDUCT-BASELINE.md:12-17` calls the "natural next step" — conduct doctrine can now actually be *read at runtime*, not just consulted while drafting |
+| `mcpServers` | optional | — | Server names or inline definitions, scoped to this agent. Prefer this over hardcoding a wall of `mcp__<server>__*` tool names in `tools:` |
+| `hooks` | optional | — | Lifecycle hooks scoped to this one agent — the per-agent form of the guard hook in §1a |
+| `background` | optional | — | `true`/`false`. Fits long read-only reviews whose output the caller doesn't need inline |
+| `effort` | optional | — | `low` \| `medium` \| `high` \| `xhigh` \| `max`. Set high on judgment-heavy critics, low on mechanical scanners — this moves cost and quality more than `model` does |
+| `isolation` | optional | — | `worktree` — runs the agent in its own git worktree. For editing agents whose diff you want quarantined |
+| `initialPrompt` | optional | — | Auto-submitted as the first user turn when the agent runs as a *main session*. Irrelevant for dispatch-only agents |
+| `experimental` | optional | — | Map with `cacheTtl`: `5m` or `1h`. Worth setting only on an agent re-invoked repeatedly in one session via `SendMessage` |
+
+Field list verified against <https://code.claude.com/docs/en/sub-agents>, 2026-09-05. Before adding a field
+here, check it there — this table was 11 fields stale for long enough that every agent in the roster was
+drafted without them.
+
+> **`AskUserQuestion` does not exist inside a dispatched agent.** Only the main session can call it.
+> Granting it in an agent's `tools:` line produces `Error: No such tool available` at the exact moment the
+> agent tried to stop and ask — which is the worst possible moment for an undefined behavior. Found the
+> hard way on 2026-09-05: **nine** agents declared it, every one of them dispatch-only.
+>
+> The pattern that works, and the one to draft into any new agent that has something to ask:
+> 1. The agent proceeds under the **safest / least irreversible** reading rather than stalling, and states
+>    that assumption in the artifact it writes.
+> 2. It records the question durably where the artifact schema already provides for it (`to_clarify`,
+>    `open_questions`, a `D-NNN` ID).
+> 3. It repeats the genuinely blocking ones in its returned summary under a `## Blocking questions`
+>    heading (`## Decisions needed` for a review/strategy agent).
+> 4. **The dispatching command or skill** — which does run in the main session — puts those to the human
+>    with `AskUserQuestion`. Every dispatcher of such an agent must carry that step and grant the tool,
+>    or the question dies in the transcript.
+>
+> A command or skill may grant `AskUserQuestion` freely. An agent may not.
+
+## 1a. Structural enforcement — prefer a field over a sentence
+
+`CONSTITUTION.md` Article VI.1 already sets the standard: a restriction is "enforced by the tool list
+itself, not by instruction alone." The fields above extend that standard to rules previously left to model
+compliance. Anthropic's own guidance is the same — an instruction like "never edit `.env`" in a doctrine
+file "is a request, not a guarantee. A `PreToolUse` hook that blocks the edit is enforcement."
+
+When drafting, ask which of the agent's `<rules>` are actually *promises* and move each to its mechanism:
+
+| The rule says | Enforce it with |
+|---|---|
+| "read-only — never edits anything" | `tools:` minimum **plus** `disallowedTools: Write, Edit, NotebookEdit` |
+| "never runs git state-changing commands" | `disallowedTools: Bash`, or a `PreToolUse` hook if `Bash` is genuinely needed |
+| "never promotes/installs anything to a live root" | `disallowedTools` on the writing tool, since a path rule can't be expressed in `tools:` |
+| "always confirms before a destructive action" (Article II) | a `PreToolUse` hook at the root — see `_scripts\hooks\` |
+| "no agent spawns another agent" (Article VI.2) | `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH: "1"` in `settings.json` `env` — the platform default is **3** |
+
+An agent whose `<rules>` block concedes its own rules are "instruction-enforced, not tool-enforced" is
+telling you a field is missing. Write the field, then leave the sentence in as documentation of intent.
 
 ## 2. Section skeleton — agents
 

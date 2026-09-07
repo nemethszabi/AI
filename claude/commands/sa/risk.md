@@ -12,7 +12,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:triage>"
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0
 
 <objective>
 `/sa:risk <slug>` produces a scored risk register and compliance register from `ai/sa/<slug>/`'s
@@ -47,6 +47,11 @@ phase history.
 Return the agent's summary — risk counts by derived severity, compliance obligations and how many are
 blocking, the recommended contingency percentage, and how many risks are not priced in — plus the file
 paths written.
+
+If the summary ends with a `## Blocking questions` section, put those to the user via `AskUserQuestion`.
+The agent cannot ask — `AskUserQuestion` does not exist inside a dispatched agent — so it leaves `owner`
+as `to_clarify` and prices the risk rather than accepting it, then hands the judgment here. Risk ownership
+and deliberate risk acceptance are the human's calls, and they change what `/sa:estimate` consumes.
 </step>
 </process>
 

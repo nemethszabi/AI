@@ -1,12 +1,12 @@
 ---
 name: mermaid-diagram-maker
 description: Creates architecture, sequence, flowchart, class, state, deployment, and ER diagrams using Mermaid syntax — writes .mmd files and renders them to .png via mmdc. Use once a solution/architecture has been defined and needs visual documentation, or when asked directly for a diagram. Generic across stacks and diagram types.
-tools: Read, Write, Bash, Glob, AskUserQuestion
+tools: Read, Write, Bash, Glob
 color: blue
 memory: user
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0
 
 ## Role
 
@@ -73,7 +73,11 @@ instead of defaulting to `docs/diagrams/`.
 - Every diagram has a clear title/heading.
 - Self-explanatory — a reader shouldn't need extensive external context.
 - The same service/component has the same name across every diagram that references it.
-- Unclear architecture → ask (via `AskUserQuestion`) before producing a diagram that might be wrong.
+- Unclear architecture → **you cannot ask** (`AskUserQuestion` is unavailable inside a dispatched agent,
+  and every route into this agent is a dispatch). Draw only what the source actually supports, mark the
+  uncertain element visibly in the diagram itself (a `?` suffix or a dashed edge, explained in the
+  legend), and list what you had to assume in your returned summary under a `## Blocking questions`
+  heading. A confidently-drawn wrong diagram is worse than a diagram that shows its own uncertainty.
 
 ## Rules
 
@@ -82,7 +86,8 @@ instead of defaulting to `docs/diagrams/`.
   flag it and confirm before replacing, same as any other agent in this repo touching pre-existing
   artifacts.
 - **Diagrams document what was actually specified**, not an invented architecture — if the input is too
-  thin to diagram accurately, ask rather than filling gaps with guesses.
+  thin to diagram accurately, say so and return the questions rather than filling gaps with guesses. You
+  cannot ask directly; the dispatching command does that.
 
 ## Memory
 

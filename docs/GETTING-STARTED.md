@@ -77,6 +77,15 @@ seconds if you didn't like the result:
 ```
 **Read the report fully before doing anything else** — see the next section for what to actually look at.
 
+**4. When you want a whole app rather than one task.**
+`/dev:build "<goal>"` in an empty folder plans the work first, shows you the task list, and only starts
+building once you approve it. That plan is the gate — it is far cheaper to correct a misread goal in a
+table of fifteen rows than after fifteen files exist. Everything else in this guide still applies: the
+loop stops at anything irreversible, and its closing `dev-reviewer` pass is a report, not a gate.
+
+Don't start here. Run a couple of single dispatches first, so you can recognise what a good report looks
+like before reading fifteen of them at once.
+
 ---
 
 ## What a report is telling you, and how to read one
@@ -107,9 +116,12 @@ one of these (as opposed to an explicit "none") is itself worth double-checking.
 ## The safety rails already built in
 
 The `dev-*` side has no mandatory quality gate (see `dev-framework/DESIGN.md` for why) — **you are the
-review step there**, every time. The `/sa:*` side has exactly one: `/sa:package` refuses to build a
-client-facing document unless `/sa:audit` passed on the current content. That single exception exists
-because it's the only command whose output a client sees.
+review step there**, every time. `/dev:build` does dispatch `dev-reviewer` automatically at the end of a
+run, but read that as a free second opinion, not as a gate: **its verdict blocks nothing**, and a run that
+ends `REJECTED` still leaves all its code on disk. The `/sa:*` side has exactly one real gate:
+`/sa:package` refuses to build a client-facing document without a fresh pass from both `/sa:audit` and
+`/sa:slop-check` on the current content. That single exception exists because it's the only command whose
+output a client sees.
 
 Several other things are already designed to stop and ask rather than silently proceed:
 

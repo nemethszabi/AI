@@ -28,6 +28,9 @@ lighter than a full wave/gate system.
 | Check a project's current dev-pipeline state | `/dev:status [path]` | Global |
 | One-off backend/frontend task, no special process | `/dev:quick <task>` | Global |
 | CampaignManager: backend/frontend task | `/dev:quick <task>` (run from that repo) | Global |
+| **Empty folder → a new .NET demo/prototype app** | `/dev:build "<goal>"` (plans first, you approve the task list, then it builds) — or `/dev:new "<description>"` for just the skeleton | Global |
+| **Rebuild an app from its UI** — a running URL, screenshots, or a source tree | `/dev:deconstruct <inputs>` → then `/dev:build --from-spec=<path>` | Global |
+| **Many tasks in one go against an existing repo** | `/dev:build "<goal>" --model=<a different one>` | Global |
 | Draft a new agent/skill/legacy-command | `/agent-builder` | Global |
 | Draft a new one-time/occasional-use prompt | `prompt-builder` skill | Global |
 | Independent check on a drafted agent/skill/command before trusting/copying it | `review-agent` skill (dispatches `agent-reviewer`) | Global |
@@ -56,12 +59,14 @@ Start there rather than here for any presales/bid work.
 ## The shape underneath, in one paragraph
 
 One generic agent per role (`dev-backend`, `dev-frontend`, `dev-reviewer`, `dev-browser-tester`,
+`dev-scaffolder`, `dev-planner`, `dev-ui-analyst`,
 `solution-analyst`, `mermaid-diagram-maker`, `doc-briefer`, `req-screener`, `req-ingestor`, `req-analyst`,
 `req-architect`,
 `req-reviewer`, `req-detailer`, `req-risk-officer`, `req-estimator`, `req-estimate-critic`, `req-offer`,
 `req-auditor`, `req-slop-detector`, `req-onepager`,
 `agent-reviewer` — the meta-level counterpart to `dev-reviewer`, reviewing agent/skill/command/prompt
-artifacts themselves rather than application code) — reused
+artifacts themselves rather than application code; and `framework-strategist`, a tier above that again,
+reviewing the whole framework rather than any one project) — reused
 verbatim across every project, never hardcoding a stack fact or project name. Project specificity lives in
 two places: the project's own `ai/context/*.md` (facts the agent reads fresh every run) and, where the
 *process itself* genuinely differs per project (SCM's Azure DevOps org rule and version-bump discipline;
@@ -74,11 +79,21 @@ not a reusable role.
 
 - **Restart the session after copying anything new to `~/.claude/`.** Agent/command lists load once at
   session start — see `SETUP.md`'s troubleshooting section.
-- **Run `/dev:init` before the first `dev-*` dispatch on a new project.** Every `dev-*` agent refuses to
-  proceed without `ai/dev/STATE.md`/`config.json` — this is enforced by `PRINCIPLES.md`, not optional.
-- **No gates are wired as blocking anywhere yet.** `/scm:review` and (once built) a generic `/dev:review`
-  are on-demand, not automatic. A `dev-backend` task reporting "Build: SUCCESS" is not the same as a
-  reviewed task — ask for review explicitly if you want one.
+- **Run `/dev:init` before the first `dev-*` dispatch on a *existing* project.** Every `dev-*` agent
+  refuses to proceed without `ai/dev/STATE.md`/`config.json` — enforced by `PRINCIPLES.md`, not optional.
+  On a **new** project you don't run it: `dev-scaffolder` (via `/dev:new` or `/dev:build`) writes those
+  files itself, along with the `ai/context/` file the implementers read.
+- **`/dev:build`'s gate is the plan, not the result.** You see the task list before any code is written —
+  that is the cheap moment to catch a misread goal. `--yes` skips it; type it deliberately.
+- **No gates are wired as blocking anywhere yet.** `/scm:review` is on-demand, and while `/dev:build` now
+  dispatches `dev-reviewer` automatically at the end of a run, its verdict **blocks nothing**. A
+  `dev-backend` task reporting "Build: SUCCESS" is not the same as a reviewed task.
+- **Review on a different model than wrote the code** (`AGENT-CONDUCT-BASELINE.md` B10) — pass
+  `--model=<name>` to `/dev:build`. Same-model review shares the author's blind spots; where you don't pass
+  it, the command says so rather than letting that pass as independence.
+- **Nothing in `/dev:*` pushes, deploys, provisions, or touches a shared database.** `dev-planner` puts
+  that class of work under "needs a human" instead of into the task list, and `/dev:build` halts if a task
+  turns out to need one anyway.
 - **The SA pipeline (`/sa:*`) and the dev pipeline (`ai/dev/`) don't talk to each other.** No REQ-ID
   carries over from `/sa:clarify` into a `dev-backend` dispatch automatically — if you want that
   continuity, paste the relevant `REQ-ID`/requirement text into the `/dev:quick`/`/scm:req` task

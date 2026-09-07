@@ -105,6 +105,17 @@ Copy-Item sa-framework                "$copilotDest\" -Recurse -Force
 `copilot\agents\README.md` and `copilot\scripts\` are repo-side documentation, not part of the rollout;
 `check-sync.ps1` excludes them.
 
+**Why `dev-framework\` is copied here when no `dev-*` agent is.** The `dev-*` family and the `/dev:*`
+namespace are absent from this root by standing scope decision — that includes `dev-scaffolder`,
+`dev-planner` and `dev-ui-analyst`, added Claude-side 2026-09-07, which inherit it. But the *doctrine*
+folder is shared, tool-agnostic content and is copied here in full, `STACK-DOTNET.md` included. So the
+files sit here describing agents this tool does not have.
+
+That is deliberate, and it is the cheaper of the two errors: `check-sync.ps1` compares the folder
+byte-for-byte, so excluding it would report `MISSING` forever and invite exactly the "fix" that broke
+`framework-review` on 2026-09-07. Do **not** trim it. If the `dev-*` family is ever ported, the doctrine it
+needs is already here.
+
 ### Skills deliberately not ported
 
 `skills\*` is a blanket copy, so anything that must *not* land here has to be removed after it — the

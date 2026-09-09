@@ -3,13 +3,14 @@ name: sa-pipeline
 description: Run the lane-driven Solution-Architect requirement-to-offer pipeline — triage an inbound ask into a lane, ingest and clarify it into traceable requirements, design, score risks, estimate, compose a client offer, check it, and package the deliverable. Use when handling an inbound RFP/TSD/change request, deciding whether to bid, producing a priced offer, or building a management one-pager. Triggers on "triage this RFP", "clarify these requirements", "estimate this", "write the offer", "can we do this and what would it cost", "check this document before I send it", "one-pager for management".
 ---
 
-> Version: 1.0.0
+> Version: 1.0.1 — patch: corrected the dispatchable-agent count (fourteen → fifteen); no behavioural change.
 
 # SA Pipeline — requirement to offer
 
 The Copilot CLI implementation of the `sa:` pipeline. Its Claude Code sibling is 19 slash commands under
-`claude\commands\sa\`; here it is one skill plus fourteen `@`-dispatchable agents, because **skills and
-agents are Copilot CLI's confirmed extension points** and a per-step command file is not.
+`claude\commands\sa\`; here it is one skill plus fifteen `@`-dispatchable agents — the thirteen `req-*`
+roles plus `doc-briefer` and `mermaid-diagram-maker` — because **skills and agents are Copilot CLI's
+confirmed extension points** and a per-step command file is not.
 
 > **[Copilot] Why a skill and not 19 commands.** `~/.copilot/commands/*.md` has no documented discovery
 > behaviour — it appears in no `copilot --help`, `copilot help commands` or `copilot help config` output as

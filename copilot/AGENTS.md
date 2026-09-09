@@ -19,7 +19,8 @@ kept thin so it stays readable, never inline the doctrine itself in this file.
   `ARTIFACT-SCHEMAS.md` (artifact shape), `ESTIMATION-METHOD.md` (how numbers are derived).
 - Standing divergences for the whole family: `~/.copilot/PORT-NOTES.md`. **Read it once before running any
   step** — six of them, and two change what you can rely on.
-- Agents dispatch with `@agent-name`. Fourteen `req-*`/support agents are live; see
+- Agents dispatch with `@agent-name`. The pipeline dispatches **fifteen** of them — thirteen `req-*` plus
+  `doc-briefer` and `mermaid-diagram-maker`; seventeen `.agent.md` files are live at this root in total. See
   `d:\_AI_GIT\copilot\agents\README.md` for the inventory and what is deliberately absent.
 
 ## Two things this tool cannot do, and must not pretend to

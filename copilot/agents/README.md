@@ -36,7 +36,13 @@ see that file's own note on why (`~/.copilot/commands/` has no documented discov
 
 ## Not ported, deliberately
 
-The `dev-*` family (`dev-backend`, `dev-frontend`, `dev-reviewer`, `dev-browser-tester`),
-`solution-analyst`, `framework-strategist`, and `public-figure-researcher`. Claude Code remains the default
-tool for implementation work, and `framework-strategist` reviews the framework from the Claude side by
-design. Recorded here so a future review reads the absence as intent, not drift.
+The `dev-*` family (`dev-backend`, `dev-frontend`, `dev-reviewer`, `dev-browser-tester`, and — added
+Claude-side 2026-09-07, inheriting the same standing decision — `dev-scaffolder`, `dev-planner`,
+`dev-ui-analyst`), plus `solution-analyst`, `framework-strategist`, and `public-figure-researcher`. Claude
+Code remains the default tool for implementation work, and `framework-strategist` reviews the framework from
+the Claude side by design. Recorded here so a future review reads the absence as intent, not drift.
+
+**The `dev-*` line is a standing scope decision, not a per-agent one**: a new `dev-*` agent added on the
+Claude side is out of scope here the moment it is created, without a fresh decision. Adding its name to the
+list above is bookkeeping so this file stays readable as an inventory — `..\README.md` carries the reasoning
+and the note on why `dev-framework\` is nevertheless copied to this root in full.

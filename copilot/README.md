@@ -31,7 +31,7 @@ incompatible and pretending otherwise produces files that work on neither.
 | `skills\` (root) | **Shared** | `SKILL.md` is an open cross-tool standard; both tools read it natively. |
 | Agents | **Separate siblings** | XML-tag sections vs Markdown headings; `tools: Read, Write` vs `tools: [write]`; `disallowedTools`/`effort`/`memory` exist on one side only. |
 | Command layer | **Separate, and differently shaped** | 19 slash commands on Claude; **one skill** here — see below. |
-| `document-data\` | **Claude-side only** | Consumed by `/sa:package`, which is where binding deliverables should be built anyway. |
+| `document-data\` | **Not rolled out to this root** | Consumed by `/sa:package`, which is where binding deliverables should be built anyway. `skills\sa-pipeline\SKILL.md` therefore tries `~/.copilot/document-data/templates.yaml` first and **falls back to `d:/_AI_GIT/document-data/templates.yaml`**, saying which it used. That fallback is the live path here — do not "simplify" it away. |
 
 ## The command layer is a skill, not commands
 

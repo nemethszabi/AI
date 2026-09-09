@@ -4,7 +4,7 @@ Read once. Every ported `req-*` agent and every `sa:` command in this branch is 
 and none of them restate it — a divergence documented in fourteen places is a divergence that will be
 corrected inconsistently in fourteen places.
 
-An agent or command marks **[Copilot]** inline only for a divergence **specific to itself**. The five below
+An agent or command marks **[Copilot]** inline only for a divergence **specific to itself**. The six below
 are universal.
 
 **Ported 2026-09-07**, when the standing "doctrine-only" scope decision was lifted and the whole `sa:`

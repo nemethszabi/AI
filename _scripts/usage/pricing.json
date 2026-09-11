@@ -1,0 +1,16 @@
+{
+  "_about": "List prices, USD per 1M tokens. First 'match' substring (lower-case model id) wins, so keep specific entries above generic ones. Source: claude-api skill model table (cached 2026-06-24), checked 2026-09-11; no long-context surcharge listed for the 1M-context models. Re-verify via the claude-api skill before relying on these for decisions.",
+  "verified": "2026-09-11",
+  "cache_multipliers": { "write_5m": 1.25, "write_1h": 2.0, "read": 0.1 },
+  "models": [
+    { "match": "fable-5-1",  "input": 10, "output": 50, "cache_read": 0.25 },
+    { "match": "mythos-5-1", "input": 10, "output": 50, "cache_read": 0.25 },
+    { "match": "fable",      "input": 10, "output": 50 },
+    { "match": "mythos",     "input": 10, "output": 50 },
+    { "match": "opus",       "input": 5,  "output": 25 },
+    { "match": "sonnet-5",   "input": 2,  "output": 10 },
+    { "match": "sonnet",     "input": 3,  "output": 15 },
+    { "match": "haiku",      "input": 1,  "output": 5 }
+  ],
+  "_unpriced": "Models with no match (e.g. GPT/Gemini via Copilot) fall back to the tool-reported cost when the tool records one."
+}

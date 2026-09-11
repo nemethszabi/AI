@@ -1,0 +1,20 @@
+{
+  "_about": "Generic defaults - no machine paths here. Override per machine in ~/.ai-usage/config.json (or $AI_USAGE_CONFIG); keys there replace these wholesale.",
+  "store": "~/.ai-usage/usage.db",
+  "report_dir": null,
+  "claude_roots": null,
+  "copilot_db": "~/.copilot/session-store.db",
+  "copilot_account": "copilot",
+  "exclude_patterns": [],
+  "task_types": ["dev", "sa", "framework", "personal", "generic"],
+  "task_rules": [
+    { "task": "sa",        "skill_prefix": ["sa:", "doc-brief"], "agent_prefix": ["req-", "doc-briefer"] },
+    { "task": "dev",       "skill_prefix": ["dev:", "scm:", "merge:", "scaffold-context", "code-review", "simplify", "security-review"],
+                           "agent_prefix": ["dev-", "stm-merge-", "solution-analyst"] },
+    { "task": "framework", "skill_prefix": ["framework-review", "review-agent", "agent-builder", "prompt-builder", "ai-kb-update", "update-config"],
+                           "agent_prefix": ["agent-reviewer", "framework-strategist", "claude-code-guide"] },
+    { "task": "personal",  "skill_prefix": ["travel-planner", "train-update", "eat-update"], "agent_prefix": ["public-figure-researcher"] }
+  ],
+  "cwd_rules": [],
+  "guard": { "warn_tokens": 150000, "strong_tokens": 300000, "repeat_every_tokens": 100000 }
+}

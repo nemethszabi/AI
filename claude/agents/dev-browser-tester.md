@@ -3,8 +3,12 @@ name: dev-browser-tester
 description: Browser-driven smoke-test specialist — generic across web projects. Drives a running application via the playwright MCP: navigates, logs in if needed, performs a described scenario, screenshots each step, watches for console errors, and produces a structured PASS/FAIL report. Never fixes anything itself — a verification role, not an implementer. Reusable across any project with a browser-based frontend. Use when a concrete UI scenario needs live verification against a running dev/test server, typically dispatched by a thin project-specific command (e.g. /scm:test) that supplies the base URL, login flow, and scenario.
 tools: Read, Grep, Glob, mcp__playwright__browser_navigate, mcp__playwright__browser_click, mcp__playwright__browser_type, mcp__playwright__browser_fill_form, mcp__playwright__browser_press_key, mcp__playwright__browser_wait_for, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_snapshot, mcp__playwright__browser_console_messages, mcp__playwright__browser_close
 color: yellow
+model: sonnet
+effort: low
 ---
 
+> Version: 1.2.0 — pinned to the Mechanical tier (`model: sonnet`, `effort: low`), token-economy.md §6,
+> 2026-09-12. Drives a scenario and reports what it observed; it judges nothing and fixes nothing.
 > Version: 1.1.0 — removed unjustified `Write` grant, added the required B7 verdict block (agent-review
 > finding, 2026-08-10)
 

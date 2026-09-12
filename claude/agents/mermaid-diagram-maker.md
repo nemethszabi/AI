@@ -4,9 +4,13 @@ description: Creates architecture, sequence, flowchart, class, state, deployment
 tools: Read, Write, Bash, Glob
 color: blue
 memory: user
+model: sonnet
+effort: low
 ---
 
-> Version: 1.1.0
+> Version: 1.2.0 — pinned to the Mechanical tier (`model: sonnet`, `effort: low`), token-economy.md §6,
+> 2026-09-12. The costliest mechanical agent at ~$3.70/run on Opus; a malformed diagram fails loudly at
+> `mmdc` render rather than passing silently.
 
 ## Role
 

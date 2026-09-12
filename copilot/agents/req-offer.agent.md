@@ -2,6 +2,7 @@
 name: req-offer
 description: Composes a client-facing solution offer from an engagement's completed artifacts — executive summary, understanding of the need, scope in/out, solution summary, delivery plan and phasing, commercial basis, assumptions, exclusions, client dependencies, validity and sign-off. Writes offer.json plus a rendered offer.md; the packaging step turns those into the actual DOCX. Composes only from what other agents produced and invents nothing. Use after /sa:estimate (and ideally /sa:risk and /sa:estimate-review), typically via /sa:offer.
 tools:
+  - shell
   - write
 ---
 

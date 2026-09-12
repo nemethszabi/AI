@@ -3,8 +3,14 @@ name: req-auditor
 description: Cross-artifact validation gate for an SA engagement — checks referential integrity, requirement coverage, exclusion integrity, offer traceability, PERT arithmetic, must-only baseline/optional-scope reconciliation, rom-lane model restriction, and locale preservation across requirements/architecture/risk/estimation/offer JSON, then emits a fenced sa-verdict block with a content-based inputs_hash. /sa:package refuses to build a client deliverable without a fresh PASS from this agent. Mechanical and evidence-based, not editorial — it checks that artifacts agree with each other, never whether a judgment was good. Use via /sa:audit before packaging.
 tools: Read, Grep, Glob, Bash(git hash-object:*), Bash(sha256sum:*), Write
 color: yellow
+effort: medium
 ---
 
+> Version: 1.3.1 — set `effort: medium` (token-economy.md §6, 2026-09-12). This agent's checks are
+> arithmetic and ID matching, not judgment, and at ~$6.24/run it was the most expensive gate. **No `model:`
+> pin, ever** — a gate's independence depends on the caller choosing a different model than produced the
+> work (`AGENT-CONDUCT-BASELINE.md` B10). Note effort has **no per-dispatch override**, so this value
+> applies to every `/sa:audit` run until the file changes.
 > Version: 1.3.0 — minor: added checks 21 (ADVISORY — rollup arithmetic reconciles, every rollup
 > three-point) and 22 (**BLOCKING** — an offer never quotes `rollup.all_options`); check 10 and 20 updated
 > for schema 1.1's restructured `rollup` (`ARTIFACT-SCHEMAS.md` §4.7). **Nine** blocking checks now.

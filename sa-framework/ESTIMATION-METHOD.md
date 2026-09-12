@@ -206,10 +206,39 @@ and why; never silently omit the field, because an absent gate and an inapplicab
 - **Duration**: ~2 weeks, delivering 2–3 representative items end-to-end (not a spike — genuinely done).
 - **Until the gate closes**, quote externally as a **range** with the gate named:
   *"≈160–250 MD, confirmed after a two-week calibration sprint."*
-- **After it closes**, re-estimate from measured velocity and commit.
+- **The gate closes before the priced offer is issued, never after it.** The calibration sprint is
+  contracted and run as its own engagement, and the figure it produces is the figure the offer states.
+
+### The gate closes before the offer, not after it — pinned 2026-09-11
+
+**An estimate is committed at signature and is not re-opened afterwards.** There is no "we re-estimate the
+rest once phase one lands" mechanism in this method, on any lane, and no artifact may describe one.
+
+The reasoning is commercial, not methodological. A phase plan whose later phases are labelled "re-estimated
+after Discovery" is not an offer — it is an option to quote later, dressed as a commitment. A client cannot
+approve a budget against it, a reviewer cannot audit it, and in practice the number only ever moves upward,
+which is precisely why it reads as evasive. Every figure in a priced offer must be one the selling org is
+prepared to stand behind at the moment the client signs.
+
+Therefore:
+
+- **Never write "re-estimated after X", "subject to re-estimation", "to be re-priced", or any equivalent,
+  into a phase table, a commercial basis, or a scope statement.** `req-auditor` treats such a phrase in a
+  client-facing artifact as a finding.
+- Uncertainty that would have justified re-estimation is expressed instead through the instruments this
+  method already provides, all of which are visible and auditable at signature: a **contingency
+  percentage** derived from the risk register (§3), a named **exclusion**, a named **assumption**, a
+  **client dependency**, or an item moved out of the baseline into the priced **optional** tier (§9.1).
+- Where the work genuinely cannot be committed until something is learned, the correct shape is
+  **sequential contracting, not deferred estimation**: contract and price the Discovery/calibration
+  engagement on its own, complete it, and then issue the delivery offer as a firm figure. Two firm offers
+  in sequence, never one offer with soft later phases.
+- After signature, a change in scope or effort is a **change request under change control** — a new,
+  separately agreed commercial instrument — and never a revision of the signed estimate.
 
 The gate is a commercial instrument, not an engineering nicety: it converts an unbounded estimation risk
-into a bounded, two-week, client-visible checkpoint. Offers should present it as a strength.
+into a bounded, two-week, client-visible checkpoint *that is completed before anything is committed*.
+Offers should present it as a strength.
 
 ---
 
@@ -236,9 +265,16 @@ Rules:
 
 When core integrations are unspecified — the common case for an inbound TSD or RFP:
 
-**Fixed-price a short Discovery phase; re-estimate everything after it.** This is honest, it bounds the
-client's initial spend, it converts your largest risk into a paid engagement, and it is far easier to
-defend than a single number covering work whose interfaces nobody has seen.
+**Contract a short Discovery phase as its own fixed-price engagement, and issue the delivery offer only
+once it has completed.** This is honest, it bounds the client's initial spend, it converts your largest
+risk into a paid engagement, and it is far easier to defend than a single number covering work whose
+interfaces nobody has seen.
+
+What this is **not** is one offer containing both Discovery and a set of later phases marked "re-estimated
+after Discovery" — see §4's pinned rule. Either the delivery figure is firm and quoted now, with its
+uncertainty carried in contingency, exclusions and the optional tier, or the delivery offer is not issued
+yet and Discovery is sold on its own. A single document that mixes the two commits the selling org to
+nothing while reading as though it commits them to everything.
 
 ---
 
@@ -422,6 +458,49 @@ baseline. Bare-minimum sizing tightens the estimate; it does not remove the unce
 already priced in — the two are not the same lever, and contingency is never shrunk to compensate for
 scope already having been trimmed.
 
+### 9.3 Strict sizing controls — pinned 2026-09-11
+
+§9.2 states the principle. These are the controls that make it testable, because "bare-minimum" was being
+asserted in `notes` on lines that had plainly not been sized that way. All five are mandatory and
+`req-estimate-critic` checks each one.
+
+**(a) AI-leverage must actually be applied, per line, in writing.** The delivery model is a real input, not
+a label on the cover. Every line under an `ai-assisted` model records, in `k_sanity_check`, what the
+AI-assisted route to that line concretely is — scaffolded from a schema, generated from an existing
+contract, a conventional CRUD/grid surface with dense training precedent, and so on — or records explicitly
+that no leverage applies and why. A line priced at traditional effort under an AI-assisted model with no
+stated reason is a defect. The categories where leverage is largest (K1/K2 UI, schema, CRUD, mapping,
+boilerplate, test harness) are exactly the categories most often left uncompressed out of habit.
+
+**(b) The lifecycle tier is derived per line, never scaled.** Multiplying a previous revision's lifecycle
+lines by a build-growth ratio is not an estimate; it is arithmetic that preserves whatever was wrong
+before and compounds it. When the build tier changes, each lifecycle line is re-derived against what it
+actually covers — UAT against the testable surface, hypercare against the go-live footprint, training
+against the audience — and PM alone may use a percentage formula, because PM genuinely does scale with
+managed effort. A scaled lifecycle tier must be labelled as an unresolved defect, not as a simplification.
+
+**(c) The lifecycle tier is bounded and must be justified above the bound.** Total non-build lifecycle
+effort (UAT, hypercare, go-live, meetings, documentation, training, PM) above **30% of build-and-delivery
+effort** requires a named, per-line justification tied to something specific about the engagement — a
+regulated UAT regime, a multi-country rollout, a contractually-fixed hypercare window. Absent that, it is
+padding, and padding here is unusually easy to hide because no single line looks unreasonable.
+
+**(d) One requirement, one home.** Every requirement is priced in exactly one baseline line. Requirements
+that appear in several lines' `req` lists are double-counted unless each line states which distinct slice
+of the requirement it prices. Overlapping component-shaped lines are the most common source of inflation
+in a large estimate, because each is individually defensible.
+
+**(e) Contingency is itemised or it is not applied.** §3 gives the band; this gives the evidence standard.
+The percentage applied must decompose into named risks from the register, each with the effort exposure it
+represents, and the decomposition must appear in the estimate. A round percentage carried forward from a
+previous revision, or consumed from the register without restating what it buys, is not a derivation.
+Contingency covers *uncertainty about work that is in scope*; it never covers scope that should have been
+a line, and it is never widened to make an aggressive baseline feel safe.
+
+Taken together these controls bite hardest on large estimates, which is the intent: the failure mode they
+exist to catch is not a single wrong line but a total that is 40% high because thirty lines each carried a
+little unexamined comfort.
+
 ---
 
 ## 10. The `rom` lane is estimated more strictly than the others
@@ -513,9 +592,48 @@ the committed figure.
 is free, which is the same class of error as §9.1's zero-baseline case — and it survives being forwarded
 without its caveat, which is what makes it expensive.
 
+### 11.5 Rendering the spread — the `worst` column is internal by default
+
+`worst` is **always derived and always stored** in `estimation.json`; PERT is undefined without it and the
+§1 spread checks operate on it. Whether it is **shown** is a separate question, and the default answer,
+pinned 2026-09-11, is no.
+
+A four-column best/likely/worst/PERT table invites a reader to anchor on the largest number in the row.
+Worst is a tail, not a forecast — it is the case where several independent things all go badly at once —
+and printing it beside the committed figure has repeatedly caused it to be read as "the real number", or
+quoted back as evidence the estimate is unreliable. The uncertainty it represents is already carried,
+visibly and defensibly, by the contingency percentage.
+
+The default rendering is therefore:
+
+- **Summary block (§11.1): one figure per row — the PERT expected value.** No best, no likely, no worst.
+  Clean enough that "what does this cost?" is answered by reading one column.
+- **Detail chapter: `best`, `likely`, `pert`.** The spread stays visible to anyone who wants it, one
+  scroll down, without the tail on the page.
+- **`worst` appears nowhere in a rendered `.md` or a client deliverable**, unless the engagement owner
+  asks for it explicitly.
+
+This is a presentation rule only. It never licenses omitting `worst` from `estimation.json`, narrowing it
+to make a range look tighter, or skipping the §1 degenerate-spread and implausible-confidence checks — an
+unrendered figure is held to exactly the same standard as a rendered one, and `req-auditor` verifies it is
+present and consistent in the JSON regardless of what the Markdown shows.
+
 ---
 
-**Last revised**: 2026-09-07 (v1.4 — added §11, presentation discipline: the mandatory single summary block
+**Last revised**: 2026-09-11 (v1.5 — four pinned changes, all tightening. §4/§5: the re-estimate-after-the-offer
+pattern is removed from the method entirely. An estimate is committed at signature; uncertainty is carried
+by contingency, exclusions, assumptions, dependencies and the optional tier, never by a phase table whose
+later rows read "re-estimated after Discovery". Where work genuinely cannot be committed, the shape is
+sequential contracting — sell Discovery on its own, then issue a firm delivery offer — not one offer with
+soft later phases. §9.3: five testable strictness controls behind §9.2's principle — per-line written
+AI-leverage justification, per-line lifecycle derivation instead of blanket scaling, a 30%-of-build
+lifecycle bound requiring named justification above it, one-requirement-one-home against double counting,
+and itemised contingency decomposed to named risks. §11.5: `worst` is internal by default — always derived,
+always stored, always checked, but rendered nowhere; the summary shows one PERT figure per row and the
+detail chapter shows best/likely/PERT. Written after an engagement estimate reached 453 MD on a base that
+had been blanket-scaled rather than re-derived, carried a contingency percentage forward without
+restating what it bought, and printed a four-column table that anchored every reader on the tail.
+v1.4, 2026-09-07 — added §11, presentation discipline: the mandatory single summary block
 with every headline figure and its arithmetic, the three sub-rollups answering the three questions always
 asked, the rule that no figure appears without its scope tier, and zero-vs-absent. Written after a review
 found the rendered estimate scattered its related figures across four sections, so answering "what does this

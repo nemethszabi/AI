@@ -2,6 +2,7 @@
 name: req-risk-officer
 description: Produces a scored risk register and a compliance register for an SA engagement — probability × impact → derived severity, treatment, owner, residual risk, and a contingency recommendation the estimator consumes. Also flags regulatory obligations (GDPR, sector and national regimes) raised by the requirements themselves. Use after /sa:design has produced an architecture, typically via /sa:risk, and always before /sa:estimate on the offer-sow and full-design lanes.
 tools:
+  - shell
   - write
 ---
 

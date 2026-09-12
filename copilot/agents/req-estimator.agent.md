@@ -2,6 +2,7 @@
 name: req-estimator
 description: Produces a three-point (best/likely/worst) AI-assisted effort estimate tied to a requirements list, design and risk register. Estimates only must-priority requirements as the priced baseline, bare-minimum sized; should/could-priority requirements are estimated separately as priced, non-committed Optional items. Traditional/legacy figures are opt-in only, never on the rom lane. Writes estimation.json plus a rendered estimation.md. Consumes the risk register's contingency recommendation rather than inventing a percentage, and never converts effort into price without a rate card. Use after /sa:design and /sa:risk, typically via /sa:estimate.
 tools:
+  - shell
   - write
 ---
 

@@ -262,7 +262,9 @@ if hr is not None:
 # ---- row 2: budget left, and where the work is -------------------------------------------------
 rls = d.get('rate_limits') or {}
 five_long, five_mid, five_short, _ = window('5h', rls.get('five_hour'))
-seven_long, seven_mid, seven_short, _ = window('7d', rls.get('seven_day'))
+# 7d gets looser thresholds than 5h (2026-09-12): 30% of a weekly window is still about two days of
+# normal work, so warning there cried wolf. The 5h window keeps 30/15, where 30% really is close.
+seven_long, seven_mid, seven_short, _ = window('7d', rls.get('seven_day'), warn_left=20, crit_left=10)
 spend_long, spend_mid, spend_short, spend_left = window('spend', rls.get('spend_limit'))
 branch = wt.get('branch') or git_branch(cwd)
 if branch and folder_long and folder_long.lower() == branch.lower():

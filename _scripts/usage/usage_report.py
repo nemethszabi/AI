@@ -11,6 +11,11 @@ figure is shown alongside where it records one.
 import argparse, collections as C, datetime as dt, os, statistics, subprocess, sys
 import usage_lib as U
 
+try:                                        # report text is UTF-8 regardless of the console codepage
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
 M = lambda x: f'{x / 1e6:,.1f}M'
 
 

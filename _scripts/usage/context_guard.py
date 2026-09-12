@@ -9,6 +9,14 @@ settings.json: hooks.UserPromptSubmit -> python D:/_AI_GIT/_scripts/usage/contex
 """
 import json, os, sys
 
+# Hook JSON in and out is UTF-8; without this Python decodes stdin with the machine's ANSI codepage
+# whenever PYTHONIOENCODING/PYTHONUTF8 is absent from the spawning environment.
+for _s in (sys.stdin, sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 try:
     import usage_lib as U
     G = U.load_config()['guard']

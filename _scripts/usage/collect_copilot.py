@@ -7,8 +7,13 @@ cache reads/writes, so it is split back out here to match the Claude rows. Copil
 per request as total_nano_aiu (1 AIU = $0.01, so USD = nano_aiu / 1e11) and premium-request units as
 request_multiplier - kept as tool_cost_usd / billed_units.
 """
-import os, sqlite3
+import os, sqlite3, sys
 import usage_lib as U
+
+try:                                        # accented cwd/project names must survive printing
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+except Exception:
+    pass
 
 
 def main():

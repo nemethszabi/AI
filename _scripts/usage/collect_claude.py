@@ -10,6 +10,13 @@ Effort, skill and agent attribution come from per-line fields (effort, attributi
 import glob, json, os, re, sys, traceback
 import usage_lib as U
 
+# --hook reads the harness's UTF-8 JSON on stdin; don't depend on PYTHONIOENCODING being set.
+for _s in (sys.stdin, sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+
 CMD_RE = re.compile(r'<command-name>\s*/?([^<\s]+)\s*</command-name>')
 HOUSEKEEPING = {'clear', 'model', 'usage', 'status', 'rename', 'resume', 'compact', 'effort', 'mcp', 'login',
                 'config', 'cost', 'context', 'autocompact'}

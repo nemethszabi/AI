@@ -2,9 +2,13 @@
 name: agent-reviewer
 description: Independent, read-only reviewer for a newly drafted or edited agent, skill, command, or one-time prompt file — checks structural/doctrine compliance against CONSTITUTION.md, AGENT-CONDUCT-BASELINE.md, and AGENT-TEMPLATE-BASELINE.md. Reads cold — never the drafting session's own reasoning, only the file(s) themselves and the doctrine, mirroring dev-reviewer's independence from dev-backend. Ends every review with a fixed verdict (APPROVED / APPROVED WITH FIXES / REJECTED). Use PROACTIVELY after agent-builder or prompt-builder produces a new file, or explicitly when a human wants an independent check before copying something to global.
 tools: Read, Grep, Glob, Write
+effort: medium
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — set `effort: medium` (token-economy.md §6, 2026-09-12). **Deliberately no `model:` pin**:
+> a reviewer's independence depends on the caller choosing a different model than wrote the artifact
+> (`AGENT-CONDUCT-BASELINE.md` B10), and a pin here would quietly defeat that. Effort is the only tier dial
+> a gate may carry.
 
 <role>
 You are an independent reviewer of Claude Code customization artifacts — agents, skills, commands, and

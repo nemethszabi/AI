@@ -1,13 +1,24 @@
 """Claude Code status line, two rows:
 
-  [scm] Opus 5 (1M)·medium │ scm-stm merge │ ctx 292k 29% of 1M · handoff advised (>150k) │ +18k/turn │ cache 89% (tools)
-  scm-stm-merge │ 5h 55% left → 15:51 │ main │ PR #1234 pending │ 7d 59% left → Tue 13:41 │ session 18h10 · +156/-23
+  [scm] scm-stm-merge │ Opus 5 (1M)·medium │ ctx 292k 29% of 1M · handoff advised (>150k) │ +18k/turn
+  5h 55% left → 15:51 │ 7d 59% left → Tue 13:41 │ main │ PR #1234 pending │ cache 89% (tools) │ session 18h10 · +156/-23
 
-Row 1 answers "should I hand off?", row 2 "where am I working and what budget is left". The folder is the
-leaf directory, or the last two parts when the leaf is generic ("...\\Mediatel Email replacement\\ai"), and
-the git branch is suppressed when it only repeats it. When the
-terminal is narrower than a row, segments first shrink to shorter forms and only then drop, lowest
-priority first - the context segment shrinks but never disappears, since it is the reason for the bar.
+Row 1 answers "what is this session, and what is it costing?", row 2 "what budget is left, and where am I?"
+Identity leads row 1 - profile chip then working folder (moved here from row 2, 2026-09-12: it answers the
+same question the chip does, while row 2 is about budget). The two segments that follow are the handoff
+decision and nothing else: level then rate - how big the context is, and how fast it is growing.
+
+Cache sits on row 2 (moved 2026-09-12): it is a diagnostic, not a decision. At 96% it says nothing; it
+earns attention only when it drops and names a reason, and that is worth a glance, not the primary row.
+
+The folder is the leaf directory, or the last two parts when the leaf is generic
+("...\\Mediatel Email replacement\\ai"). Two things are suppressed when they merely restate that folder:
+the session name and the git branch - one fact printed twice is worse than a shorter bar. The two
+rate-limit windows sit side by side on row 2, because the pair is the decision: "5h fine, week nearly
+gone" calls for something different from the reverse.
+
+When the terminal is narrower than a row, segments first shrink to shorter forms and only then drop,
+lowest priority first - the context segment and the 5h window never disappear.
 COLUMNS is exported by Claude Code before each run.
 
 Deliberately no session $: on a subscription that is a notional API price, not what is billed. Cost lives
@@ -78,22 +89,29 @@ def fit(segments, width):
 
 
 def window(label, rl, warn_left=30, crit_left=15):
-    """('5h 55% left → 18:20', '5h 55%', left%) - remaining, not used, plus when it comes back.
-    Both variants come back already coloured: yellow at warn_left or below, red at crit_left or below."""
+    """('5h 55% left → 18:20', '5h 55% left', '5h 55%', left%) - remaining, NOT used, plus when it comes
+    back. GREEN while healthy, yellow at warn_left or below, red at crit_left or below.
+
+    Green matters: this is the only number on the bar that counts DOWN (ctx counts up), so an uncoloured
+    "89%" invites being read as 89% consumed and therefore alarming. With green/yellow/red the colour
+    carries the meaning and the polarity of the number stops mattering. For the same reason the word
+    "left" outlives the reset clock by one degradation step - the bare "5h 89%" form is the ambiguous
+    one, so it is the last resort, not the first saving."""
     if not rl or rl.get('used_percentage') is None:
-        return None, None, 100
+        return None, None, None, 100
     left = 100 - rl['used_percentage']
     short = f'{label} {left:.0f}%'
-    long = short + ' left'
+    mid = short + ' left'
+    long = mid
     ts = rl.get('resets_at')
     if ts:
         try:
             t = dt.datetime.fromtimestamp(float(ts))
-            long += ' → ' + t.strftime('%a %H:%M' if (t - dt.datetime.now()).total_seconds() > 12 * 3600 else '%H:%M')
+            long = mid + ' → ' + t.strftime('%a %H:%M' if (t - dt.datetime.now()).total_seconds() > 12 * 3600 else '%H:%M')
         except Exception:
             pass
-    col = RED if left <= crit_left else YELLOW if left <= warn_left else ''
-    return colour(long, col), colour(short, col), left
+    col = RED if left <= crit_left else YELLOW if left <= warn_left else GREEN
+    return colour(long, col), colour(mid, col), colour(short, col), left
 
 
 def turn_delta(sid, ctx):
@@ -180,15 +198,30 @@ except ValueError:
 # ---- row 1: who am I, and how full is the context ----------------------------------------------
 profile_name = os.path.basename(os.environ.get('CLAUDE_CONFIG_DIR', '') or '').replace('claude-', '')
 chip = f'{DIM}[{profile_name}]{RESET} ' if profile_name else ''
+
+# Identity block: which config root, and which folder. The chip rides on the folder rather than the model,
+# so the row opens with "which session am I looking at" before it says anything about cost.
+ws, wt = d.get('workspace') or {}, d.get('worktree') or {}
+cwd = ws.get('current_dir') or d.get('cwd')
+folder_long, folder_short = folder(cwd)
+if folder_long:
+    place = seg(1, None, chip + folder_long, chip + folder_short)
+else:
+    place = seg(1, None, chip.rstrip()) if chip else None
+
 model = ((d.get('model') or {}).get('display_name') or '?')
 model_short = re.sub(r'\s*\([^)]*\)', '', model)
 eff = f"·{(d.get('effort') or {}).get('level')}" if (d.get('effort') or {}).get('level') else ''
 fast = ' ⚡' if d.get('fast_mode') else ''
-who = seg(1, None, chip + model.replace(' context)', ')') + eff + fast, chip + model_short + eff + fast,
-          chip + model_short)
+who = seg(2, None, model.replace(' context)', ')') + eff + fast, model_short + eff + fast, model_short)
 
+# The session name earns its place only when it says something the folder doesn't - the same rule the
+# branch has always followed. "scm-stm merge" beside "scm-stm-merge" is one fact printed twice.
+squash = lambda s: re.sub(r'[^a-z0-9]', '', (s or '').lower())
 name = d.get('session_name') or ''
-name_seg = seg(2, None, name, name[:16] + '…' if len(name) > 16 else name) if name else None
+if name and folder_long and squash(name) == squash(folder_long):
+    name = ''
+name_seg = seg(5, None, name, name[:16] + '…' if len(name) > 16 else name) if name else None
 
 cw = d.get('context_window') or {}
 cu = cw.get('current_usage') or {}
@@ -210,7 +243,7 @@ if ctx:
                   f'ctx {human(ctx)}{mark}')
     delta = turn_delta(d.get('session_id'), ctx)
     if delta > 0:                                   # how fast this session is filling up
-        growth = seg(4, DIM, f'+{human(delta)}/turn', f'+{human(delta)}')
+        growth = seg(3, DIM, f'+{human(delta)}/turn', f'+{human(delta)}')
 
 # The miss reason matters more than the ratio: "tools" means the tool/MCP set moved mid-session and the
 # whole prefix was rewritten, which at a large context is the single most expensive event there is.
@@ -224,19 +257,16 @@ if hr is not None:
     raw = ((pc.get('last_miss_cause') or {}).get('causes') or [None])[0]
     cause = CAUSE_SHORT.get(raw, (raw or '')[:8])
     body = f'cache {hr:.0%}'
-    cache = seg(3, None, f'{body} ({cause})' if cause and hr < 0.98 else body, body, f'c{hr:.0%}')
+    cache = seg(5, None, f'{body} ({cause})' if cause and hr < 0.98 else body, body, f'c{hr:.0%}')
 
 # ---- row 2: budget left, and where the work is -------------------------------------------------
 rls = d.get('rate_limits') or {}
-five_long, five_short, _ = window('5h', rls.get('five_hour'))
-seven_long, seven_short, _ = window('7d', rls.get('seven_day'))
-spend_long, spend_short, spend_left = window('spend', rls.get('spend_limit'))
-ws, wt = d.get('workspace') or {}, d.get('worktree') or {}
-cwd = ws.get('current_dir') or d.get('cwd')
-folder_seg = seg(1, None, *folder(cwd))
+five_long, five_mid, five_short, _ = window('5h', rls.get('five_hour'))
+seven_long, seven_mid, seven_short, _ = window('7d', rls.get('seven_day'))
+spend_long, spend_mid, spend_short, spend_left = window('spend', rls.get('spend_limit'))
 branch = wt.get('branch') or git_branch(cwd)
-if branch and folder_seg and folder_seg[1][0].lower() == branch.lower():
-    branch = None                               # "scm-stm-merge │ scm-stm-merge" says the same thing twice
+if branch and folder_long and folder_long.lower() == branch.lower():
+    branch = None                               # row 1 already said it
 branch_seg = seg(2, None, f"{branch}{f' ({wt['name']})' if wt.get('name') else ''}", branch[:18]) if branch else None
 pr = d.get('pr') or {}
 pr_seg = None
@@ -249,13 +279,13 @@ dur = duration((d.get('cost') or {}).get('total_duration_ms'),
                (d.get('cost') or {}).get('total_lines_added'),
                (d.get('cost') or {}).get('total_lines_removed'))
 
-print(fit([who, name_seg, ctx_seg, growth, cache], width))
-row2 = fit([folder_seg,
-            seg(0, None, five_long, five_short),
+print(fit([place, name_seg, who, ctx_seg, growth], width))
+row2 = fit([seg(0, None, five_long, five_mid, five_short),
+            seg(1, None, seven_long, seven_mid, seven_short),
             branch_seg,
             pr_seg,
-            seg(4, None, seven_long, seven_short),
-            seg(5, None, spend_long, spend_short) if spend_left <= 25 else None,
+            seg(4, None, spend_long, spend_mid, spend_short) if spend_left <= 25 else None,
+            cache,
             seg(6, None, *dur)], width)
 if row2:
     print(row2)

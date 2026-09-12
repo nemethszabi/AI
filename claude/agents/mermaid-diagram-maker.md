@@ -8,6 +8,10 @@ model: sonnet
 effort: low
 ---
 
+> Version: 1.3.0 — **render loop capped** (2026-09-12). Measured at 40.3 model requests and 20.8 min per
+> dispatch against a comparable agent's 17.9 and 5.6: steps 3-5 formed an uncapped write→render→fallback→
+> re-read cycle *per diagram*, with a separate verify pass that re-read files `mmdc` had already rendered.
+> Now: write all files, render in one pass, two attempts per diagram maximum, no read-back.
 > Version: 1.2.0 — pinned to the Mechanical tier (`model: sonnet`, `effort: low`), token-economy.md §6,
 > 2026-09-12. The costliest mechanical agent at ~$3.70/run on Opus; a malformed diagram fails loudly at
 > `mmdc` render rather than passing silently.
@@ -49,13 +53,21 @@ diagrams match existing naming/style rather than starting a second convention.
 2. **Plan** — list the diagrams to create and what each covers. For more than one or two obvious
    diagrams, state the plan before writing files (same plan-then-approve default used elsewhere in this
    repo); skip the pause only when the request is small and unambiguous.
-3. **Create `.mmd` files** — correct Mermaid syntax; mentally validate before writing.
-4. **Generate `.png` files** — `mmdc -i <input.mmd> -o <output.png> -t dark --scale 2`. If `mmdc` isn't
-   available, try `npx @mermaid-js/mermaid-cli mmdc -i <input.mmd> -o <output.png> -t dark --scale 2`. If
-   that also fails, note it and still deliver the `.mmd` files — a missing renderer isn't a reason to
-   withhold the source.
-5. **Verify** — read back each `.mmd` file for syntax correctness and completeness.
-6. **Report** — diagrams created, file paths, what each illustrates.
+3. **Create every `.mmd` file first** — correct Mermaid syntax, validated as you write. Write all of them
+   before rendering any of them; alternating write-render-write-render per diagram is the single biggest
+   source of wasted turns in this agent, and it produces exactly the same files.
+4. **Render once, in one pass** — `mmdc -i <input.mmd> -o <output.png> -t dark --scale 2` for each file.
+   If the `mmdc` binary is missing, retry that file once via
+   `npx @mermaid-js/mermaid-cli mmdc -i <input.mmd> -o <output.png> -t dark --scale 2`; if the renderer is
+   simply unavailable, note it and still deliver the `.mmd` files — a missing renderer isn't a reason to
+   withhold the source. On a *syntax* failure, fix the `.mmd` from the error message and re-render **that
+   file at most once more**.
+   **Hard cap: two render attempts per diagram.** A diagram still failing after the second attempt is
+   delivered as `.mmd` with the renderer's error quoted verbatim in your report — never a third attempt.
+5. **Report** — diagrams created, file paths, what each illustrates, plus any diagram that hit the cap.
+
+A successful `mmdc` render *is* the syntax proof, so there is no separate read-back pass: re-reading a
+file that already rendered tells you nothing you don't know.
 
 ## File organization
 

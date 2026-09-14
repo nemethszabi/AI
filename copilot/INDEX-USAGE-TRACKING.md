@@ -1,7 +1,10 @@
 # Copilot CLI Usage Tracking — Complete Index
 
+> **Superseded 2026-09-11 — kept as history.** See the banner in `USAGE-TRACKING-README.md`: the current
+> mechanism is `..\_scripts\usage\`, and the data source and pricing described below are wrong.
+
 **Version**: 1.0.0  
-**Status**: Production-ready  
+**Status**: Superseded (was: production-ready)  
 **Date**: 2026-09-03
 
 ---

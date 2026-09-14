@@ -130,7 +130,9 @@ Several other things are already designed to stop and ask rather than silently p
 - Anything touching Azure DevOps (posting a comment, changing a work item's state) always shows you the
   exact comment/tag/state change and asks `[y/n]` — every single run, not just the first time.
 - No agent in this system ever runs `git commit` or `git add`. You always commit yourself, which is itself
-  a built-in checkpoint — nothing lands in history without you looking at the diff first.
+  a built-in checkpoint — nothing lands in history without you looking at the diff first. The one
+  exception is `/doc-sync`, which commits and pushes this framework repo itself, and only after its own
+  separate approval.
 - Genuine ambiguity gets asked about via an explicit question (you'll see it as a real prompt), not
   silently guessed — see `AGENT-CONDUCT-BASELINE.md` A7 if you want the underlying rule.
 

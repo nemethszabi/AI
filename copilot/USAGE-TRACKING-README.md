@@ -1,7 +1,14 @@
 # Copilot Usage Tracking Framework
 
+> **Superseded 2026-09-11 — kept as history.** Copilot usage is collected by the cross-tool toolkit
+> `..\_scripts\usage\` (see its `README.md`), which puts Copilot and Claude on one scale;
+> `scripts\Get-CopilotUsage.ps1` is now a thin wrapper around it. This page is wrong in three ways: the data
+> is in `assistant_usage_events`, not per-session usage columns; Opus is $5/$25 per 1M tokens, not $15/$75;
+> and Copilot records its own per-request cost (`total_nano_aiu`), so no hard-coded rate table is needed.
+> Correction record: `d:\WORK\AI\knowledge-base\copilot-usage-tracking.md`.
+
 **Version**: 1.0.0 (Sept 2026)  
-**Status**: Ready for production use  
+**Status**: Superseded (was: ready for production use)  
 **Scope**: Personal/user-level Copilot CLI session tracking
 
 ---

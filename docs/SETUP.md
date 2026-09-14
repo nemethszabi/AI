@@ -1,7 +1,7 @@
 # Setup — one-time install + troubleshooting
 
 This repo is staging/distribution only — nothing here is live in Claude Code until copied to `~\.claude\`.
-See `README.md`'s Rollout section for the copy commands. This file covers **verifying** the install and
+See `claude\README.md`'s and `copilot\README.md`'s Rollout sections for the copy commands. This file covers **verifying** the install and
 the specific problems worth knowing about before you hit them.
 
 ## Install
@@ -52,10 +52,11 @@ copy step above stays a deliberate, explicit action, never automatic.
 
 ## Verify
 
-1. **Start a brand-new Claude Code session, under the profile you actually use** (`claude --profile scm`
-   or `claude --profile nsz` — agent/command lists load at session start, see the restart gotcha below,
-   and are per-profile, not shared with the default location).
-2. Run `/sa:help` — should print the `sa:` namespace reference (17 commands), not an error.
+1. **Start a brand-new Claude Code session, under the profile you actually use** (`claude-scm` or
+   `claude-nsz` from a PowerShell terminal, or `CLAUDE_CONFIG_DIR` set to that profile's root before
+   `claude` — there is no `--profile` flag; agent/command lists load at session start, see the restart
+   gotcha below, and are per-profile, not shared with the default location).
+2. Run `/sa:help` — should print the `sa:` namespace reference (19 commands), not an error.
 3. In any project with `ai/dev/STATE.md` already scaffolded, run `/dev:status` — should print that
    project's phase/gates, not "not initialized." In a project without one yet, run `/dev:init` and confirm
    it creates `ai/dev/STATE.md` + `config.json`.
@@ -150,10 +151,10 @@ will false-positive a plain count. Never conclude a defect from eyeballing `Read
 
 **Approved and run 2026-09-03.** The file copy below has been executed — `~/.copilot/` (Copilot CLI's own
 live runtime state; confirmed empty of any pre-existing doctrine first, so this was a clean additive copy)
-now carries the doctrine files and `AGENTS.md`. Two pieces remain outstanding, see the callouts below:
-`COPILOT_CUSTOM_INSTRUCTIONS_DIRS` (blocked by the permission classifier as a permanent env-var change,
-needs explicit approval) and MCP server wiring (not attempted — the destination file shape wasn't
-confirmed). Matches `copilot\README.md`'s own rollout section verbatim.
+now carries the doctrine files and `AGENTS.md`; the full `sa:` pipeline followed on 2026-09-07 and the
+`handoff` skill plus hook on 2026-09-14. `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` and the Geomant MCP server are
+done; the remaining MCP servers are not wired — see the callouts below. The block below matches
+`copilot\README.md`'s rollout section; if the two ever differ, that file wins.
 
 - **Destination**: `~/.copilot/` (global/personal). `COPILOT_HOME` is the direct analog of Claude Code's
   `CLAUDE_CONFIG_DIR` — a future second Copilot identity would follow the same
@@ -172,7 +173,7 @@ confirmed). Matches `copilot\README.md`'s own rollout section verbatim.
   New-Item -ItemType Directory -Path "$copilotDest\hooks" -Force | Out-Null
   Copy-Item copilot\hooks\*.json        "$copilotDest\hooks\" -Force
   Copy-Item AGENT-CONDUCT-BASELINE.md, DESIGN-PRINCIPLES-BASELINE.md   "$copilotDest\" -Force
-  Copy-Item copilot\AGENT-TEMPLATE-BASELINE.md   "$copilotDest\" -Force
+  Copy-Item copilot\AGENT-TEMPLATE-BASELINE.md, copilot\PORT-NOTES.md, copilot\AGENTS.md "$copilotDest\" -Force
   Copy-Item CONSTITUTION.md             "$copilotDest\" -Force
   Copy-Item dev-framework               "$copilotDest\" -Recurse -Force
   Copy-Item sa-framework                "$copilotDest\" -Recurse -Force

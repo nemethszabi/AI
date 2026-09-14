@@ -1,6 +1,6 @@
 ---
 name: doc-sync
-description: Document, roll out and back up a framework or prompting change — four separately approved gates (docs → rollout → commit → backup). Use when the doc-sync hook suggests it, or after any agent/skill/command/doctrine change.
+description: Document, roll out and back up a framework or prompting change — four separately approved gates (docs → rollout → commit+push → backup). Use when the doc-sync hook suggests it, or after any agent/skill/command/doctrine change.
 allowed-tools:
   - Read
   - Write
@@ -12,7 +12,7 @@ allowed-tools:
 argument-hint: "[what changed, optional] [--docs-only]"
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0
 
 <objective>
 `/doc-sync` closes the loop that a framework change otherwise leaves open: the change is made, but the
@@ -93,11 +93,17 @@ Hook or `settings.json` changes are **never** applied by this step: show the exa
 ask separately.
 </step>
 
-<step name="gate-3-commit" condition="the staging repo has uncommitted changes">
-Propose a commit for the **staging repo only**: the file list and a message (subject ≤ 72 characters,
-body = the change list in a few lines, plus the attribution lines this session's instructions require).
-Ask **Commit** / **Skip**. Never push. Project repositories are never committed by this command — their
-owners commit.
+<step name="gate-3-commit-push" condition="the staging repo has uncommitted or unpushed changes">
+The staging repo is **always committed and pushed together** — a staged change that reached the live roots
+but not the remote is only half recorded. Propose, for the **staging repo only**: the file list, a message
+(subject ≤ 72 characters, body = the change list in a few lines, plus the attribution lines this session's
+instructions require), and the push target (`git -C <staging_repo> rev-parse --abbrev-ref @{u}`).
+
+Ask **Commit and push** / **Skip**. On approval: `git add` the listed files only, `git commit`, then a plain
+`git push` to the current branch's upstream — never `--force`, never a different branch. Report the commit
+sha and the push result; a rejected push (e.g. remote ahead) is reported and stopped, never resolved by
+force or by rebasing without asking. Also include commits made earlier that are still unpushed. Project
+repositories are never committed or pushed by this command — their owners do that.
 </step>
 
 <step name="gate-4-backup" condition="doc_sync.backup_command is set">
@@ -110,7 +116,7 @@ copied where, errors). A failed backup is reported as failed, never as done.
 DOC-SYNC
 Changes documented: <n> files — <list>
 Rollout:            <done — in sync | skipped | not needed> <any drift left>
-Commit:             <sha | skipped | not needed>
+Commit + push:      <sha → upstream | push rejected — reason | skipped | not needed>
 Backup:             <done | failed — reason | skipped>
 Still open:         <anything declined or not in sync>
 ```
@@ -121,7 +127,8 @@ Still open:         <anything declined or not in sync>
 - **Four gates, four separate approvals.** An approval covers only its own gate, only this run.
 - **Facts only.** Document what changed; never add doctrine, never restructure a document.
 - **Only changed files roll out.** No blanket copies; hook/settings changes are shown, never applied.
-- **Never push. Never commit a project repository.**
+- **The staging repo is committed and pushed together, in one approval** — never force, never another
+  branch. **Never commit or push a project repository.**
 - **Never touch an `exclude` path.**
 - **Report truthfully** — a copy or backup that failed or was skipped is said so.
 </rules>

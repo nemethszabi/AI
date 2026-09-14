@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 """
-PreToolUse guard hook for the Bash tool - the structural half of CONSTITUTION.md Articles II and III.
+PreToolUse guard hook for the Bash AND PowerShell tools - the structural half of CONSTITUTION.md
+Articles II and III.
+
+Matcher note (corrected 2026-09-14): this was registered against `"Bash"` alone, while PowerShell is
+the primary shell on the Windows machine. Every `Remove-Item -Recurse -Force` and every
+`git push --force` issued through the PowerShell tool went unexamined for as long as that was true.
+The matcher is now `"Bash|PowerShell"`, and the `rm -rf` rule has a PowerShell counterpart below.
+The body reads `tool_input.command`, which both tools populate, so nothing else needed to change.
 
 Added 2026-09-05 (framework-review F-12/C-11). Article II ("destructive actions require confirmation
 every time") and Article III ("never weaken a gate") were until now enforced only by asking models to
@@ -10,10 +17,11 @@ PreToolUse hook that blocks the edit is enforcement."
 Deliberately narrow. O-03's warning in that review: a hook that blocks too broadly becomes something you
 disable under deadline pressure, which is worse than the instruction. Only these four are matched:
 
-  git push --force      -> ask   (Article II - irreversible for everyone else on the branch)
-  git reset --hard      -> ask   (Article II - discards uncommitted work irrecoverably)
-  rm -rf                -> ask   (Article II - no undo)
-  --no-verify           -> deny  (Article III - its entire purpose is skipping a gate)
+  git push --force               -> ask   (Article II - irreversible for everyone else on the branch)
+  git reset --hard               -> ask   (Article II - discards uncommitted work irrecoverably)
+  rm -rf                         -> ask   (Article II - no undo)
+  Remove-Item -Recurse -Force    -> ask   (Article II - the PowerShell form of the same thing)
+  --no-verify                    -> deny  (Article III - its entire purpose is skipping a gate)
 
 "ask" forces the confirmation Article II requires; it does not forbid the command. Only --no-verify is
 denied outright, because unlike the others it has no legitimate form - it exists to bypass a check.
@@ -56,6 +64,19 @@ RULES = [
         "ask",
         "rm -rf deletes recursively with no undo. CONSTITUTION.md Article II requires explicit "
         "confirmation. Check what the path actually resolves to before approving.",
+    ),
+    (
+        # The PowerShell counterpart. Both switches required, mirroring the `rm -rf` rule: recursion
+        # alone still prompts per item, and -Force alone is not recursive. `rm` is an alias of
+        # Remove-Item here, but `rm -rf` does not parse in PowerShell, so the bash rule above does
+        # not cover this and the two do not overlap.
+        re.compile(r"\b(?:Remove-Item|rmdir|rd)\b"
+                   r"(?=[^\n]*?\s-r(?:ecurse)?\b)"
+                   r"(?=[^\n]*?\s-f(?:orce)?\b)", re.I),
+        "ask",
+        "Remove-Item -Recurse -Force deletes recursively with no undo and no per-item prompt. "
+        "CONSTITUTION.md Article II requires explicit confirmation. Check what the path actually "
+        "resolves to before approving.",
     ),
 ]
 

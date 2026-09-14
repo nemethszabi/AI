@@ -10,6 +10,11 @@ for conduct, the same split as the Claude side.
 now distinguish **verified** from **still unverified**, because a table that doesn't say which is which is
 the reason a port gets built on an assumption.
 
+**Re-check 2026-09-14 against v1.0.83** (`copilot --version`, `copilot help commands`, `copilot help config`,
+`copilot help environment`, plus GitHub's hooks configuration reference): custom commands are **still**
+absent; three things this file previously recorded as absent now exist *outside agent frontmatter* — see
+"What changed at v1.0.83" below. Help text and docs only; none of the three observed in a live session yet.
+
 ---
 
 ## `.agent.md` — custom agents
@@ -56,7 +61,19 @@ agent rather than letting the reader assume parity:
 | `effort` | **absent** | No per-agent reasoning-depth control. |
 | `memory` | **absent** | No cross-session agent memory; state conventions in the artifact instead. |
 | `model` per-dispatch | frontmatter `model` exists, but selection is **session-level** (`/model`) | The cross-model review rule (`ARTIFACT-SCHEMAS.md §9`) is satisfied by switching the session before dispatching. `PORT-NOTES.md` D5. |
-| `permissionMode`, `maxTurns`, `hooks`, `isolation` | **absent** | No per-agent circuit-breakers or lifecycle hooks. |
+| `permissionMode`, `maxTurns`, `hooks`, `isolation` | **absent** | No per-agent circuit-breakers or lifecycle hooks. (Session/user/repo-level hooks do exist — see below.) |
+
+### What changed at v1.0.83 — not frontmatter, but not absent either
+
+| Capability | Where it lives | Status / use |
+|---|---|---|
+| **Per-agent model and effort** | `subagents.agents.<agent-name>` in `~/.copilot` config — `model`, `effortLevel`, `contextTier`, each may be `"inherit"`; set interactively with `/subagents` | Help text only. A **config default per agent**, not frontmatter and not per dispatch. Could make the cross-model review rule structural (pin checking agents to a model other than the authoring one) — **not adopted**; see `PORT-NOTES.md` D5 for why it is recorded rather than applied. |
+| **Hooks** | User: `~/.copilot/hooks/*.json` or inline `hooks` in user settings. Repo: `.github/hooks/*.json`, **and inline `hooks` in `.github/copilot/settings.json` or `.claude/settings.json`**. Schema `{"version": 1, "hooks": {"<event>": [{"type": "command", "bash": …, "powershell": …, "timeoutSec": …}]}}` | Events include `sessionStart`, `userPromptSubmitted`, `preToolUse`, `postToolUse`, `agentStop`, `subagentStart/Stop`, `preCompact`, `sessionEnd`. Context can be injected from `postToolUse`, `sessionStart`, `userPromptSubmitted`, `subagentStart`; `preToolUse` can deny; `preCompact`/`sessionEnd` output is ignored. Payload is camelCase (`toolName`, `toolArgs`, `sessionId`). **In use**: `hooks\framework-change-flag.json`. `disableAllHooks` turns all of them off. |
+| **Status line command** | `statusLine` setting — a command that receives session status JSON on stdin | Not investigated; the Claude `statusline.py` does not port as-is. |
+
+Also present at v1.0.83 and relevant to session hygiene: `/context`, `/compact`, `/resume`, `/fork`,
+`/rewind`, `/clear`, `/new`. Skills are invoked explicitly by writing `/<skill-name>` in the prompt; GitHub's
+docs define no argument syntax, so a skill reads its mode words from the prompt text (`skills\handoff`).
 
 ## `SKILL.md` — skills
 
@@ -71,7 +88,7 @@ agent rather than letting the reader assume parity:
 ## `commands\` — **still unverified, and treat it as unsupported**
 
 `~/.copilot/commands/*.md` appears in **no** `copilot --help`, `copilot help commands` or
-`copilot help config` output as of v1.0.82. One file (`usage.md`) was staged there in the 2026-09-03
+`copilot help config` output as of v1.0.82 — and still none at v1.0.83 (re-checked 2026-09-14). One file (`usage.md`) was staged there in the 2026-09-03
 scaffold on the assumption it worked; that assumption has never been confirmed, and the built-in `/usage`
 command would shadow it regardless.
 

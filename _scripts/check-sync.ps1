@@ -108,6 +108,7 @@ $copilotStaged = Get-FileHashMapRemapped $repoRoot @{
     'copilot\agents'   = 'agents'
     'copilot\commands' = 'commands'
     'copilot\skills'   = 'skills'
+    'copilot\hooks'    = 'hooks'      # user-level hook files, added 2026-09-14 (framework-change-flag)
     'skills'           = 'skills'
     'dev-framework'    = 'dev-framework'
     'sa-framework'     = 'sa-framework'
@@ -213,7 +214,7 @@ Write-Host "=== copilot CLI  ($copilotRoot) ===" -ForegroundColor Cyan
 if (-not (Test-Path $copilotRoot)) {
     Write-Host "  Root does not exist - skipping (not set up on this machine)." -ForegroundColor DarkGray
 } else {
-    $copilotLive = Get-FileHashMap $copilotRoot @('agents', 'commands', 'skills', 'dev-framework', 'sa-framework')
+    $copilotLive = Get-FileHashMap $copilotRoot @('agents', 'commands', 'skills', 'hooks', 'dev-framework', 'sa-framework')
     foreach ($f in @('CONSTITUTION.md', 'AGENT-CONDUCT-BASELINE.md', 'DESIGN-PRINCIPLES-BASELINE.md',
                      'AGENT-TEMPLATE-BASELINE.md', 'AGENTS.md', 'COPILOT.md', 'PORT-NOTES.md')) {
         $p = Join-Path $copilotRoot $f

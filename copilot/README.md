@@ -18,7 +18,8 @@ incompatible and pretending otherwise produces files that work on neither.
 | `AGENT-TEMPLATE-BASELINE.md` | `.agent.md`/`SKILL.md` shapes, the **verified** tool-name mapping, the fields Copilot lacks and what each costs, and the porting checklist. Re-verified against v1.0.82 on 2026-09-07. |
 | `PORT-NOTES.md` | **Read once.** The six standing divergences that apply to every ported `req-*` agent and to the whole `sa:` pipeline. Not repeated per file — a divergence documented in fourteen places gets corrected in fourteen inconsistent ways. |
 | `agents\` | 17 `.agent.md` files. Siblings of `..\claude\agents\*.md`, each naming its original and marking `[Copilot]` divergences. See that folder's `README.md` for the inventory and what is deliberately absent. |
-| `skills\` | Copilot-only skills — chiefly `sa-pipeline\SKILL.md`, this branch's command layer. Cross-tool skills live in the shared `..\skills\`. |
+| `skills\` | Copilot-only skills — chiefly `sa-pipeline\SKILL.md`, this branch's command layer, and `handoff\SKILL.md` (2026-09-14). Cross-tool skills live in the shared `..\skills\`. |
+| `hooks\` | User-level hook files for `~/.copilot/hooks/` — `framework-change-flag.json` (2026-09-14). See **Hooks** below. |
 | `commands\` | One legacy file, kept but **not built on** — see the warning below. |
 | `scripts\` | Copilot usage-tracking PowerShell. Repo-side only, not rolled out. |
 
@@ -45,6 +46,44 @@ mechanism. Nineteen step files built on an unverified discovery path would produ
 does not exist, which is worse than a differently-shaped one that works. If custom commands are later
 confirmed, splitting that skill is mechanical.
 
+## Session handoffs — the same files as Claude Code
+
+`skills\handoff\SKILL.md` (2026-09-14) is the Copilot sibling of Claude's `/handoff` v2.1.0. Both implement
+the shared contract `..\dev-framework\HANDOFF.md` — name, structure, `Status` lifecycle, deletion rule — so a
+handoff written in one tool is resumed and closed in the other; `ai/handoff/` is project-scoped like
+`ai/sa/<slug>/`. Invoke with `/handoff`, `/handoff resume <file>`, `/handoff list`, `/handoff close` in the
+prompt. Copilot-side divergences, all marked `[Copilot]` in the skill: plain-text numbered question instead
+of `AskUserQuestion` (D4 — silence means *Keep*), `Remove-Item -LiteralPath` instead of `rm`, and `Get-Date`
+allowed when the session has no clock.
+
+## Hooks
+
+Copilot CLI loads user-level hooks from `~/.copilot/hooks/*.json` (`{"version": 1, "hooks": {...}}`), and
+repo-level ones from `.github/hooks/*.json` **and from inline `hooks` in a repo's `.claude/settings.json`** —
+so a project's Claude hooks may already run under Copilot. Source: GitHub's hooks configuration reference
+and `copilot help config` (v1.0.83), read 2026-09-14; the loading itself **has not been observed in a live
+session yet** — check `/env` next time Copilot is used.
+
+| Hook file | Event | What it does |
+|---|---|---|
+| `hooks\framework-change-flag.json` | `postToolUse` | Runs the **same** `..\_scripts\hooks\framework-change-flag.py` the Claude roots use. The script detects Copilot's camelCase payload (`toolName`/`toolArgs`/`sessionId`), counts only `edit`/`create`/`write` (Copilot's `view` also carries a path), and injects a one-time `additionalContext` asking to stage the change in `_AI_GIT` and finish with `/doc-sync` **from Claude Code**. Written after 2026-09-12 found ~600 lines of doctrine that had existed only at this root. Dry-run tested with simulated payloads 2026-09-14. |
+
+The hook file names the absolute script path `D:/_AI_GIT/...` — machine-specific by necessity, the same as
+the Claude `settings.json` wiring.
+
+## Not ported, deliberately
+
+Recorded so a future review or sync check reads the absence as intent, not drift (the `framework-review`
+lesson below):
+
+| Claude-side piece | Why not here |
+|---|---|
+| `/doc-sync` | Framework upkeep — docs, rollout, commit+push, backup against `_AI_GIT` — is done from Claude Code. The Copilot hook above points there instead of duplicating a four-gate command on an unverified command mechanism. |
+| `context_guard.py` (`UserPromptSubmit`) | Reads Claude's transcript format for context size. Copilot's `userPromptSubmitted` payload carries no transcript path, and `/context` is built in. Revisit if Copilot's `statusLine` JSON proves to carry context size. |
+| `statusline.py` | Same — Claude transcript/`rate_limits` fields. Copilot has its own `statusLine` setting; not investigated. |
+| "Handoff before compaction" (`PreCompact`) | Proposed Claude-side only. On Copilot `preCompact` hook output is ignored, so it could not remind anyone. |
+| `dev-*`, `solution-analyst`, `framework-strategist`, `framework-review` | Standing scope decision — see `agents\README.md` and *Skills deliberately not ported* below. |
+
 ## The two things this tool genuinely cannot do
 
 Recorded prominently because both were reasons this port was deferred, and neither has gone away — they are
@@ -63,7 +102,8 @@ now *handled*, not solved.
 
 A third divergence is milder but bites daily: **model selection is session-level**, so the cross-model
 review rule (`ARTIFACT-SCHEMAS.md §9`) is satisfied by `/model` *before* dispatching, not by a per-dispatch
-parameter. (`PORT-NOTES.md` D5.)
+parameter. (`PORT-NOTES.md` D5 — which since v1.0.83 also records the per-agent `subagents.agents.<name>`
+config setting as a candidate, not-yet-adopted alternative.)
 
 ## Why the port happened
 
@@ -82,21 +122,24 @@ packaged back in Claude Code. That only works if both sides implement the same c
 
 ## Rollout
 
-**Status**: doctrine rolled out 2026-09-03; full pipeline rolled out 2026-09-07.
+**Status**: doctrine rolled out 2026-09-03; full pipeline rolled out 2026-09-07; `handoff` skill,
+`HANDOFF.md` and the `framework-change-flag` hook rolled out 2026-09-14.
 
 ```powershell
 # Run from the repo root.
 $copilotDest = "$env:USERPROFILE\.copilot"
 New-Item -ItemType Directory -Path "$copilotDest\agents" -Force | Out-Null
 New-Item -ItemType Directory -Path "$copilotDest\skills" -Force | Out-Null
+New-Item -ItemType Directory -Path "$copilotDest\hooks"  -Force | Out-Null
 
 Copy-Item copilot\agents\*.agent.md   "$copilotDest\agents\" -Force
 Copy-Item copilot\skills\*            "$copilotDest\skills\" -Recurse -Force
+Copy-Item copilot\hooks\*.json        "$copilotDest\hooks\"  -Force
 Copy-Item skills\*                    "$copilotDest\skills\" -Recurse -Force
 # ...then remove the skills deliberately NOT ported (see the table below):
 Remove-Item "$copilotDest\skills\framework-review" -Recurse -Force -ErrorAction SilentlyContinue
 Copy-Item AGENT-CONDUCT-BASELINE.md, DESIGN-PRINCIPLES-BASELINE.md "$copilotDest\" -Force
-Copy-Item copilot\AGENT-TEMPLATE-BASELINE.md, copilot\PORT-NOTES.md "$copilotDest\" -Force
+Copy-Item copilot\AGENT-TEMPLATE-BASELINE.md, copilot\PORT-NOTES.md, copilot\AGENTS.md "$copilotDest\" -Force
 Copy-Item CONSTITUTION.md             "$copilotDest\" -Force
 Copy-Item dev-framework               "$copilotDest\" -Recurse -Force
 Copy-Item sa-framework                "$copilotDest\" -Recurse -Force

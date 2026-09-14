@@ -93,6 +93,15 @@ Two consequences worth knowing:
   guarantee — `/model` is one keystroke away from erasing it. Every checking command still reports which
   model actually ran (`PIPELINE.md §4`).
 
+**Update 2026-09-14 (v1.0.83).** `copilot help config` now documents `subagents.agents.<agent-name>` —
+a per-agent `model` / `effortLevel` / `contextTier` default, set with `/subagents`. That is a **candidate**
+for making this rule structural (e.g. `req-slop-detector` pinned to a model the authoring session does not
+use), and it is recorded here rather than applied, for three reasons: it is known from help text only, not
+observed working with `@`-dispatch; a pin is a *fixed* model, while §9 asks for a model *different from the
+author's*, which depends on who authored — a pin can equal the author as easily as a `/model` switch can;
+and the Claude side deliberately never pins gates (`claude\AGENT-TEMPLATE-BASELINE.md`, tier rule). Until
+verified and decided, the session switch above remains the rule.
+
 ## D6. The packaging gate cannot refuse — and this port says so
 
 The one capability that genuinely does not survive. `/sa:package` on the Claude side **refuses** to build

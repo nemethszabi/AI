@@ -168,6 +168,9 @@ confirmed). Matches `copilot\README.md`'s own rollout section verbatim.
   Copy-Item copilot\agents\*.agent.md   "$copilotDest\agents\" -Force -ErrorAction SilentlyContinue
   Copy-Item copilot\skills\*            "$copilotDest\skills\" -Recurse -Force -ErrorAction SilentlyContinue
   Copy-Item skills\*                    "$copilotDest\skills\" -Recurse -Force
+  Remove-Item "$copilotDest\skills\framework-review" -Recurse -Force -ErrorAction SilentlyContinue
+  New-Item -ItemType Directory -Path "$copilotDest\hooks" -Force | Out-Null
+  Copy-Item copilot\hooks\*.json        "$copilotDest\hooks\" -Force
   Copy-Item AGENT-CONDUCT-BASELINE.md, DESIGN-PRINCIPLES-BASELINE.md   "$copilotDest\" -Force
   Copy-Item copilot\AGENT-TEMPLATE-BASELINE.md   "$copilotDest\" -Force
   Copy-Item CONSTITUTION.md             "$copilotDest\" -Force
@@ -205,6 +208,12 @@ Three things to know before relying on it, all documented in `copilot\PORT-NOTES
 - **Engagements are portable.** `ai/sa/<slug>/` is project-scoped and conforms to one shared schema, so an
   engagement triaged in Claude Code can be clarified in Copilot CLI and packaged back. That portability was
   the deciding argument for doing the port at all.
+
+**Added 2026-09-14 (Copilot CLI v1.0.83)**: the `handoff` skill (same files as Claude's `/handoff`, contract
+in `dev-framework\HANDOFF.md`) and a user-level `postToolUse` hook, `~\.copilot\hooks\framework-change-flag.json`,
+running the same `_scripts\hooks\framework-change-flag.py` as the Claude roots. **Verify** in a fresh
+Copilot session with `/env` — it lists loaded hooks and skills; the hook's loading has not yet been observed
+live. Full detail and the not-ported list: `copilot\README.md`.
 
 The rollout copies `document-data\` to the **Claude roots only** — it feeds `/sa:package`, which is where
 binding deliverables belong regardless.

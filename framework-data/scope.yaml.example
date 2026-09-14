@@ -67,8 +67,10 @@ doc_sync:
   staging_docs:                      # relative to staging_repo — framework docs that describe the roster
     - README.md
     - claude\README.md
+    - copilot\README.md               # a shared-file change lands on the second tool too
     - docs\USAGE.md
     - docs\SETUP.md
+    - docs\UPDATING.md
   project_roots:                     # repos whose .claude\ / ai\prompts\ changes need documenting
     - D:\path\to\a-project
   backup_command: powershell -File D:\path\to\backup\ai-full-backup.ps1

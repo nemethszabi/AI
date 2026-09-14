@@ -35,7 +35,7 @@ lighter than a full wave/gate system.
 | Draft a new one-time/occasional-use prompt | `prompt-builder` skill | Global |
 | Independent check on a drafted agent/skill/command before trusting/copying it | `review-agent` skill (dispatches `agent-reviewer`) | Global |
 | **Periodic health-and-strategy pass over the whole framework** — is it still in sync, coherent, current, and pointed at the work you actually do? | `/framework-review` (dispatches `framework-strategist`); add `drift`/`doctrine`/`research`/`ideas`/`parity` to narrow it. **It suggested something you want — now what?** See `FRAMEWORK-REVIEW-WORKFLOW.md` for the full report → approve → build → rollout loop | Global |
-| **Context is getting large, or stopping for the day** — carry the session over | `/handoff` → `/clear` → `/handoff resume <file>` (it asks to delete the handoff once handled). `/handoff list` shows open ones. Always `<project>/ai/handoff/handoff-YYYYMMDD-HHMM-<slug>.md` | Global |
+| **Context is getting large, or stopping for the day** — carry the session over | `/handoff` → `/clear` → `/handoff resume <file>` (it asks to delete the handoff once handled). `/handoff list` shows open ones. Always `<project>/ai/handoff/handoff-YYYYMMDD-HHMM-<slug>.md`. Same words in Copilot CLI (the `handoff` skill) — either tool resumes the other's handoff | Global, both tools |
 | **Just changed an agent/skill/command/doctrine or a project's prompting files** — document it, roll it out, back it up | `/doc-sync` (suggested automatically by the `framework-change-flag.py` hook once wired) — four separate approvals: docs → rollout → commit → backup | Global |
 | Generate/reformat an Excel/Word/PowerPoint document | `office-doc-builder` skill (library, imported by other skills) | Global |
 | Read/extract content from an existing Excel/Word file | `office-doc-reader` skill (backs `req-ingestor`; `.pdf` — use the built-in `Read` tool directly) | Global |
@@ -131,6 +131,9 @@ not a reusable role.
   one can be continued in the other. **Two things differ**: Copilot's packaging step cannot *refuse* (it
   checks and reports, so run binding deliverables in Claude Code), and its model selection is session-level
   (`/model` before dispatching a checking agent). `copilot\PORT-NOTES.md` has all six divergences.
+- **Session handoffs work across both tools too.** `/handoff` in Claude Code and the `handoff` skill in
+  Copilot CLI implement one contract (`dev-framework\HANDOFF.md`), so you can stop in one tool and
+  `/handoff resume` in the other. `/doc-sync`, the context guard and the status line stay Claude-only.
 - **`/sa:doc`, `/sa:onepager` and `/sa:offer` are three different documents.** `/sa:doc` is an *internal*
   consolidation for your team; `/sa:onepager` is one dense page for the meeting where nobody read it; the
   client-facing path is `/sa:offer` → `/sa:audit` + `/sa:slop-check` → `/sa:package`. Confusing them is how

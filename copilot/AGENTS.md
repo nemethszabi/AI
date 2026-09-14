@@ -23,6 +23,17 @@ kept thin so it stays readable, never inline the doctrine itself in this file.
   `doc-briefer` and `mermaid-diagram-maker`; seventeen `.agent.md` files are live at this root in total. See
   `d:\_AI_GIT\copilot\agents\README.md` for the inventory and what is deliberately absent.
 
+## Session handoffs
+- Context getting large, or stopping for the day: the **`handoff` skill** — `/handoff`, then `/clear`, then
+  `/handoff resume <file>`; `/handoff list`, `/handoff close`. Contract: `~/.copilot/dev-framework/HANDOFF.md`.
+- Files live in `<project>/ai/handoff/` and are the same files Claude Code's `/handoff` writes — either tool
+  resumes the other's.
+
+## Framework edits
+- Change agents, skills, doctrine or hooks in `d:\_AI_GIT` (staged), **never only here at `~/.copilot`**.
+  The `framework-change-flag` hook reminds once per session; finishing the change (docs, rollout,
+  commit+push, backup) is `/doc-sync` in Claude Code — Copilot has no equivalent by decision.
+
 ## Two things this tool cannot do, and must not pretend to
 - **Packaging cannot refuse.** The two-verdict gate is checked and reported here, but nothing stops a
   session told to continue. It is an **advisory check, never a gate**. Run packaging in Claude Code for

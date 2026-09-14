@@ -13,8 +13,12 @@ What counts (path contains, case-insensitive, forward slashes):
 Never counted: the knowledge base itself (`knowledge_base` in scope.yaml - editing docs must not re-trigger
 a doc sync), ai/handoff/, ai/reports/, ai/results/, ai/design/, ai/dev/.
 
-settings.json: hooks.PostToolUse -> matcher "Edit|Write|MultiEdit|NotebookEdit"
-  -> python "D:/_AI_GIT/_scripts/hooks/framework-change-flag.py"
+Claude Code  - settings.json: hooks.PostToolUse -> matcher "Edit|Write|MultiEdit|NotebookEdit"
+               -> python "D:/_AI_GIT/_scripts/hooks/framework-change-flag.py"
+Copilot CLI  - ~/.copilot/hooks/framework-change-flag.json (staged at copilot/hooks/), event postToolUse.
+               Added 2026-09-14. Payload is camelCase (toolName, toolArgs, sessionId), there is no matcher,
+               so the tool filter is done here; output is a top-level additionalContext. /doc-sync is
+               Claude-only, so the Copilot reminder says to finish the change from Claude Code.
 Session lists: ~/.ai-usage/docsync/<session_id>.txt
 """
 import json, os, re, sys
@@ -64,20 +68,47 @@ def counts(path, scope):
             or name.endswith('-baseline.md'))
 
 
+COPILOT_WRITE_TOOLS = ('edit', 'create', 'write')    # Copilot's view tool also carries a path - never count it
+
+
+def read_payload(hook):
+    """(path, session_id, tool) from either tool's payload; path is None when nothing was written."""
+    if 'toolName' in hook:                  # Copilot CLI
+        if str(hook.get('toolName', '')).lower() not in COPILOT_WRITE_TOOLS:
+            return None, None, 'copilot'
+        args = hook.get('toolArgs') or {}
+        if isinstance(args, str):
+            try:
+                args = json.loads(args)
+            except Exception:
+                args = {}
+        path = args.get('path') or args.get('file_path') or args.get('filePath') if isinstance(args, dict) else None
+        return path, hook.get('sessionId'), 'copilot'
+    ti = hook.get('tool_input') or {}       # Claude Code
+    return ti.get('file_path') or ti.get('notebook_path'), hook.get('session_id'), 'claude'
+
+
 def main():
     hook = json.load(sys.stdin)
-    ti = hook.get('tool_input') or {}
-    path = ti.get('file_path') or ti.get('notebook_path')
+    path, session, tool = read_payload(hook)
     if not path or not counts(path, scope_values()):
         return
     os.makedirs(STATE, exist_ok=True)
-    sf = os.path.join(STATE, f"{hook.get('session_id') or 'unknown'}.txt")
+    sf = os.path.join(STATE, f"{session or 'unknown'}.txt")
     first = not os.path.isfile(sf)
     seen = set() if first else set(open(sf, encoding='utf-8').read().splitlines())
     if path not in seen:
         with open(sf, 'a', encoding='utf-8') as fh:
             fh.write(path + '\n')
-    if first:
+    if not first:
+        return
+    if tool == 'copilot':
+        print(json.dumps({'additionalContext': (
+            f'[doc-sync] This session changed a framework/prompting file ({path}). Do not interrupt the current '
+            f'task. When it reaches a natural end, suggest once, in one line: make sure the change is staged in '
+            f'the staging repo (never only at ~/.copilot), then run /doc-sync from Claude Code to document, roll '
+            f'out, commit and back it up - Copilot CLI has no /doc-sync.')}))
+    else:
         print(json.dumps({'hookSpecificOutput': {
             'hookEventName': 'PostToolUse',
             'additionalContext': f'[doc-sync] This session changed a framework/prompting file ({path}). Do not '

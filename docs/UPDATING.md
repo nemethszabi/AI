@@ -12,9 +12,10 @@ repo*. What needs to happen after an edit:
 
 1. Re-run the Claude rollout `Copy-Item` block (`claude\README.md` → Rollout, or `docs\SETUP.md` → Install)
    — copies the changed file to all three Claude config roots.
-2. Once the Copilot rollout has been approved and run at least once (see `copilot\README.md` — currently a
-   proposal, not yet executed), re-run its `Copy-Item` block too. Until then, there's no live Copilot
-   destination to update — nothing to do on that side yet.
+2. Re-run the Copilot rollout `Copy-Item` block too (`copilot\README.md` → Rollout — live since 2026-09-03,
+   full pipeline since 2026-09-07). A shared file edited for a Claude reason still lands on Copilot.
+3. Run `_scripts\check-sync.ps1` — it checks all four roots. `/doc-sync` (Claude Code) does steps 1–3 for
+   only the changed files, behind approval.
 
 ## `claude\` branch (agents, commands, `CLAUDE.md`, `AGENT-TEMPLATE-BASELINE.md`)
 
@@ -38,6 +39,10 @@ Nothing pushes a change live without that manual step, on purpose.
 `copilot\commands\`, the shared `skills\`/`dev-framework\`/`sa-framework\`, and the doctrine files. Drift
 detection is automatic; promotion stays a deliberate `Copy-Item` step, run from `copilot\README.md`'s
 Rollout block.
+
+Since 2026-09-14 the check also covers `copilot\hooks\` → `~\.copilot\hooks\`. Hook *scripts* are not
+copied anywhere — both tools' hook wiring points at `_scripts\hooks\` in this repo, so an edit to a script is
+live for both on save, with no rollout step.
 
 Three things about this branch that the Claude side has no equivalent of:
 
@@ -66,6 +71,8 @@ still be true if the other tool did not exist?* If not, it belongs in a branch.
 
 No mechanism here keeps `claude\` and `copilot\` **content** in parity with each other (e.g. flagging "a
 new agent was added to `claude\agents\` with no Copilot counterpart"). That's a different kind of check —
-tracking a porting backlog, not staged-vs-live drift — and would be premature to build while the Copilot
-side is intentionally empty by scope decision (`copilot\README.md`). If/when a real port starts, revisit
-this file to decide whether that backlog needs its own tracking, rather than building it speculatively now.
+tracking a porting backlog, not staged-vs-live drift. The port did start (2026-09-07), and the chosen answer
+so far is **shared contracts plus written conformance lists rather than a parity tool**: `sa-framework\
+PIPELINE.md §5` for the pipeline, `dev-framework\HANDOFF.md §6` for handoffs, and `copilot\README.md`'s
+"Not ported, deliberately" table for what is absent on purpose. A periodic `/framework-review` walks them.
+Revisit a parity tool only if that review keeps finding drift the lists did not prevent.

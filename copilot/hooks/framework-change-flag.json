@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "powershell": "python \"D:/_AI_GIT/_scripts/hooks/framework-change-flag.py\"",
+        "bash": "python \"D:/_AI_GIT/_scripts/hooks/framework-change-flag.py\"",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}

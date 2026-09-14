@@ -23,7 +23,7 @@ it once, here, not per-agent.
 | `ai/context/` | Living project facts — read by agents, updated in place |
 | `ai/design/` | Design documents — `<id>-<slug>-design-YYYYMMDD.md`. **Never** under `reports/` |
 | `ai/reports/` | Dated investigation, review and analysis results |
-| `ai/handoff/` | Session handoffs — `handoff-YYYYMMDD-HHMM-<slug>.md`, written and deleted by `/handoff` only |
+| `ai/handoff/` | Session handoffs — `handoff-YYYYMMDD-HHMM-<slug>.md`, written and deleted only by a `HANDOFF.md` implementation (`/handoff` in either tool) |
 | `ai/dev/`, `ai/sa/<slug>/` | Framework state (§1 here; `sa-framework\ARTIFACT-SCHEMAS.md`) |
 | `ai/prompts/`, `ai/scripts/` | Reusable prompts; utility scripts |
 
@@ -202,6 +202,9 @@ AI-tooling state grouped under the existing `ai/` folder (`ai/context/`, `ai/pro
 instead of adding a new top-level dot-folder. Also clarified that `contracts/` and `ARCHITECTURE.md`
 should point at a project's real, pre-existing sources of truth rather than being duplicated under
 `ai/dev/` when those already exist in code or in `ai/context/`.
+
+**Amendment note (2026-09-14, later)**: the `ai/handoff/` row now points at the shared `HANDOFF.md`
+contract (sibling of this file), extracted when handoffs were ported to Copilot CLI.
 
 **Amendment note (2026-09-14)**: added the standard `ai/` layout table under the header — `ai/design/` for
 design documents (previously mixed into `ai/reports/`) and `ai/handoff/` as the only handoff location,

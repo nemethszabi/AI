@@ -7,7 +7,7 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-> Version: 1.1.0
+> Version: 1.2.0 — minor: relay names `SendMessage` follow-ups and their fallback (`AGENT-TEMPLATE-BASELINE.md` §3).
 
 <objective>
 Bootstrap or refresh a project's `ai/context/` file by delegating to the `solution-analyst` agent — the
@@ -27,6 +27,11 @@ Return your report.")
 
 Relay the agent's report back to the user as-is — do not summarize away the CREATE/UPDATE distinction or
 the confidence caveats it raises.
+
+Then add one line: questions about the repo go to that **same** `solution-analyst` via `SendMessage` to
+the agent id this dispatch returned, since it still holds the scan. Say `SendMessage`, not "ask it again": a
+fresh `Agent` call re-walks the whole repo with no memory of the first pass. If that agent is gone, name the
+fallback rather than re-dispatching: the written context file (or the changelist) plus targeted `Grep`.
 
 If the report ends with a `## Blocking questions` section, put those to the user via `AskUserQuestion`
 before doing anything else. The agent cannot ask — `AskUserQuestion` does not exist inside a dispatched

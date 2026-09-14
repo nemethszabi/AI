@@ -20,8 +20,8 @@ incompatible and pretending otherwise produces files that work on neither.
 | `agents\` | 17 `.agent.md` files. Siblings of `..\claude\agents\*.md`, each naming its original and marking `[Copilot]` divergences. See that folder's `README.md` for the inventory and what is deliberately absent. |
 | `skills\` | Copilot-only skills — chiefly `sa-pipeline\SKILL.md`, this branch's command layer, and `handoff\SKILL.md` (2026-09-14). Cross-tool skills live in the shared `..\skills\`. |
 | `hooks\` | User-level hook files for `~/.copilot/hooks/` — `framework-change-flag.json` (2026-09-14). See **Hooks** below. |
-| `commands\` | One legacy file, kept but **not built on** — see the warning below. |
-| `scripts\` | Copilot usage-tracking PowerShell. Repo-side only, not rolled out. |
+| `scripts\` | `Get-CopilotUsage.ps1` — a thin wrapper over the cross-tool usage toolkit `..\_scripts\usage\`. Repo-side only, not rolled out. |
+| `USAGE-TRACKING-README.md`, `INDEX-USAGE-TRACKING.md` | Superseded 2026-09-11. Kept as history only. |
 
 ## What is shared, and what is not
 
@@ -38,8 +38,9 @@ incompatible and pretending otherwise produces files that work on neither.
 
 `~/.copilot/commands/*.md` has **no documented discovery behaviour** — it appears in no `copilot --help`,
 `copilot help commands` or `copilot help config` output as of v1.0.82, and the built-in `/usage` would
-shadow the one file staged there in 2026-09-03 regardless. That file predates the check and is kept only so
-its removal is a deliberate act rather than a side effect.
+shadow the one file staged there in 2026-09-03 regardless. That file (`usage.md`) predated the check and
+was removed on purpose on 2026-09-14, together with the rest of the old usage-tracking files. Nothing is
+staged under `commands\` now.
 
 So the `sa:` pipeline's 19 steps live in **`skills\sa-pipeline\SKILL.md`**, a documented and verified
 mechanism. Nineteen step files built on an unverified discovery path would produce a pipeline that silently

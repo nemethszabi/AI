@@ -30,4 +30,16 @@ Returns:
 
 ## Implementation
 
-This agent runs the usage query script and formats the output.
+Run exactly this, adding `-Month <n> -Year <yyyy>` only if the user asked for a different month:
+
+```
+& 'd:\_AI_GIT\copilot\scripts\Get-CopilotUsage.ps1'
+```
+
+It is a thin wrapper over the cross-tool toolkit `d:\_AI_GIT\_scripts\usage\` (needs Python 3 on `PATH`)
+and prints a Markdown report. Relay its figures as printed. Never compute cost yourself or apply a price
+table from memory. Say that the costs are estimates, not invoices.
+
+> 2026-09-14: named the script explicitly. The body previously said only "runs the usage query script",
+> and the scripts that name used to reach (`simple-usage.ps1`, `Get-CopilotUsage-Fixed.ps1`) queried a
+> non-existent table with outdated pricing; both are deleted.

@@ -38,7 +38,9 @@ function Get-FileHashMap($root, $relativeDirs) {
     foreach ($dir in $relativeDirs) {
         $full = Join-Path $root $dir
         if (-not (Test-Path $full)) { continue }
-        Get-ChildItem -Path $full -Recurse -File | ForEach-Object {
+        # __pycache__ is regenerated whenever Python imports a skill's helper from a live root; it is
+        # gitignored here and never staged, so counting it would report permanent EXTRA drift.
+        Get-ChildItem -Path $full -Recurse -File | Where-Object { $_.FullName -notmatch '\\__pycache__\\' } | ForEach-Object {
             $rel = $_.FullName.Substring($root.Length).TrimStart('\')
             $map[$rel] = Get-Sha256 $_.FullName
         }
@@ -55,7 +57,7 @@ function Get-FileHashMapRemapped($root, $dirMap) {
         $keyPrefix = $dirMap[$sourceDir]
         $full = Join-Path $root $sourceDir
         if (-not (Test-Path $full)) { continue }
-        Get-ChildItem -Path $full -Recurse -File | ForEach-Object {
+        Get-ChildItem -Path $full -Recurse -File | Where-Object { $_.FullName -notmatch '\\__pycache__\\' } | ForEach-Object {
             $relFromSourceDir = $_.FullName.Substring($full.Length).TrimStart('\')
             $map[(Join-Path $keyPrefix $relFromSourceDir)] = Get-Sha256 $_.FullName
         }

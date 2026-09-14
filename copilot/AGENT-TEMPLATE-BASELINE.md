@@ -91,8 +91,8 @@ docs define no argument syntax, so a skill reads its mode words from the prompt 
 
 `~/.copilot/commands/*.md` appears in **no** `copilot --help`, `copilot help commands` or
 `copilot help config` output as of v1.0.82 — and still none at v1.0.83 (re-checked 2026-09-14). One file (`usage.md`) was staged there in the 2026-09-03
-scaffold on the assumption it worked; that assumption has never been confirmed, and the built-in `/usage`
-command would shadow it regardless.
+scaffold on the assumption it worked; that assumption was never confirmed, and the built-in `/usage`
+command would have shadowed it regardless. It was deleted on 2026-09-14.
 
 **Do not build on this mechanism.** The `sa:` pipeline's command layer is a skill
 (`copilot\skills\sa-pipeline\SKILL.md`) for exactly this reason — nineteen step files on an unverified

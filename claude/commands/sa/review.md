@@ -12,8 +12,10 @@ allowed-tools:
 argument-hint: "<slug from /sa:clarify> [--model=sonnet|opus|haiku|fable]"
 ---
 
-> Version: 2.1.0 — minor: `--model` guidance rewritten from "stronger model" to "different model than
-> produced the design" (`ARTIFACT-SCHEMAS.md` §9), and a reminder added when no override was given.
+> Version: 2.2.0 — minor: relay names `SendMessage` follow-ups to the same reviewer and their fallback
+> (`AGENT-TEMPLATE-BASELINE.md` §3). 2.1.0: `--model` guidance rewritten from "stronger model" to
+> "different model than produced the design" (`ARTIFACT-SCHEMAS.md` §9), and a reminder added when no
+> override was given.
 
 <objective>
 `/sa:review <slug> [--model=<model>]` reviews `ai/sa/<slug>/architecture.json` (and `detailed-design.json`
@@ -78,6 +80,12 @@ If `--model` was not given, add one line:
 Review ran on the session model — the same one that produced the design.
 Re-run with --model=<a different one> before this design underwrites a priced offer.
 ```
+
+Then add one line: questions about a finding go to that **same** `req-reviewer` via `SendMessage` to the
+agent id this dispatch returned. It still holds the design and its reasoning, and it stays on the model
+that ran the review, so the cross-model separation holds. Its answers explain findings. Changing one
+means re-running `/sa:review`, because `--apply-review` reads only `review.json`. If that agent is gone, the
+fallback is `review.json` plus the JSON paths each finding cites, not a fresh dispatch.
 </step>
 </process>
 

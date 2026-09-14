@@ -13,7 +13,9 @@ the reason a port gets built on an assumption.
 **Re-check 2026-09-14 against v1.0.83** (`copilot --version`, `copilot help commands`, `copilot help config`,
 `copilot help environment`, plus GitHub's hooks configuration reference): custom commands are **still**
 absent; three things this file previously recorded as absent now exist *outside agent frontmatter* — see
-"What changed at v1.0.83" below. Help text and docs only; none of the three observed in a live session yet.
+"What changed at v1.0.83" below. **Hooks confirmed in a live session** the same day: `/env` lists
+`postToolUse: 1 hook (sources: ~\.copilot\hooks\framework-change-flag.json)` and the `handoff` skill. The
+per-agent `subagents` setting and `statusLine` remain help-text only.
 
 ---
 
@@ -112,7 +114,14 @@ Walk this when bringing a Claude agent across. Conformance target for the `sa:` 
 `..\sa-framework\PIPELINE.md §5`.
 
 1. **Frontmatter** — `name`, `description`, `tools` (minimum the role needs; `write` only for read-only
-   roles). Drop every field from the "does not have" table above.
+   roles). Drop every field from the "does not have" table above. **Quote `description` in single quotes
+   whenever it contains `: ` or ` #`** — Copilot parses frontmatter as strict YAML, where Claude Code is
+   lenient, and a malformed file is **silently skipped**: no warning in the session, only an
+   `[ERROR] agents\<file>: custom agent markdown frontmatter is malformed` line in `~/.copilot/logs/`.
+   `doc-briefer` was unloadable this way from at least 2026-09-11 until 2026-09-14, found only because
+   `/env` listed 16 agents where 17 were rolled out.
+8. **Verify it loaded** — in a fresh session, `/env` must list the agent/skill/hook; if it does not, grep
+   `~/.copilot/logs/` for its file name.
 2. **Tags → headings** — `<role>` → `# Role`, and so on.
 3. **Paths** — `~/.claude/` → `~/.copilot/` throughout. Engagement artifacts (`ai/sa/<slug>/`) stay put:
    they are project-scoped and shared between tools.

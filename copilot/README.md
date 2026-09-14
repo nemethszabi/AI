@@ -61,8 +61,10 @@ allowed when the session has no clock.
 Copilot CLI loads user-level hooks from `~/.copilot/hooks/*.json` (`{"version": 1, "hooks": {...}}`), and
 repo-level ones from `.github/hooks/*.json` **and from inline `hooks` in a repo's `.claude/settings.json`** —
 so a project's Claude hooks may already run under Copilot. Source: GitHub's hooks configuration reference
-and `copilot help config` (v1.0.83), read 2026-09-14; the loading itself **has not been observed in a live
-session yet** — check `/env` next time Copilot is used.
+and `copilot help config` (v1.0.83), read 2026-09-14; loading **confirmed live 2026-09-14** — `/env`
+lists `postToolUse: 1 hook (sources: ~\.copilot\hooks\framework-change-flag.json)`. The reminder firing on a
+real edit has not been seen yet (the script is dry-run tested). The same `/env` check found `doc-briefer`
+missing — a YAML frontmatter error, fixed; see `AGENT-TEMPLATE-BASELINE.md` porting checklist item 1.
 
 | Hook file | Event | What it does |
 |---|---|---|

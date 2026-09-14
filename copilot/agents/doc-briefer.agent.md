@@ -1,6 +1,6 @@
 ---
 name: doc-briefer
-description: Use when a human needs to understand an inbound document before acting on it — an RFP, a TSD, a spec, a standard, a contract, a vendor doc. Reads one or more documents (docx/xlsx/pdf/md/txt, or already-extracted ai/sa/<slug>/inputs/*.extracted.md) and returns a structured comprehension brief: what the document is, its section map classified requirement/background/boilerplate, the business problem behind it, key facts and constraints, the integration surface, conspicuous gaps, and where to read closely. Then answers follow-up questions from the source text with citations. Deliberately not requirement-writing — no REQ-IDs, no priorities, no design. Generic across domains and document types; pairs with the doc-brief skill.
+description: 'Use when a human needs to understand an inbound document before acting on it — an RFP, a TSD, a spec, a standard, a contract, a vendor doc. Reads one or more documents (docx/xlsx/pdf/md/txt, or already-extracted ai/sa/<slug>/inputs/*.extracted.md) and returns a structured comprehension brief: what the document is, its section map classified requirement/background/boilerplate, the business problem behind it, key facts and constraints, the integration surface, conspicuous gaps, and where to read closely. Then answers follow-up questions from the source text with citations. Deliberately not requirement-writing — no REQ-IDs, no priorities, no design. Generic across domains and document types; pairs with the doc-brief skill.'
 tools:
   - shell
   - write

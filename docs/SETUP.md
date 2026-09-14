@@ -212,8 +212,9 @@ Three things to know before relying on it, all documented in `copilot\PORT-NOTES
 **Added 2026-09-14 (Copilot CLI v1.0.83)**: the `handoff` skill (same files as Claude's `/handoff`, contract
 in `dev-framework\HANDOFF.md`) and a user-level `postToolUse` hook, `~\.copilot\hooks\framework-change-flag.json`,
 running the same `_scripts\hooks\framework-change-flag.py` as the Claude roots. **Verify** in a fresh
-Copilot session with `/env` — it lists loaded hooks and skills; the hook's loading has not yet been observed
-live. Full detail and the not-ported list: `copilot\README.md`.
+Copilot session with `/env` — it lists loaded hooks, skills and agents (confirmed 2026-09-14: hook and
+`handoff` skill listed). **Count the agents**: a file with malformed YAML frontmatter is skipped silently
+and only logged in `~/.copilot/logs/` — `doc-briefer` was missing this way until 2026-09-14. Full detail and the not-ported list: `copilot\README.md`.
 
 The rollout copies `document-data\` to the **Claude roots only** — it feeds `/sa:package`, which is where
 binding deliverables belong regardless.

@@ -61,6 +61,18 @@ report_dir: D:\path\to\results
 # Optional. Run manually; the agent reads its output, never re-implements it.
 sync_check_command: powershell -File D:\path\to\framework-repo\_scripts\check-sync.ps1
 
+# Optional. Read by the /doc-sync command (and staging_repo/knowledge_base above by the
+# framework-change-flag.py hook). Missing → /doc-sync proposes one on its first run.
+doc_sync:
+  staging_docs:                      # relative to staging_repo — framework docs that describe the roster
+    - README.md
+    - claude\README.md
+    - docs\USAGE.md
+    - docs\SETUP.md
+  project_roots:                     # repos whose .claude\ / ai\prompts\ changes need documenting
+    - D:\path\to\a-project
+  backup_command: powershell -File D:\path\to\backup\ai-full-backup.ps1
+
 # Optional second tool, when a migration or parity effort is in scope.
 second_tool:
   name: copilot-cli

@@ -38,7 +38,7 @@ that context along — not because the agent ignored something in your head.
    command reference. If either errors or isn't found, stop here and fix that first — nothing past this
    point will work either.
 3. **Pick a real, low-stakes target for your very first try.** Don't debut this on something you're
-   nervous about. Something already scaffolded (CampaignManager, net8-migration) or a throwaway test
+   nervous about. Something already scaffolded (CampaignManager, development) or a throwaway test
    folder both work.
 
 ---
@@ -49,7 +49,7 @@ Do these in order. Each one builds on confidence from the last.
 
 **1. Check a project's status — pure reading, changes nothing.**
 ```
-cd to a project that already has ai/dev/ (e.g. CampaignManager or net8-migration)
+cd to a project that already has ai/dev/ (e.g. CampaignManager or development)
 /dev:status
 ```
 You should get back a short report: phase, gates (all `false` right now, everywhere), source-of-truth
@@ -73,7 +73,7 @@ Pick something genuinely small — a one-line fix, a copy change, anything you c
 seconds if you didn't like the result:
 ```
 /dev:quick "<small, specific task>"          # CampaignManager or any ai/dev/-initialized project
-/scm:fix "<small, specific bug description>" # net8-migration
+/scm:fix "<small, specific bug description>" # development
 ```
 **Read the report fully before doing anything else** — see the next section for what to actually look at.
 
@@ -139,7 +139,7 @@ Several other things are already designed to stop and ask rather than silently p
 - **The report looks incomplete or off-topic** — most likely the dispatching command didn't pass enough
   context, not that the agent ignored something. Re-run with a more specific task description.
 - **You don't trust a change** — don't accept it. Nothing is committed yet at that point; discard by hand
-  or ask for `/scm:review` (net8-migration) for an independent second look before you decide.
+  or ask for `/scm:review` (development) for an independent second look before you decide.
 - **A command or agent seems to not exist** — restart your session first, then check
   `SETUP.md`'s troubleshooting section.
 

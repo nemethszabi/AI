@@ -59,7 +59,7 @@ copy step above stays a deliberate, explicit action, never automatic.
 3. In any project with `ai/dev/STATE.md` already scaffolded, run `/dev:status` — should print that
    project's phase/gates, not "not initialized." In a project without one yet, run `/dev:init` and confirm
    it creates `ai/dev/STATE.md` + `config.json`.
-4. If a project has its own namespace (e.g. `/scm:help` in net8-migration), run it and confirm it prints
+4. If a project has its own namespace (e.g. `/scm:help` in development), run it and confirm it prints
    that project's command reference.
 
 ## Optional: the rate card (for priced offers)

@@ -35,16 +35,18 @@ lighter than a full wave/gate system.
 | Draft a new one-time/occasional-use prompt | `prompt-builder` skill | Global |
 | Independent check on a drafted agent/skill/command before trusting/copying it | `review-agent` skill (dispatches `agent-reviewer`) | Global |
 | **Periodic health-and-strategy pass over the whole framework** — is it still in sync, coherent, current, and pointed at the work you actually do? | `/framework-review` (dispatches `framework-strategist`); add `drift`/`doctrine`/`research`/`ideas`/`parity` to narrow it. **It suggested something you want — now what?** See `FRAMEWORK-REVIEW-WORKFLOW.md` for the full report → approve → build → rollout loop | Global |
+| **Context is getting large, or stopping for the day** — carry the session over | `/handoff` → `/clear` → `/handoff resume <file>` (it asks to delete the handoff once handled). `/handoff list` shows open ones. Always `<project>/ai/handoff/handoff-YYYYMMDD-HHMM-<slug>.md` | Global |
+| **Just changed an agent/skill/command/doctrine or a project's prompting files** — document it, roll it out, back it up | `/doc-sync` (suggested automatically by the `framework-change-flag.py` hook once wired) — four separate approvals: docs → rollout → commit → backup | Global |
 | Generate/reformat an Excel/Word/PowerPoint document | `office-doc-builder` skill (library, imported by other skills) | Global |
 | Read/extract content from an existing Excel/Word file | `office-doc-reader` skill (backs `req-ingestor`; `.pdf` — use the built-in `Read` tool directly) | Global |
 | Extraction/generation genuinely needs OCR, patch-editing, or native charts/pivots — beyond what the lightweight skills above do | `document-skills@anthropic-agent-skills` plugin (installed 2026-08-11, user scope — see `SETUP.md` for the per-profile install gotcha) | Plugin, not this repo |
-| net8-migration (SCM): bug fix | `/scm:fix [#ID] <bug>` | net8-migration |
-| net8-migration (SCM): new requirement | `/scm:req [#ID] <requirement>` | net8-migration |
-| net8-migration (SCM): review recent changes | `/scm:review [#ID]` | net8-migration |
-| net8-migration (SCM): hosting/IIS question | `/scm:devops-ask <question>` | net8-migration |
-| net8-migration (SCM): hosting/config/perf change | `/scm:devops-change <request>` | net8-migration |
-| net8-migration (SCM): browser smoke test | `/scm:test [URL] <scenario>` | net8-migration |
-| net8-migration (SCM): triage recent `dbo.Logs` errors for a site | `/scm:errors-triage <site> [from-date]` | net8-migration |
+| development (SCM): bug fix | `/scm:fix [#ID] <bug>` | development |
+| development (SCM): new requirement | `/scm:req [#ID] <requirement>` | development |
+| development (SCM): review recent changes | `/scm:review [#ID]` | development |
+| development (SCM): hosting/IIS question | `/scm:devops-ask <question>` | development |
+| development (SCM): hosting/config/perf change | `/scm:devops-change <request>` | development |
+| development (SCM): browser smoke test | `/scm:test [URL] <scenario>` | development |
+| development (SCM): triage recent `dbo.Logs` errors for a site | `/scm:errors-triage <site> [from-date]` | development |
 | scm-stm-merge: first full analysis pass | `/merge:full-analysis [path]` | scm-stm-merge |
 | scm-stm-merge: re-run one phase only | `/merge:requirements` / `db` / `functional` / `code` | scm-stm-merge |
 

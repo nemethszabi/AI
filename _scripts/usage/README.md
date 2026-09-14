@@ -15,7 +15,7 @@ and task types can be compared. Claude Code and GitHub Copilot CLI today; anothe
 | `collect_copilot.py` | Reads `~/.copilot/session-store.db` → `assistant_usage_events` |
 | `usage_report.py` | Runs both collectors, then writes a Markdown report (by tool/model/effort, task type, agent, skill, project, month, top sessions, signals) |
 | `statusline.py` | Claude Code status line, two rows. **Row 1**: profile chip, model·effort, session name, context size (coloured against the guard thresholds and labelled with the action it implies), context added by the last turn, cache hit ratio with the reason for the last miss. **Row 2**: working folder, each rate-limit window as *remaining* plus its reset clock, git branch (suppressed when it equals the folder), PR number and review state, session duration and lines changed. Segments shrink to shorter forms before dropping, least important first; the context segment and the 5h window always survive. No session $ - on a subscription that is a notional API price; cost belongs in the reports. **Item-by-item reference for every segment, colour and threshold: `d:\WORK\AI\knowledge-base\token-economy.md` §7** - kept there rather than duplicated here |
-| `context_guard.py` | `UserPromptSubmit` hook: warns once per threshold step when main-thread context passes 150k / 300k (+100k steps) |
+| `context_guard.py` | `UserPromptSubmit` hook: warns once per threshold step when main-thread context passes 150k / 300k (+100k steps), pointing at `/handoff` → `/clear` → `/handoff resume` |
 | `pricing.json` | List prices per 1M tokens + cache multipliers. **Edit here only** - costs are computed at report time, so a fix re-prices history |
 | `usage-config.json` | Generic defaults: task rules (skill/agent prefix → dev / sa / framework / personal), guard thresholds |
 
@@ -31,6 +31,8 @@ Machine-specific settings (store path, profile roots, cwd → task rules, exclud
 },
 "statusLine": { "type": "command", "command": "python D:/_AI_GIT/_scripts/usage/statusline.py" }
 ```
+
+A related hook lives outside this folder: `_scripts\hooks\framework-change-flag.py` (`PostToolUse`, matcher `Edit|Write|MultiEdit|NotebookEdit`) suggests `/doc-sync` once per session after a framework or prompting edit. Wiring is in its own docstring.
 
 The `Stop` hook copies each turn into the store as it happens. That matters because Claude Code deletes
 transcripts after `cleanupPeriodDays` (default 30), and the store is the durable copy. Hook failures are

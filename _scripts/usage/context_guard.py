@@ -63,14 +63,13 @@ def main():
     if bucket <= last:                      # already warned at this level, or context shrank (compaction)
         return
     k = f'{ctx / 1000:.0f}k'
-    out = {'systemMessage': f'Context ~{k} tokens - every turn re-sends all of it. At the next natural break: write a '
-                            f'handoff (state, decisions, open questions, next step) to a file, /clear, and reload it. '
-                            f'/compact is the lossy fallback.'}
+    out = {'systemMessage': f'Context ~{k} tokens - every turn re-sends all of it. At the next natural break: '
+                            f'/handoff, /clear, then /handoff resume <file>. /compact is the lossy fallback.'}
     if ctx >= strong:
         out['hookSpecificOutput'] = {
             'hookEventName': 'UserPromptSubmit',
             'additionalContext': f'[context-guard] Main-thread context is ~{k} tokens. Finish the current step first; then, '
-                                 f'in one line, suggest the user write a handoff file and continue in a fresh session. '
+                                 f'in one line, suggest the user run /handoff and continue in a fresh session with /handoff resume. '
                                  f'Do not stop or shorten the current task because of this note.'}
     print(json.dumps(out))
 

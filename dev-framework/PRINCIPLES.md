@@ -16,6 +16,20 @@ top-level `.dev/` dot-folder as in the reference framework this was adapted from
 generating agents for uses yet another convention, change every `ai/dev/` path in this file to match — do
 it once, here, not per-agent.
 
+**Standard `ai/` layout** (every project; a folder exists only once something is written to it):
+
+| Folder | Holds |
+|---|---|
+| `ai/context/` | Living project facts — read by agents, updated in place |
+| `ai/design/` | Design documents — `<id>-<slug>-design-YYYYMMDD.md`. **Never** under `reports/` |
+| `ai/reports/` | Dated investigation, review and analysis results |
+| `ai/handoff/` | Session handoffs — `handoff-YYYYMMDD-HHMM-<slug>.md`, written and deleted by `/handoff` only |
+| `ai/dev/`, `ai/sa/<slug>/` | Framework state (§1 here; `sa-framework\ARTIFACT-SCHEMAS.md`) |
+| `ai/prompts/`, `ai/scripts/` | Reusable prompts; utility scripts |
+
+A project may add its own folders (e.g. `ai/rollout/`) in its own `ai/README.md`; it may not put designs or
+handoffs anywhere else.
+
 ---
 
 ## 1. Load state before anything
@@ -188,6 +202,10 @@ AI-tooling state grouped under the existing `ai/` folder (`ai/context/`, `ai/pro
 instead of adding a new top-level dot-folder. Also clarified that `contracts/` and `ARCHITECTURE.md`
 should point at a project's real, pre-existing sources of truth rather than being duplicated under
 `ai/dev/` when those already exist in code or in `ai/context/`.
+
+**Amendment note (2026-09-14)**: added the standard `ai/` layout table under the header — `ai/design/` for
+design documents (previously mixed into `ai/reports/`) and `ai/handoff/` as the only handoff location,
+matching `/handoff` v2.0.0.
 
 **Amendment note (2026-09-07)**: added §8 (greenfield mode), §9 (plan-driven execution and `PLAN.md`
 ownership), §10 (cross-model review for this family, mirroring `AGENT-CONDUCT-BASELINE.md` B10), and the

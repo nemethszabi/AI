@@ -3,7 +3,7 @@ name: prompt-builder
 description: Draft a new one-time or occasional-use prompt with proper context-loading and structure, saved under a project's ai/prompts/{topic}/ folder for future reuse. Use when the user wants to save a prompt for reuse later, or asks to "make this a reusable prompt", "draft a one-time prompt for X", "save this as a prompt I can run again". Do NOT use for anything that will actually recur often, or that needs isolation/tool-restriction/autonomy/proactive-triggering — that's agent-builder's job (this skill checks for that and redirects rather than complying blindly).
 ---
 
-> Version: 1.0.0
+> Version: 1.0.1
 
 # Prompt Builder
 
@@ -53,8 +53,9 @@ because that's simpler:
   (`d:\WORK\AI\results\claude-prompting-system-review.md` §5.3) — don't skip it by default for anything
   with write/mutate potential. Cross-check against `CONSTITUTION.md` Article II (destructive/irreversible
   actions) if the target project has one.
-- **Output/report format?** Does this end in a saved, dated `ai/reports/` file (existing convention), or
-  just an inline answer with nothing worth persisting?
+- **Output/report format?** Does this end in a saved file — a dated `ai/reports/` result, or an
+  `ai/design/` document if the output is a design (never `reports/` for designs; see the standard `ai/`
+  layout in `dev-framework\PRINCIPLES.md`) — or just an inline answer with nothing worth persisting?
 
 ## Step 5 — Draft
 
@@ -74,5 +75,5 @@ Target project: repo name
 Context files referenced: list, or "none"
 Runtime parameters: list, or "none — no parameters needed"
 Approval gate: yes, phased / no, read-only
-Output: saved to ai/reports/... , or inline only
+Output: saved to ai/reports/... or ai/design/... , or inline only
 ```

@@ -92,9 +92,11 @@ def main():
     out = [f'# AI usage report - {first} .. {last}',
            f'\nGenerated {dt.datetime.now():%Y-%m-%d %H:%M} from `{cfg["store"]}`. {len(rows):,} requests, '
            f'{len(by_sess):,} sessions, est. **${total:,.2f}** at list prices (pricing.json, verified {pricing.get("verified")}). '
-           'Estimates, not invoices: subscriptions and Copilot premium requests bill differently - compare *relative* numbers.']
+           'Copilot $ is its own recorded AI-credit charge, which is what the company seat is billed since 2026-06-01 '
+           '(`copilot_bill.py` shows it against the plan). Claude $ is a notional API list price - a subscription '
+           'does not bill per token - so compare it *relatively*.']
     tool_cost = ('tool $', lambda x: f"{x['tool_cost']:,.2f}" if x['tool_cost'] else '-')
-    billed = ('premium units', lambda x: f"{x['billed']:,.0f}" if x['billed'] else '-')
+    billed = ('AI credits', lambda x: f"{x['tool_cost'] * 100:,.0f}" if x['tool_cost'] else '-')
     table(out, 'By tool', agg(rows, lambda r: r['tool']), 'tool', extra=(tool_cost, billed))
     table(out, 'By tool / model / effort', agg(rows, lambda r: (r['tool'], r['model'], r['effort'] or '-')), 'tool / model / effort',
           extra=(tool_cost, billed))

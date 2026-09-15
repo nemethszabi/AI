@@ -3,9 +3,10 @@
   python collect_copilot.py
 
 Source table: assistant_usage_events (one row per model request). Copilot's input_tokens already includes
-cache reads/writes, so it is split back out here to match the Claude rows. Copilot records its own cost
-per request as total_nano_aiu (1 AIU = $0.01, so USD = nano_aiu / 1e11) and premium-request units as
-request_multiplier - kept as tool_cost_usd / billed_units.
+cache reads/writes, so it is split back out here to match the Claude rows. Copilot records its own charge
+per request as total_nano_aiu (1e9 nano-AIU = 1 AI credit = $0.01, so USD = nano_aiu / 1e11) - the real
+Business/Enterprise bill since 2026-06-01 - kept as tool_cost_usd. request_multiplier (retired
+premium-request billing) is kept as billed_units for history only.
 """
 import os, sqlite3, sys
 import usage_lib as U

@@ -37,8 +37,13 @@ Run exactly this, adding `-Month <n> -Year <yyyy>` only if the user asked for a 
 ```
 
 It is a thin wrapper over the cross-tool toolkit `d:\_AI_GIT\_scripts\usage\` (needs Python 3 on `PATH`)
-and prints a Markdown report. Relay its figures as printed. Never compute cost yourself or apply a price
-table from memory. Say that the costs are estimates, not invoices.
+and prints a Markdown report of AI credits used against the company seat. Relay its figures as printed.
+Never compute cost yourself or apply a price table from memory. The figures are Copilot's own recorded
+charge, not estimates; say only that usage above the seat's share is billed once the org-wide pool runs
+out, which the report cannot see. Add `-Plan enterprise` if the user says the seat is Enterprise.
+
+> 2026-09-15: switched the default to the company-plan bill (`copilot_bill.py`). GitHub moved Business
+> and Enterprise to AI Credits on 2026-06-01; the old "premium units" figure was retired billing.
 
 > 2026-09-14: named the script explicitly. The body previously said only "runs the usage query script",
 > and the scripts that name used to reach (`simple-usage.ps1`, `Get-CopilotUsage-Fixed.ps1`) queried a

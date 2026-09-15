@@ -6,6 +6,9 @@
 > is in `assistant_usage_events`, not per-session usage columns; Opus is $5/$25 per 1M tokens, not $15/$75;
 > and Copilot records its own per-request cost (`total_nano_aiu`), so no hard-coded rate table is needed.
 > Correction record: `d:\WORK\AI\knowledge-base\copilot-usage-tracking.md`.
+> **2026-09-15:** the pricing below is doubly obsolete. Since 2026-06-01, Copilot Business and Enterprise
+> bill in AI Credits: tokens at API list rates, 1 credit = $0.01, seat price returned as pooled included
+> credits. `Get-CopilotUsage.ps1` now shows that bill by default (`..\_scripts\usage\copilot_bill.py`).
 
 **Version**: 1.0.0 (Sept 2026)  
 **Status**: Superseded (was: ready for production use)  

@@ -1,6 +1,6 @@
 # AI usage toolkit
 
-> Version: 1.0.0 (2026-09-11)
+> Version: 1.1.0 (2026-09-15: `copilot_bill.py`, Copilot priced by its own AI-credit charge)
 
 Measures token use and estimated cost across AI coding tools on one scale, so tools, models, effort levels
 and task types can be compared. Claude Code and GitHub Copilot CLI today; another tool is one more
@@ -13,6 +13,7 @@ and task types can be compared. Claude Code and GitHub Copilot CLI today; anothe
 | `usage_lib.py` | Config, SQLite store schema, pricing, task classification - shared by everything below |
 | `collect_claude.py` | Reads Claude Code transcripts from every profile root (`~/.claude`, `~/AppData/Local/claude-*`), incrementally (byte offsets) |
 | `collect_copilot.py` | Reads `~/.copilot/session-store.db` → `assistant_usage_events` |
+| `copilot_bill.py` | Copilot month as the company plan bills it: AI credits used vs the seat's included credits, usage above them, company cost, month-end projection, GitHub's quota snapshot; by model / initiator / session. Plans in `usage-config.json` → `copilot_plans`, choose with `copilot_plan` |
 | `usage_report.py` | Runs both collectors, then writes a Markdown report (by tool/model/effort, task type, agent, skill, project, month, top sessions, signals) |
 | `statusline.py` | Claude Code status line, two rows. **Row 1**: profile chip, model·effort, session name, context size (coloured against the guard thresholds and labelled with the action it implies), context added by the last turn, cache hit ratio with the reason for the last miss. **Row 2**: working folder, each rate-limit window as *remaining* plus its reset clock, git branch (suppressed when it equals the folder), PR number and review state, session duration and lines changed. Segments shrink to shorter forms before dropping, least important first; the context segment and the 5h window always survive. No session $ - on a subscription that is a notional API price; cost belongs in the reports. **Item-by-item reference for every segment, colour and threshold: `d:\WORK\AI\knowledge-base\token-economy.md` §7** - kept there rather than duplicated here |
 | `context_guard.py` | `UserPromptSubmit` hook: warns once per threshold step when main-thread context passes 150k / 300k (+100k steps), pointing at `/handoff` → `/clear` → `/handoff resume` |
@@ -43,7 +44,8 @@ logged to `~/.ai-usage/collector-errors.log` and never reach the session.
 ```powershell
 python D:\_AI_GIT\_scripts\usage\usage_report.py                         # everything → <report_dir>\usage-report-YYYYMMDD.md
 python D:\_AI_GIT\_scripts\usage\usage_report.py --since 2026-09-01 --stdout
-python D:\_AI_GIT\_scripts\usage\usage_report.py --tool copilot --stdout  # or copilot\scripts\Get-CopilotUsage.ps1
+python D:\_AI_GIT\_scripts\usage\usage_report.py --tool copilot --stdout  # or copilot\scripts\Get-CopilotUsage.ps1 -Detailed
+python D:\_AI_GIT\_scripts\usage\copilot_bill.py [--month 2026-09] [--plan enterprise]  # Copilot company bill; default of Get-CopilotUsage.ps1
 python D:\_AI_GIT\_scripts\usage\collect_claude.py --full                 # re-read all transcripts from byte 0
 ```
 
@@ -54,8 +56,11 @@ input, output, cache_read, cache_write, cache_write_1h, reasoning, context, tool
 
 - `input` never includes cache tokens. Copilot's `input_tokens` does, so its collector splits them back out.
 - `context` is everything the model received for that request (input plus cache read plus cache write).
-- `tool_cost_usd` is the tool's own figure where it records one: Copilot's `total_nano_aiu / 1e11`.
-- `billed_units` is Copilot's premium-request multiplier.
+- `tool_cost_usd` is the tool's own figure where it records one: Copilot's `total_nano_aiu / 1e11`
+  (1e9 nano-AIU = 1 AI credit = $0.01). Since 2026-06-01 this is the real Copilot Business/Enterprise charge:
+  tokens at API list rates, every request billed (agent tool-call rounds, subagents, compactions), seat price
+  returned as pooled included credits. Reports use it as Copilot's cost.
+- `billed_units` is Copilot's premium-request multiplier - retired billing, kept for history, shown nowhere.
 
 **Task type** is resolved at report time, first match wins:
 1. The request's own skill or agent rule.
@@ -66,6 +71,6 @@ input, output, cache_read, cache_write, cache_write_1h, reasoning, context, tool
 
 ## Limits
 
-- **Estimates, not invoices.** Claude subscriptions and Copilot premium requests bill differently from list price, so compare *relative* numbers.
+- **Claude $ is notional, Copilot $ is the bill.** A Claude subscription does not charge per token, so its list-price figure is for *relative* comparison only; Copilot's figure is its recorded AI-credit charge. Whether usage above your seat's share costs the company extra depends on the org pool, which only an org admin can see.
 - **Copilot subagents are unnamed.** `session-store.db` records only an agent UUID, which the report shows as `(unnamed)`.
 - **Effort is recorded per request** by both tools. Claude rows made before per-request effort logging show `-`.

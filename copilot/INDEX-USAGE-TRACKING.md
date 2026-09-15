@@ -2,6 +2,8 @@
 
 > **Superseded 2026-09-11 — kept as history.** See the banner in `USAGE-TRACKING-README.md`: the current
 > mechanism is `..\_scripts\usage\`, and the data source and pricing described below are wrong.
+> Since 2026-06-01 Copilot bills in AI Credits, not premium requests. `Get-CopilotUsage.ps1` shows that
+> bill (2026-09-15).
 
 **Version**: 1.0.0  
 **Status**: Superseded (was: production-ready)  

@@ -118,7 +118,10 @@ def list_cost(pricing, r):
 
 
 def cost(pricing, r):
-    """List-price cost (comparable across tools); tool-reported cost only for models pricing.json lacks."""
+    """Copilot: its own recorded charge (AI credits, billed at API list rates). Others: list price from
+    pricing.json, falling back to the tool-reported cost for models it lacks."""
+    if r.get('tool') == 'copilot' and r.get('tool_cost_usd') is not None:
+        return r['tool_cost_usd']
     c = list_cost(pricing, r)
     return c if c is not None else (r.get('tool_cost_usd') or 0.0)
 

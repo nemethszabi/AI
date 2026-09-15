@@ -20,7 +20,7 @@ incompatible and pretending otherwise produces files that work on neither.
 | `agents\` | 17 `.agent.md` files. Siblings of `..\claude\agents\*.md`, each naming its original and marking `[Copilot]` divergences. See that folder's `README.md` for the inventory and what is deliberately absent. |
 | `skills\` | Copilot-only skills — chiefly `sa-pipeline\SKILL.md`, this branch's command layer, and `handoff\SKILL.md` (2026-09-14). Cross-tool skills live in the shared `..\skills\`. |
 | `hooks\` | User-level hook files for `~/.copilot/hooks/` — `framework-change-flag.json` (2026-09-14). See **Hooks** below. |
-| `scripts\` | `Get-CopilotUsage.ps1` — a thin wrapper over the cross-tool usage toolkit `..\_scripts\usage\`. Repo-side only, not rolled out. |
+| `scripts\` | `Get-CopilotUsage.ps1` — a thin wrapper over the cross-tool usage toolkit `..\_scripts\usage\`; defaults to the company-plan AI Credits bill (`copilot_bill.py`), `-Detailed` for the cross-tool report. Repo-side only, not rolled out. |
 | `USAGE-TRACKING-README.md`, `INDEX-USAGE-TRACKING.md` | Superseded 2026-09-11. Kept as history only. |
 
 ## What is shared, and what is not

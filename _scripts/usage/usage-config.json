@@ -16,5 +16,12 @@
     { "task": "personal",  "skill_prefix": ["travel-planner", "train-update", "eat-update"], "agent_prefix": ["public-figure-researcher"] }
   ],
   "cwd_rules": [],
+  "_copilot_plans": "GitHub AI Credits billing since 2026-06-01: seat price returns as included credits (pooled org-wide), 1 credit = $0.01, overage $0.01/credit. Verified 2026-09-15 against docs.github.com/en/copilot/concepts/billing/organizations-and-enterprises.",
+  "copilot_plan": "business",
+  "copilot_credit_usd": 0.01,
+  "copilot_plans": {
+    "business":   { "seat_usd": 19, "included_credits": 1900 },
+    "enterprise": { "seat_usd": 39, "included_credits": 3900 }
+  },
   "guard": { "warn_tokens": 150000, "strong_tokens": 300000, "repeat_every_tokens": 100000 }
 }

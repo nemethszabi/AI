@@ -12,7 +12,7 @@ allowed-tools:
 argument-hint: "<slug from /sa:triage>"
 ---
 
-> Version: 2.1.0
+> Version: 2.1.1 — patch: relays PERT totals, never `worst` (`ESTIMATION-METHOD.md` v1.5 §11.5).
 
 <objective>
 `/sa:estimate <slug>` produces a three-point effort estimate from `ai/sa/<slug>/`'s `requirements.json`,
@@ -50,8 +50,8 @@ Append to phase history; never rewrite prior lines.
 </step>
 
 <step name="relay">
-Return the agent's summary — models estimated and their Likely totals, the contingency percentage and
-where it came from, the must-coverage check, `not_estimated` count, and whether a rate card was found —
+Return the agent's summary — models estimated and their PERT totals (never `worst`), the contingency
+percentage and where it came from, the lifecycle share against the 30% bound, the must-coverage check, `not_estimated` count, and whether a rate card was found —
 plus the file paths written.
 
 If the summary ends with a `## Blocking questions` section, put those to the user via `AskUserQuestion`.

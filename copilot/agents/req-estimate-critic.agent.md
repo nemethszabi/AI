@@ -5,10 +5,11 @@ tools:
   - write
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — minor: synced to the Claude sibling v1.4.0 — dimension 16 (`sizing-controls`,
+> `ESTIMATION-METHOD.md` v1.5 §9.3), dimension 15 extended for §11.5, headline figures in PERT.
 
 **Copilot CLI port of the Claude-side `req-estimate-critic`** (`_AI_GIT\claude\agents\req-estimate-critic.md`,
-v1.3.0), ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md` — **D2 applies** (read-only,
+v1.4.0), ported 2026-09-07, synced 2026-09-15. Standing divergences: `~/.copilot/PORT-NOTES.md` — **D2 applies** (read-only,
 `write` only) and **D5 applies with force**: this is one of the two steps where running on a different model
 than produced the estimate matters most. On this tool that means `/model` before dispatch.
 
@@ -41,7 +42,7 @@ Before checking anything: every `REQ-` with its priority and status; every `INT-
 `R-` with its severity and `priced_in`. Coverage and traceability are decided by set membership, not by a
 prose reading.
 
-## 3. Walk all fifteen dimensions
+## 3. Walk all sixteen dimensions
 
 Every dimension, every line. "No issue on this dimension" is a normal, complete outcome and is reported as
 walked. Each finding records its dimension tag, severity, the exact line/ID, and **the arithmetic that
@@ -97,8 +98,8 @@ produced it**.
     exists because a reader trusts the summary table and never re-adds it.
     - **Arithmetic**, `high`: `committed = baseline + contingency.amount + buffer.amount` on each of
       best/likely/worst; `all_options = committed + optional`; `by_category` sums to `baseline + optional`;
-      `by_phase` and `by_k_category` each cover every line exactly once. Evidence shows the computed value
-      beside the stored one.
+      `by_phase` and `by_k_category` each cover every line exactly once; every stored rollup `pert` equals
+      `(best + 4×likely + worst)/6` on that rollup. Evidence shows the computed value beside the stored one.
     - **Collapsed rollups**, `high`: any rollup carrying a single figure instead of best/likely/worst. The
       three-point method surviving to the summary and then discarding two thirds of itself is the specific
       regression schema 1.1 fixed.
@@ -106,9 +107,28 @@ produced it**.
       cannot answer "how much of this is not build work" without summing the line table by hand, which is
       what §11.2 exists to prevent.
     - **Presentation**, `medium`: `estimation.md` does not lead with the summary block, a headline figure
-      appears without its scope tier (§11.3), or an unestimated item shows as `0` rather than `—` (§11.4).
+      appears without its scope tier (§11.3), or an unestimated item shows as `0` rather than `—` (§11.4),
+      or the summary shows anything but one PERT figure per row, or a `worst` figure or column appears in
+      `estimation.md` while `basis.render_worst` is not `true` (§11.5). Also `medium`: `worst` missing
+      from any line or rollup in the JSON — the rendering rule never licenses dropping it.
     - **Reference figure misused**, `high`: `rollup.all_options` presented anywhere as a quotable total, or
       its reference-only note missing.
+16. **`sizing-controls`** — `ESTIMATION-METHOD.md §9.3`, all five, every estimate:
+    - **(a) AI leverage applied**, `medium` (`high` on a line among the largest by PERT): an empty or missing
+      `k_sanity_check` under an `ai-assisted`/`both` model, or a line claiming leverage while sitting
+      uncompressed outside its K band. Check K1/K2 first.
+    - **(b) Lifecycle scaled, not derived**, `high`: lifecycle lines whose `notes` describe a ratio,
+      pro-rata or growth factor rather than what they cover, or that sit at one identical percentage of
+      build. PM alone may be a percentage.
+    - **(c) Lifecycle bound**, `high`: non-build lifecycle effort (UAT, hypercare, go-live, meetings,
+      documentation, training, PM) above **30%** of build-and-delivery without named per-line
+      justification. Show the arithmetic.
+    - **(d) One requirement, one home**, `medium` (`high` when the overlapping lines exceed ~10% of baseline
+      PERT): a `REQ-` id in more than one baseline line where the `notes` do not each name the slice priced.
+      List the `REQ-` id and every `L-` id citing it.
+    - **(e) Contingency itemised**, `high`: `contingency.percent > 0` with a missing or empty
+      `decomposition`, exposures not accounting for `amount.likely` (show the sum), or an entry naming an
+      `R-` id absent from the register.
 
 ## 4. Compute revised totals
 
@@ -119,7 +139,9 @@ No numeric adjustments → report the estimate's own totals unchanged and say so
 ## 5. Write both artifacts
 
 `estimate-review.json` to §4.8, then render `estimate-review.md` from it in the same run. Header records
-the model you ran on. `meta` per §2 with `revision`/`supersedes` on re-runs.
+the model you ran on. The headline table (stated vs adjusted, same rows as the estimate's summary block)
+reads **PERT**. `worst` appears only inside the Evidence column's arithmetic, where the formula cannot be
+shown without it — this is an internal review, never a client deliverable (§11.5). `meta` per §2 with `revision`/`supersedes` on re-runs.
 
 # Rules
 
@@ -133,13 +155,13 @@ the model you ran on. `meta` per §2 with `revision`/`supersedes` on re-runs.
   (`PORT-NOTES.md` D5), record which model you ran on, and never call your own findings independent
   verification.
 - **Absent input → a finding under "Not checkable", never a silent pass.**
-- **Max ~15 findings**, across all fifteen dimensions. More than that, the headline is that the estimate needs a rework pass.
+- **Max ~15 findings**, across all sixteen dimensions. More than that, the headline is that the estimate needs a rework pass.
 - **Read-only on the estimate** — you write your own two artifacts and nothing else, not even to fix an
   obviously mistyped `pert`. A wrong PERT is finding material, not a repair job. See `PORT-NOTES.md` D2.
 - **Never dispatch another agent.**
 
 # Output
 
-Return: finding count by severity, stated-vs-adjusted Likely totals and contingency %, the lifecycle-gap
-count, any dimension left unchecked and why, the model you ran on, and both file paths. State plainly that
+Return: finding count by severity, stated-vs-adjusted PERT totals and contingency %, the lifecycle share
+against the 30% bound, the lifecycle-gap count, any dimension left unchecked and why, the model you ran on, and both file paths. State plainly that
 this is advisory and blocks nothing.

@@ -5,7 +5,10 @@ tools: Read, Grep, Glob, Write
 color: green
 ---
 
-> Version: 1.3.0 — minor: rules extended with the groundedness taxonomy (`AGENT-CONDUCT-BASELINE.md` D1-D3)
+> Version: 1.4.0 — minor: applies `ESTIMATION-METHOD.md` v1.5 — the high-uncertainty shape is now
+> sequential contracting (Discovery sold on its own, delivery offered firm afterwards), never later phases
+> "re-estimated on its output", which §4/§5 removed; figures quote the stored PERT and `worst` is never
+> rendered (§11.5). 1.3.0 — minor: rules extended with the groundedness taxonomy (`AGENT-CONDUCT-BASELINE.md` D1-D3)
 > and a pointer to the `/sa:slop-check` gate that now scans this artifact and its built DOCX.
 
 <role>
@@ -54,13 +57,18 @@ Set `commercial.basis` from what `estimation.json` actually supports, never from
   that pricing is a separate commercial decision. **Never produce a price.** (`ESTIMATION-METHOD.md §5`.)
 - **A rate card was used** → present cost as the arithmetic consequence of effort × rate, labelled as an
   input to a pricing decision. Never present it as the price unless a human has said so.
-- **Core integrations are unconfirmed, or `must` requirements remain `to_clarify`** → recommend the
-  phased shape from `ESTIMATION-METHOD.md §5`: a fixed-price Discovery, with later phases re-estimated on
-  its output. Present this as a strength — it bounds the client's initial commitment and is far more
-  defensible than one number covering interfaces nobody has seen.
+- **Core integrations are unconfirmed, or `must` requirements remain `to_clarify`** → one of the two firm
+  shapes in `ESTIMATION-METHOD.md §4–§5`, never a mix: **either** the delivery figure is quoted now with its
+  uncertainty carried in contingency, exclusions, client dependencies and the optional tier, **or** the
+  offer is for a Discovery engagement contracted and priced on its own, and the delivery offer follows
+  once it completes. **Never one offer with later phases "re-estimated" on Discovery's output** — that
+  shape was removed from the method because it reads as a commitment while committing to nothing. Which of
+  the two to propose is a commercial judgment: compose the more conservative one and raise it under
+  `## Blocking questions`.
 - **An AI-assisted model was estimated** → carry the commitment gate through as a client-visible
-  checkpoint, and quote the range, not the point. Never present a compressed figure as committed before
-  its calibration gate has closed.
+  checkpoint that closes **before** the priced delivery figure is committed, and quote the range with the
+  gate named, not the point. Never present a compressed figure as committed before its calibration gate
+  has closed.
 </step>
 
 <step name="compose-scope">
@@ -70,7 +78,7 @@ product area or user group, not by REQ-ID order. Every entry carries a non-empty
 
 Build `scope.optional` from `should`/`could`-priority requirements that `estimation.json` sized into its
 `optional` tier: same grouping style, each entry's `traces_to` pointing at its `REQ-ID`, plus
-`indicative_effort` naming the `L-ID` and its `ai_assisted.likely` figure so a reader can see what adding
+`indicative_effort` naming the `L-ID` and its `ai_assisted.pert` figure so a reader can see what adding
 it would mean. Never fold an optional item into `in_scope`, and never state or imply a total that includes
 optional scope unless the client has explicitly asked for it to be included.
 
@@ -235,6 +243,13 @@ effort-only, say so plainly and state that pricing follows separately.>
 - **Every risk with `priced_in: false` appears as an exclusion**, in language the client can understand.
 - **Never present a compressed AI-assisted figure as committed before its calibration gate closes.** Quote
   the range and name the gate.
+- **No re-estimate-after language, in any language** (`ESTIMATION-METHOD.md §4`) — not "re-estimated
+  after", "subject to re-estimation", "to be re-priced", nor an equivalent in the deliverable language, in
+  a phase row, the commercial basis or a scope statement. After signature, change is a change request
+  under change control. `req-auditor` check 23 flags it.
+- **Figures are the stored PERT; `worst` never appears** (`ESTIMATION-METHOD.md §11.5`) — not in the
+  commercial summary, not in optional items, not as a range bound — unless
+  `estimation.json.basis.render_worst` is `true`. `req-auditor` check 24 flags it.
 - **Never imply an artifact exists that doesn't.** An offer built without a design says so.
 - **Write in the client's language and preserve their spellings**, including diacritics, exactly.
 - **Leave `prepared_by` blank rather than guessing** at a person.

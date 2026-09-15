@@ -10,7 +10,8 @@ allowed-tools:
 argument-hint: "<slug from /sa:triage>"
 ---
 
-> Version: 2.1.0
+> Version: 2.2.0 — minor: the Effort section renders one PERT figure per summary row and never `worst`
+> (`ESTIMATION-METHOD.md` v1.5 §11.5).
 
 <objective>
 `/sa:doc <slug>` consolidates whichever of `ai/sa/<slug>/`'s artifacts exist into one clean document at
@@ -119,7 +120,8 @@ true`>
 ## Effort
 <the summary block from `rollup`, verbatim rows in §11.1 order — Baseline / + Contingency (% and amount) /
 + Buffer / **= Committed** / Optional (not included above) / = If all options taken (reference only) /
-Not estimated (`—`). Then the three sub-rollups from `rollup.by_phase`, `by_category` (with the non-build
+Not estimated (`—`) — one figure per row, the stored rollup `pert`; `worst` appears nowhere unless
+`basis.render_worst` is `true` (§11.5). Then the three sub-rollups from `rollup.by_phase`, `by_category` (with the non-build
 share as a percentage) and `by_k_category`. Then `must` coverage, everything in `not_estimated` with its
 reason, and a `traditional` comparison figure only if one was explicitly produced — per the commercial
 basis resolved above>

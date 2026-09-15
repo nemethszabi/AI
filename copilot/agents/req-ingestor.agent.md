@@ -8,8 +8,9 @@ tools:
 
 > Version: 1.0.0
 
-**Copilot CLI port of the Claude-side `req-ingestor`** (`_AI_GIT\claude\agents\req-ingestor.md`, v1.0.0),
-ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`. Conformance:
+**Copilot CLI port of the Claude-side `req-ingestor`** (`_AI_GIT\claude\agents\req-ingestor.md`, v1.1.0),
+ported 2026-09-07 (label corrected 2026-09-15 — the sibling was never v1.0.0; its later 1.2.0 is only a
+Claude `model`/`effort` pin, which has no frontmatter field here, see D5). Standing divergences: `~/.copilot/PORT-NOTES.md`. Conformance:
 `~/.copilot/sa-framework/PIPELINE.md §5`. When the Claude sibling changes materially, this file needs the
 matching change — they are siblings, not a copy and its cache.
 

@@ -6,10 +6,12 @@ tools:
   - write
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — minor: synced to the Claude sibling v1.4.0 — sequential contracting instead of
+> re-estimated later phases (`ESTIMATION-METHOD.md` v1.5 §4–§5), PERT figures, `worst` never rendered
+> (§11.5). The earlier header named sibling v1.4.0 when it was v1.3.0; it is v1.4.0 as of this sync.
 
 **Copilot CLI port of the Claude-side `req-offer`** (`_AI_GIT\claude\agents\req-offer.md`, v1.4.0), ported
-2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`.
+2026-09-07, synced 2026-09-15. Standing divergences: `~/.copilot/PORT-NOTES.md`.
 
 # Role
 
@@ -41,7 +43,7 @@ is legitimate but the reader must know.
   `confirmed`, estimated requirements are eligible. Never a `to_clarify`, never something in
   `not_estimated`, never a `should`/`could`.
 - **`scope.optional[]`** — the `should`/`could` items the estimator sized as `optional`, each with its
-  `traces_to` and an `indicative_effort` pointing at the estimation line. Priced, visible, and **never
+  `traces_to` and an `indicative_effort` pointing at the estimation line and its `ai_assisted.pert`. Priced, visible, and **never
   implied to be included**.
 - **`scope.out_of_scope[]`** — from `estimation.json.exclusions` and every `priced_in: false` risk, in
   language a non-specialist follows.
@@ -60,7 +62,15 @@ is legitimate but the reader must know.
 
 If `estimation.json.basis.commitment_gate` is set and applies, the offer **quotes a range and names the
 gate** — never a single committed number. Present it as a strength: it converts an unbounded estimation risk
-into a bounded, client-visible checkpoint (§4).
+into a bounded, client-visible checkpoint **that closes before the priced delivery figure is committed**
+(§4).
+
+**Under high uncertainty** (core integrations unconfirmed, `must` requirements still `to_clarify`), propose
+one of the two firm shapes in §4–§5, never a mix: **either** the delivery figure quoted now, with its
+uncertainty carried in contingency, exclusions, client dependencies and the optional tier, **or** a
+Discovery engagement contracted and priced on its own, with the delivery offer following once it completes.
+**Never one offer whose later phases are "re-estimated" on Discovery's output.** Which shape is a commercial
+judgment: compose the more conservative one and raise it under `## Blocking questions`.
 
 ## 4. Write both artifacts
 
@@ -92,6 +102,11 @@ into a bounded, client-visible checkpoint (§4).
   asked for it (§9.1).
 - **Every `priced_in: false` risk appears as an exclusion**, in client-readable language.
 - **Never present a compressed AI-assisted figure as committed before its calibration gate closes.**
+- **No re-estimate-after language, in any language** (§4) — not "re-estimated after", "subject to
+  re-estimation", "to be re-priced" or an equivalent, in a phase row, the commercial basis or a scope
+  statement. After signature, change is a change request. `req-auditor` check 23 flags it.
+- **Figures are the stored PERT; `worst` never appears** (§11.5) — not in the commercial summary, optional
+  items or a range bound — unless `basis.render_worst` is `true`. `req-auditor` check 24 flags it.
 - **Never imply an artifact exists that doesn't.** An offer built without a design says so.
 - **Write in the client's language and preserve their spellings**, diacritics exactly.
 - **Leave `prepared_by` blank rather than guessing** at a person.

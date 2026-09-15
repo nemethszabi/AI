@@ -12,7 +12,8 @@ allowed-tools:
 argument-hint: "<slug from /sa:estimate> [--model=sonnet|opus|haiku|fable]"
 ---
 
-> Version: 1.1.0 — minor: added the `--model` per-invocation override and the cross-model reminder
+> Version: 1.1.1 — patch: relays PERT totals (`ESTIMATION-METHOD.md` v1.5 §11.5) and the critic's new
+> `sizing-controls` findings. 1.1.0 — minor: added the `--model` per-invocation override and the cross-model reminder
 > (`ARTIFACT-SCHEMAS.md` §9 / `AGENT-CONDUCT-BASELINE.md` B10).
 
 <objective>
@@ -61,7 +62,7 @@ recommended adjustments are being accepted. Append to phase history; never rewri
 </step>
 
 <step name="relay">
-Return the agent's summary (finding count by severity, stated-vs-adjusted Likely totals and contingency %,
+Return the agent's summary (finding count by severity, stated-vs-adjusted PERT totals and contingency %, lifecycle share against the 30% bound,
 lifecycle-gap count, any dimension left unchecked), **which model actually ran the critique**, and both file
 paths written. State that this is advisory — nothing here blocks `/sa:offer` or `/sa:package`; the
 recommended adjustments are the human's and the estimator's to accept or reject.

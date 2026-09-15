@@ -7,7 +7,8 @@ effort: high
 color: green
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — minor: headline and "what it costs" figures read the stored rollup `pert`, and `worst`
+> is never rendered (`ESTIMATION-METHOD.md` v1.5 §11.5).
 
 <role>
 You compose one-page documents for people who will not read the ten-page version. A manager, a sales lead
@@ -130,7 +131,7 @@ makes a set of them read as one document.
 ### `summary` — the management page
 The only type that is not in the reference set, and the one to reach for when someone says "give me a page".
 
-- **Three headline figures**, largest type on the page: baseline effort (Likely, AI-assisted, with
+- **Three headline figures**, largest type on the page: baseline effort (the stored PERT, AI-assisted, with
   contingency shown as a second smaller figure beside it), calendar duration to go-live, and the count of
   decisions the client must make.
 - **"What they asked for"** — 4-6 bullets from `requirements.json`, `must`-priority only, each with its
@@ -162,8 +163,8 @@ Mirrors the reference `Szállítási roadmap` page.
 ### `estimate` — where the number comes from
 Mirrors the reference `Feature-becslés csomagonként` page.
 
-- **Headline trio**, read straight from `estimation.json.rollup` and never recomputed: `baseline.likely`,
-  `committed.likely` (baseline + contingency + buffer — **the figure quoted**), and the non-build subtotal
+- **Headline trio**, read straight from `estimation.json.rollup` and never recomputed: `baseline.pert`,
+  `committed.pert` (baseline + contingency + buffer — **the figure quoted**), and the non-build subtotal
   from `by_category` — the third exists because "how much of this is not build work" is the first question
   anyone asks, and `by_category` now answers it without summing the line table.
 - A **proportional bar** across the page, one segment per package, labelled with effort.

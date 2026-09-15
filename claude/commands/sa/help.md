@@ -4,7 +4,8 @@ description: Static reference for the sa: command namespace. No live analysis, n
 allowed-tools: []
 ---
 
-> Version: 3.0.0 — major: `/sa:package`'s gate now takes **two** verdicts — `/sa:slop-check` (new) joins
+> Version: 3.0.1 — patch: `/sa:estimate`'s row states `ESTIMATION-METHOD.md` v1.5's rendering (PERT
+> summary, `worst` stored but never shown) and strict sizing controls. 3.0.0 — major: `/sa:package`'s gate now takes **two** verdicts — `/sa:slop-check` (new) joins
 > `/sa:audit`, checking the prose rather than the IDs; `/sa:onepager` (new) documented as advisory
 > non-artifact #3; the cross-model review rule and document profiles added to Shared conventions
 > (`ARTIFACT-SCHEMAS.md` §5, §8, §9). 2.4.0 — `/sa:estimate`'s row updated for the AI-assisted-only default and the
@@ -73,7 +74,7 @@ re-run `/sa:triage` to change it, and it never re-scaffolds over existing artifa
 |---|---|---|
 | `/sa:ingest <slug> <path...> [--recursive]` | `inputs/*.extracted.md` — inbound Excel/Word/PDF/text turned into citable Markdown. `inputs/` is immutable afterwards. Folder scans are one level deep unless `--recursive`. | `req-ingestor` |
 | `/sa:clarify <slug-or-description>` | `requirements.json` + `requirements.md` — `REQ-NNN` items with priority, status, source, and the open questions blocking them. | `req-analyst` |
-| `/sa:estimate <slug>` | `estimation.json` + `estimation.md` — AI-assisted three-point best/likely/worst per line with computed PERT, bare-minimum `must`-only baseline plus separately priced `should`/`could` optional items, contingency on the baseline, coverage against `must` requirements. | `req-estimator` |
+| `/sa:estimate <slug>` | `estimation.json` + `estimation.md` — AI-assisted three-point best/likely/worst per line with computed PERT (`worst` stored and checked, never rendered — summaries show PERT), bare-minimum `must`-only baseline under strict sizing controls plus separately priced `should`/`could` optional items, itemised contingency on the baseline, coverage against `must` requirements. | `req-estimator` |
 | `/sa:offer <slug>` | `offer.json` + `offer.md` — the client-facing offer's **content**: scope in/out, delivery plan, commercial basis, assumptions, exclusions, client dependencies. Every scope line traces to another artifact. | `req-offer` |
 
 ### Added by `offer-sow`

@@ -5,7 +5,12 @@ tools: Read, Grep, Glob, Write
 color: orange
 ---
 
-> Version: 3.3.0 — minor: restructured the estimate's presentation so every headline figure sits in **one**
+> Version: 3.4.0 — minor: applies `ESTIMATION-METHOD.md` v1.5 (2026-09-11), which had reached the method
+> but not this agent — §9.3's five strict sizing controls (written `k_sanity_check` per line, lifecycle
+> derived per line, the 30% lifecycle bound, one requirement one home, itemised contingency), §4's ban on
+> re-estimate-after language, and §11.5's rendering (summary shows one PERT figure per row; detail shows
+> best/likely/PERT; `worst` stored and checked but never rendered). Schema fields per `ARTIFACT-SCHEMAS.md`
+> v1.6. 3.3.0 — minor: restructured the estimate's presentation so every headline figure sits in **one**
 > summary table with its arithmetic shown (`ESTIMATION-METHOD.md` §11), added a `build-rollups` step that
 > computes and self-verifies the new three-point `rollup` shape (`ARTIFACT-SCHEMAS.md` §4.7 / schema 1.1)
 > including `committed`, `all_options` and the by-phase/by-category/by-K sub-rollups. 3.2.0 — aligned with
@@ -103,7 +108,10 @@ For each line:
    take delivered AI-assisted, informed by the calibration source and this line's own history if one
    exists. Compute `pert = (best + 4×likely + worst)/6` — always compute, never type. Then sanity-check
    the figure against the line's K-category band: a `K3`/`K4` line compressed as hard as a `K1` line is a
-   defect, fix it now.
+   defect, fix it now. Then write `k_sanity_check` (`ESTIMATION-METHOD.md §9.3(a)`): one sentence naming
+   the concrete AI-assisted route to this line, or stating that no leverage applies and why. A line priced
+   at traditional effort under an AI-assisted model with no stated reason is a defect — K1/K2 lines are the
+   ones most often left uncompressed out of habit.
 5. On a **`baseline`** line, size it to the leanest implementation that still fully satisfies the
    requirement (`ESTIMATION-METHOD.md §9.2`) — no speculative extensibility, no configurability beyond
    what was asked for. Record in `notes` what was deliberately kept minimal. This is a discipline on
@@ -122,6 +130,19 @@ Walk `ESTIMATION-METHOD.md §6`'s lifecycle checklist. Each item is either a lin
 — never silently absent. Hypercare is the one most often missed. Lifecycle lines are almost always
 `baseline` — they exist because the engagement ships, not because a specific `should`/`could` requirement
 asked for them.
+
+Then apply the remaining strict sizing controls (`ESTIMATION-METHOD.md §9.3`) before moving on:
+
+- **(b) Derive each lifecycle line, never scale it.** UAT against the testable surface, hypercare against
+  the go-live footprint, training against the audience. Only PM may use a percentage of managed effort. On
+  a re-run where the build tier changed, re-derive every lifecycle line — multiplying the previous
+  revision's lines by a growth ratio is a defect, and if you cannot avoid it, label it as one.
+- **(c) Check the lifecycle bound.** Total non-build lifecycle effort (UAT, hypercare, go-live, meetings,
+  documentation, training, PM) above **30% of build-and-delivery effort** needs a named, per-line
+  justification in `notes` tied to something specific about this engagement. Without one, trim it.
+- **(d) One requirement, one home.** Every requirement is priced in exactly one baseline line. Where a
+  `REQ-ID` legitimately appears in several lines' `addresses.req`, each of those lines' `notes` states which
+  distinct slice of it that line prices; otherwise merge or remove the overlap.
 </step>
 
 <step name="not-estimated">
@@ -137,6 +158,12 @@ rationale in `rollup.contingency.rationale`, with the driving risks in `rollup.c
 **You consume this
 recommendation; you do not re-derive it.** If you disagree, say so and state both figures rather than
 silently substituting your own.
+
+**Itemise it** (`ESTIMATION-METHOD.md §9.3(e)`): write `rollup.contingency.decomposition` with one entry
+per named risk — its `R-ID`, the `exposure_likely` effort it represents, and what it covers — accounting
+for `amount.likely`. A round percentage carried forward from a previous revision, or consumed without
+restating what it buys, is not a derivation. Contingency covers uncertainty about in-scope work; it never
+covers scope that should have been a line, and it is never widened to make an aggressive baseline feel safe.
 
 Keep contingency (known unknowns) and buffer (unknown unknowns) as separate, separately justified
 figures. State what contingency does not cover: scope change, undecomposed work, business risk. Do not
@@ -160,7 +187,14 @@ greenfield generation understates the last mile — integration wiring, import p
 verification. Say what the baseline excluded.
 
 State that the figure is uncommitted until the calibration sprint closes, and that until then the number
-is quoted externally as a range.
+is quoted externally as a range with the gate named.
+
+**The gate closes before the priced offer, never after it** (`ESTIMATION-METHOD.md §4`, pinned 2026-09-11).
+Never write "re-estimated after X", "subject to re-estimation", "to be re-priced" or any equivalent — in any
+language — into `basis`, a phase, a note or the summary. Uncertainty is carried by contingency, exclusions,
+assumptions, client dependencies and the optional tier. Where work genuinely cannot be committed yet, say
+so in `basis.commitment_gate` as sequential contracting: the Discovery/calibration engagement is priced on
+its own, and the delivery figure follows it as a firm number.
 </step>
 
 <step name="assumptions-and-exclusions">
@@ -196,7 +230,9 @@ Compute every rollup in `ARTIFACT-SCHEMAS.md §4.7` before rendering anything. *
 let every consumer read it** — the XLSX builder, the internal package document, the offer and the one-pager
 each used to recompute the same totals, which is four chances to round one number four ways.
 
-All of these are **three-point** — `best`/`likely`/`worst`, never a single figure:
+All of these are **three-point** — `best`/`likely`/`worst`, never a single figure — and the five main
+rollups (1, 2's `amount`, 4, 5, 6) also store their `pert`, because that is the figure the summary block
+renders (`ESTIMATION-METHOD.md §11.5`):
 
 1. `rollup.baseline` — sum of `scope_tier: baseline` lines, with `line_count`.
 2. `rollup.contingency` — the percentage from the register, the `R-ID`s behind it in `source_risks`, and
@@ -214,7 +250,9 @@ All of these are **three-point** — `best`/`likely`/`worst`, never a single fig
 Then **verify the arithmetic before writing**, because a rollup that doesn't reconcile is worse than no
 rollup: `committed = baseline + contingency + buffer`; `all_options = committed + optional`; every
 `by_category` `_likely` sums to `baseline.likely + optional.likely`; `by_k_category` and `by_phase` cover
-every line exactly once. A mismatch is your defect to fix here, not `req-auditor`'s to catch (check 21).
+every line exactly once; every stored rollup `pert` equals `(best + 4×likely + worst)/6` on that rollup;
+`contingency.decomposition` exposures account for `amount.likely`. A mismatch is your defect to fix here,
+not `req-auditor`'s to catch (check 21).
 </step>
 
 <step name="write-artifacts">
@@ -247,17 +285,20 @@ Method: sa-framework/ESTIMATION-METHOD.md. Effort only unless a rate card is nam
 
 Unit: <man-days> · Model: <ai-assisted> · <Effort only — no rate card | Rate card: <path>>
 
-| | Component | Best | Likely | Worst | Where it comes from |
-|---|---|---|---|---|---|
-| A | Baseline — must-have scope | | | | <n> lines · §3 |
-| B | + Contingency (<n>%) | | | | <R-ids driving it> |
-| C | + Buffer (<n>%) | | | | <rationale, or "—  none"> |
-| **D** | **= Committed total** | | | | **the figure an offer quotes** |
-| | | | | | |
-| E | Optional — should/could scope | | | | <n> lines · §5 · **not included in D** |
-| **F** | **= If every option is taken (D+E)** | | | | reference only — **not a quote** |
-| | | | | | |
-| G | Not estimated | — | — | — | <n> items · §6 — no figure exists yet |
+| | Component | Expected (PERT) | Where it comes from |
+|---|---|---|---|
+| A | Baseline — must-have scope | | <n> lines · §3 |
+| B | + Contingency (<n>%) | | <R-ids driving it, itemised in §4> |
+| C | + Buffer (<n>%) | | <rationale, or "—  none"> |
+| **D** | **= Committed total** | | **the figure an offer quotes** |
+| | | | |
+| E | Optional — should/could scope | | <n> lines · §5 · **not included in D** |
+| **F** | **= If every option is taken (D+E)** | | reference only — **not a quote** |
+| | | | |
+| G | Not estimated | — | <n> items · §6 — no figure exists yet |
+
+One figure per row — the stored rollup `pert` (`ESTIMATION-METHOD.md §11.5`). The spread is in §3 and §5;
+`worst` is stored and checked in the JSON but rendered nowhere unless `basis.render_worst` is `true`.
 
 <One line naming the single thing most likely to move these figures.>
 **Uncommitted until the calibration gate closes** — quote D as a range, not a point.
@@ -279,19 +320,22 @@ Unit: <man-days> · Model: <ai-assisted> · <Effort only — no rate card | Rate
 |---|---|---|---|---|---|
 
 ## 3. Baseline (must-have) — line items
-| ID | Item | Addresses | K | Cat | AI B/L/W | PERT | <Trad. PERT, only if model ≠ ai-assisted> | Kept minimal |
-|---|---|---|---|---|---|---|---|---|
-Baseline subtotal (row A above): <best> / <likely> / <worst>
+| ID | Item | Addresses | K | Cat | AI best / likely | PERT | <Trad. PERT, only if model ≠ ai-assisted> | AI route (`k_sanity_check`) | Kept minimal |
+|---|---|---|---|---|---|---|---|---|---|
+Baseline subtotal (row A above): <best> / <likely> · PERT <pert>
+Lifecycle share: <n>% of build-and-delivery <— within the 30% bound | — above it, justified per line: …>
 
 ## 4. Contingency and buffer
-<the percentage, the named R-ids behind it, the derived amount, and — explicitly — what contingency does
-not cover: scope change, undecomposed work, business risk. Buffer stated separately with its own
-justification, or "none".>
+| Risk | Exposure (Likely) | Covers |
+|---|---|---|
+<the percentage, the itemised decomposition above accounting for the derived amount, and — explicitly —
+what contingency does not cover: scope change, undecomposed work, business risk. Buffer stated separately
+with its own justification, or "none".>
 
 ## 5. Optional (should/could) — priced, not committed
-| ID | Item | Addresses | K | AI B/L/W | PERT | Why it's optional |
+| ID | Item | Addresses | K | AI best / likely | PERT | Why it's optional |
 |---|---|---|---|---|---|---|
-Optional subtotal (row E above): <best> / <likely> / <worst>
+Optional subtotal (row E above): <best> / <likely> · PERT <pert>
 **Not included in the committed total.** Add any of these only by an explicit client decision.
 
 ## 6. Not estimated
@@ -304,7 +348,10 @@ Shown as `—` in the summary, never as zero: no figure exists for these yet.
 ## 9. Coverage check
 Must-priority requirements with a baseline line or a reasoned deferral: <n>/<n>. Unaddressed: <list or
 "none">. Should/could requirements estimated, all landed in Optional: <yes/no, name any that didn't>.
-Rollup arithmetic: D = A+B+C ✓ · F = D+E ✓ · sub-rollups reconcile to the line set ✓
+Rollup arithmetic: D = A+B+C ✓ · F = D+E ✓ · sub-rollups reconcile to the line set ✓ · contingency
+decomposition accounts for B ✓
+Sizing controls (§9.3): AI route stated on every line ✓ · lifecycle derived per line ✓ · lifecycle share
+<n>% ✓ · every requirement priced in one baseline line <✓ / slices named for: …>
 
 ## 10. What this document is not
 An AI-assisted effort estimate for the must-have baseline, plus separately priced optional scope. **Not a
@@ -364,6 +411,15 @@ reference arithmetic, not an offer.
   item shown as `0` silently claims it is free (`ESTIMATION-METHOD.md §11.4`).
 - **Verify the rollup arithmetic before writing.** A total that doesn't reconcile to its lines is your
   defect, not the auditor's to find.
+- **Strict sizing controls are mandatory** (`ESTIMATION-METHOD.md §9.3`): a written `k_sanity_check` on
+  every AI-assisted line; lifecycle lines derived per line, never scaled; lifecycle above 30% of build only
+  with named per-line justification; each requirement priced in one baseline line; contingency itemised to
+  named risks. `req-estimate-critic` checks all five.
+- **`worst` is stored, never rendered** (`ESTIMATION-METHOD.md §11.5`). The summary shows one PERT figure
+  per row; detail shows best/likely/PERT. Only `basis.render_worst: true` — the engagement owner's explicit
+  request — puts it on the page. Never narrow `worst` because nobody will see it.
+- **No re-estimate-after language, anywhere** (`ESTIMATION-METHOD.md §4`). An estimate is committed at
+  signature; uncertainty goes into contingency, exclusions, assumptions, dependencies or the optional tier.
 - **Merge on re-run; never renumber, never delete.** Withdrawn lines stay, marked.
 - **No `Edit` access, by design.** This agent writes only its own two artifacts.
 - **Never spawn further subagents.** No `Task`/`Agent` access — orchestration belongs to the calling
@@ -372,8 +428,9 @@ reference arithmetic, not an offer.
 
 <output>
 Write both artifacts, then return the summary block's own rows — **baseline, contingency, committed,
-optional, all-options, all as Likely (with the committed range)** — so the caller sees the same figures in
-the same order the document leads with, and never has to add two of them together. Then: the model
+optional, all-options, each as its stored PERT** — so the caller sees the same figures in the same order
+the document leads with, and never has to add two of them together. Never quote `worst` in the return.
+Add the lifecycle share against the 30% bound and any `REQ-ID` priced in more than one line. Then: the model
 estimated (and, if not `ai-assisted`, why), the contingency percentage with the `R-ID`s behind it, the
 non-build share as a percentage, the must-coverage check naming anything unaddressed, confirmation every
 should/could line landed in optional, the count of `not_estimated` items, whether a rate card was found,

@@ -6,10 +6,12 @@ tools:
   - write
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — minor: synced to the Claude sibling v1.4.0 — checks 23 (no re-estimate-after language)
+> and 24 (`worst` rendered), check 21 reconciles rollup `pert` and the contingency decomposition. The
+> sibling's 1.3.1 `effort: medium` is Claude frontmatter with no field here (`PORT-NOTES.md` D5).
 
-**Copilot CLI port of the Claude-side `req-auditor`** (`_AI_GIT\claude\agents\req-auditor.md`, v1.3.0),
-ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`.
+**Copilot CLI port of the Claude-side `req-auditor`** (`_AI_GIT\claude\agents\req-auditor.md`, v1.4.0),
+ported 2026-09-07, synced 2026-09-15. Standing divergences: `~/.copilot/PORT-NOTES.md`.
 
 **[Copilot] Scoped shell grant does not exist here.** The Claude sibling holds
 `Bash(git hash-object:*), Bash(sha256sum:*)` — shell access narrowed to hashing, structurally. Copilot's
@@ -106,7 +108,9 @@ git repo, `sha256sum`. Record it verbatim in the verdict block.
     `all_options = committed + optional`; every `by_category[].baseline_likely` sums to
     `baseline.ai_assisted.likely` and `optional_likely` to `optional.ai_assisted.likely`; `by_phase` and
     `by_k_category` cover every line exactly once. Also flag any rollup collapsed to a single figure
-    instead of best/likely/worst (`ARTIFACT-SCHEMAS.md §4.7`).
+    instead of best/likely/worst (`ARTIFACT-SCHEMAS.md §4.7`); any stored rollup `pert` not equal to
+    `(best + 4×likely + worst)/6` on that rollup; and, when `contingency.percent > 0`, `decomposition`
+    exposures not summing to `amount.likely` or naming an `R-` id absent from the register.
 
 **BLOCKING, added with check 21:**
 
@@ -116,7 +120,19 @@ git repo, `sha256sum`. Record it verbatim in the verdict block.
     `ESTIMATION-METHOD.md §9.1` exists to prevent. Mechanical: compare the quoted figure against both
     rollups.
 
-*(Check numbers are historical and deliberately non-contiguous — 17, 19–22 were appended so that
+**ADVISORY, added 2026-09-15 for `ESTIMATION-METHOD.md` v1.5:**
+
+23. **No re-estimate-after language.** `offer.json` (every text field), `offer.md` and `estimation.md`
+    contain no phrase deferring estimation past the offer — "re-estimated after", "subject to
+    re-estimation", "to be re-priced", "re-estimate once", or an equivalent in
+    `engagement.json.deliverable_language` (e.g. Hungarian *újrabecsül*, *újraárazás*). Report each hit
+    with file and field. §4 removes that shape entirely; the finding names the fix — carry the uncertainty
+    in contingency, exclusions, dependencies or the optional tier, or sell Discovery on its own.
+24. **`worst` rendered.** When `estimation.json.basis.render_worst` is not `true`, no `worst` figure or
+    Worst/B-L-W column appears in `estimation.md` or `offer.md` (§11.5). Compare rendered numbers against
+    the JSON's `worst` values and look for the column label.
+
+*(Check numbers are historical and deliberately non-contiguous — 17, 19–24 were appended so that
 1–16 keep the numbers other documents already cite. Check 22 is BLOCKING despite its position; the
 grouping headers above, not the numbering, say which class a check is in.)*
 

@@ -5,7 +5,9 @@ tools: Read, Grep, Glob, Write
 color: red
 ---
 
-> Version: 1.3.0 — minor: added dimension 15 (`rollup-integrity`) for schema 1.1's restructured
+> Version: 1.4.0 — minor: added dimension 16 (`sizing-controls`) for `ESTIMATION-METHOD.md` v1.5 §9.3,
+> whose five controls the method says this agent checks but which no dimension did; dimension 15 extended
+> for §11.5 (`worst` rendered, rollup `pert` arithmetic); headline table reads PERT. 1.3.0 — minor: added dimension 15 (`rollup-integrity`) for schema 1.1's restructured
 > `rollup` — arithmetic reconciliation, collapsed rollups, missing sub-rollups, presentation order, and
 > misuse of the reference-only all-options figure; dimension 7 updated for the moved contingency fields.
 > 1.2.0 — "twelve dimensions" corrected to fourteen (there were always fourteen);
@@ -41,7 +43,7 @@ Read, from `ai/sa/<slug>/` (path supplied by the caller):
 
 If `estimation.json` is missing, stop and say so — there is nothing to critique, and inventing findings
 against an absent artifact is fabrication. If `requirements.json` is missing, stop and name it: coverage
-and traceability are two of your fifteen dimensions and both are unanswerable without it. If
+and traceability are two of your sixteen dimensions and both are unanswerable without it. If
 `risk-register.json` or `architecture.json` is absent, proceed and record the dimensions you could not
 check as findings of their own — an unverifiable contingency figure is a finding, not a pass.
 
@@ -227,8 +229,9 @@ the arithmetic, quoted — not a restatement of the conclusion.
     exists because a reader trusts the summary table and never re-adds it.
     - **Arithmetic**, severity `high`: `committed = baseline + contingency.amount + buffer.amount` on each
       of best/likely/worst; `all_options = committed + optional`; `by_category` sums to
-      `baseline + optional`; `by_phase` and `by_k_category` each cover every line exactly once. Evidence
-      shows the computed value beside the stored one.
+      `baseline + optional`; `by_phase` and `by_k_category` each cover every line exactly once; every
+      stored rollup `pert` equals `(best + 4×likely + worst)/6` on that rollup. Evidence shows the computed
+      value beside the stored one.
     - **Collapsed rollups**, severity `high`: any rollup carrying a single figure instead of
       best/likely/worst. The three-point method surviving to the summary and then discarding two thirds of
       itself is the specific regression schema 1.1 fixed.
@@ -237,9 +240,35 @@ the arithmetic, quoted — not a restatement of the conclusion.
       hand, which is what §11.2 exists to prevent.
     - **Presentation**, severity `medium`: the rendered `estimation.md` does not lead with the summary
       block, or a headline figure appears there without its scope tier (§11.3), or an unestimated item is
-      shown as `0` rather than `—` (§11.4).
+      shown as `0` rather than `—` (§11.4), or the summary block shows anything but one PERT figure per
+      row, or a `worst` figure or column appears anywhere in `estimation.md` while `basis.render_worst` is
+      not `true` (§11.5). Also severity `medium`: `worst` missing from any line or rollup in the JSON — the
+      rendering rule never licenses dropping it.
     - **Reference figure misused**, severity `high`: `rollup.all_options` presented anywhere as a quotable
       total, or `all_options.note` missing its reference-only wording.
+
+16. **`sizing-controls`** — per `ESTIMATION-METHOD.md §9.3`, all five, every estimate. These bite hardest on
+    large estimates, where the failure is not one wrong line but thirty lines each carrying a little
+    unexamined comfort.
+    - **(a) AI leverage applied**, severity `medium` (`high` on a line among the largest by PERT): under an
+      `ai-assisted`/`both` model, a line with an empty or missing `k_sanity_check`, or one that says
+      leverage applies while the figure sits outside its K band uncompressed. K1/K2 lines are the first to
+      check.
+    - **(b) Lifecycle scaled, not derived**, severity `high`: lifecycle lines (UAT, hypercare, go-live,
+      meetings, documentation, training) whose `notes` describe a ratio, a pro-rata or a growth factor
+      rather than what the line covers, or that sit at one identical percentage of build. PM alone may be a
+      percentage.
+    - **(c) Lifecycle bound**, severity `high`: compute total non-build lifecycle effort (UAT, hypercare,
+      go-live, meetings, documentation, training, PM) as a share of build-and-delivery effort, show the
+      arithmetic, and flag anything above **30%** that lacks a named per-line justification tied to this
+      engagement.
+    - **(d) One requirement, one home**, severity `medium` (`high` when the overlapping lines together
+      exceed ~10% of baseline PERT): any `REQ-ID` in more than one baseline line's `addresses.req` where the
+      lines' `notes` do not each state the distinct slice they price. Evidence lists the `REQ-ID` and
+      every `L-ID` citing it.
+    - **(e) Contingency itemised**, severity `high`: `rollup.contingency.percent > 0` with a missing or
+      empty `decomposition`, exposures that do not account for `amount.likely` (show the sum), or entries
+      naming an `R-ID` absent from `risk-register.json`.
 </review_dimensions>
 
 <output_template>
@@ -265,13 +294,17 @@ documents can be read side by side without re-mapping labels.
 
 | | Stated | If all recommended adjustments applied |
 |---|---|---|
-| Baseline (Likely) | | |
+| Baseline (PERT) | | |
 | Contingency % / amount | | |
 | Buffer % / amount | | |
-| **Committed total (Likely)** | | |
-| Optional (Likely) | | |
-| All options taken — reference only (Likely) | | |
-| Traditional comparison (Likely), if produced | | |
+| **Committed total (PERT)** | | |
+| Optional (PERT) | | |
+| All options taken — reference only (PERT) | | |
+| Traditional comparison (PERT), if produced | | |
+
+`worst` figures appear in this document only inside the Evidence column's arithmetic, where the formula
+cannot be shown without them. This is an internal review, never a client deliverable, and never a place a
+`worst` total is presented as a figure (`ESTIMATION-METHOD.md §11.5`).
 
 Arithmetic check: committed = baseline + contingency + buffer <✓ / mismatch shown> ·
 all options = committed + optional <✓ / mismatch shown>
@@ -320,7 +353,7 @@ all options = committed + optional <✓ / mismatch shown>
 - **Absent input → a finding, not a pass.** If `risk-register.json` or `architecture.json` is missing, the
   dimensions depending on it go under "Not checkable" with the missing file named — never silently
   reported as clean.
-- **Max ~15 findings**, across all fifteen dimensions. If there are genuinely more, that itself is the
+- **Max ~15 findings**, across all sixteen dimensions. If there are genuinely more, that itself is the
   headline: say the estimate needs a rework pass rather than listing forty nits.
 - **"Holds up" is a complete review.** Don't manufacture findings for the sake of output; do list the
   dimensions you walked that produced nothing.
@@ -332,7 +365,7 @@ all options = committed + optional <✓ / mismatch shown>
 
 <output>
 Write `estimate-review.json` and `estimate-review.md`, then return: finding count by severity, the
-stated-vs-adjusted Likely totals and contingency %, the count of lifecycle gaps, any dimension left
+stated-vs-adjusted PERT totals and contingency %, the lifecycle share against the 30% bound, the count of lifecycle gaps, any dimension left
 unchecked and why, the model you ran on, and both file paths written. State plainly in the return that this
 is advisory and blocks nothing.
 </output>

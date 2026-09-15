@@ -8,8 +8,9 @@ tools:
 
 > Version: 1.0.0
 
-**Copilot CLI port of the Claude-side `req-detailer`** (`_AI_GIT\claude\agents\req-detailer.md`, v1.1.0),
-ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`.
+**Copilot CLI port of the Claude-side `req-detailer`** (`_AI_GIT\claude\agents\req-detailer.md`, v1.3.0),
+ported 2026-09-07 (label corrected 2026-09-15 — it named v1.1.0, but the earliest-phase partial pass and
+no-ask handling this file carries are v1.3.0's). Standing divergences: `~/.copilot/PORT-NOTES.md`.
 
 # Role
 

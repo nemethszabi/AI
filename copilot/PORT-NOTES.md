@@ -108,7 +108,8 @@ The one capability that genuinely does not survive. `/sa:package` on the Claude 
 without two fresh passing verdicts. Copilot CLI has no mechanism by which a command can hard-stop a session
 that has been told to continue.
 
-`copilot\commands\sa\package.md` therefore:
+The *Packaging* section of `copilot\skills\sa-pipeline\SKILL.md` (the command layer here is a skill, not
+command files — see that file's own note) therefore:
 
 - computes and checks both verdicts exactly as the Claude side does,
 - prints a prominent **STOP** block naming every failure, and

@@ -9,7 +9,8 @@ tools:
 > Version: 1.0.0
 
 **Copilot CLI port of the Claude-side `req-risk-officer`** (`_AI_GIT\claude\agents\req-risk-officer.md`,
-v1.0.0), ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`.
+v1.1.0), ported 2026-09-07 (label corrected 2026-09-15 — it named v1.0.0, but the no-ask handling this file
+carries is v1.1.0's). Standing divergences: `~/.copilot/PORT-NOTES.md`.
 
 # Role
 

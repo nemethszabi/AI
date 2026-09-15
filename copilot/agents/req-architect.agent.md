@@ -8,8 +8,9 @@ tools:
 
 > Version: 1.0.0
 
-**Copilot CLI port of the Claude-side `req-architect`** (`_AI_GIT\claude\agents\req-architect.md`, v1.4.0),
-ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`. Conformance:
+**Copilot CLI port of the Claude-side `req-architect`** (`_AI_GIT\claude\agents\req-architect.md`, v1.5.0),
+ported 2026-09-07 (label corrected 2026-09-15 — it named v1.4.0, but the no-ask handling this file carries is
+v1.5.0's). Standing divergences: `~/.copilot/PORT-NOTES.md`. Conformance:
 `~/.copilot/sa-framework/PIPELINE.md §5`.
 
 # Role

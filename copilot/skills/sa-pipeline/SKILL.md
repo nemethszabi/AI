@@ -3,7 +3,10 @@ name: sa-pipeline
 description: Run the lane-driven Solution-Architect requirement-to-offer pipeline — triage an inbound ask into a lane, ingest and clarify it into traceable requirements, design, score risks, estimate, compose a client offer, check it, and package the deliverable. Use when handling an inbound RFP/TSD/change request, deciding whether to bid, producing a priced offer, or building a management one-pager. Triggers on "triage this RFP", "clarify these requirements", "estimate this", "write the offer", "can we do this and what would it cost", "check this document before I send it", "one-pager for management".
 ---
 
-> Version: 1.0.1 — patch: corrected the dispatchable-agent count (fourteen → fifteen); no behavioural change.
+> Version: 1.1.0 — minor: synced with the Claude command layer as of 2026-09-15 — estimation workbook and
+> `doc` render per `ESTIMATION-METHOD.md` v1.5 §11.5 (one PERT figure per summary row, `worst` never
+> rendered), matching `/sa:package` 2.1.0 and `/sa:doc` 2.2.0; `review` relay carries the follow-up rule
+> from `/sa:review` 2.2.0. 1.0.1 — patch: corrected the dispatchable-agent count (fourteen → fifteen).
 
 # SA Pipeline — requirement to offer
 
@@ -62,7 +65,7 @@ Lane sequences live in `ARTIFACT-SCHEMAS.md §4.1`; per-step preconditions and o
 | **ingest** | `@req-ingestor` | Folder scans are one level deep unless recursion was asked for. |
 | **clarify** | `@req-analyst` | |
 | **design** | `@req-architect`, then `@mermaid-diagram-maker` | Pass the HLD's `Diagrams` section and `ai/sa/<slug>/diagrams/` as the output dir. Skip the second dispatch if none are warranted. |
-| **review** | `@req-reviewer` | **Switch model first** — see *Cross-model checking*. |
+| **review** | `@req-reviewer` | **Switch model first** — see *Cross-model checking*. Tell the human that questions about a finding are answered from `review.json` plus the JSON paths each finding cites, and that an answer explains a finding but never changes it — changing one means re-running `review`, because `req-architect`'s apply-review reads only `review.json`. **[Copilot]** Claude continues the same reviewer via `SendMessage`; no equivalent for resuming a dispatched `@agent` is verified here, so the file-based fallback is the path. |
 | **design-detail** | `@req-detailer`, then `@mermaid-diagram-maker` | `full-design` lane only; the agent stops on any other. |
 | **risk** | `@req-risk-officer` | Run before estimating — its contingency recommendation is an input. |
 | **estimate** | `@req-estimator` | |
@@ -152,7 +155,8 @@ ones the estimate document, the offer and the one-pager show — a workbook that
 chance to round one number a fourth way (`ARTIFACT-SCHEMAS.md §4.7`).
 
 - **Tab 1 Summary** — the estimate's own summary block, same rows in the same order
-  (`ESTIMATION-METHOD.md §11.1`), each best/likely/worst: Baseline → + Contingency (% and amount) → + Buffer
+  (`ESTIMATION-METHOD.md §11.1`), each as its stored PERT expected value only (§11.5): Baseline → +
+  Contingency (% and amount) → + Buffer
   → **= Committed total** (visually distinct, labelled *the figure quoted*) → Optional (*not included
   above*) → = If all options taken (**reference only — not a quote**) → Not estimated (`—` with a count,
   never `0`). Arithmetic rows carry **real cell formulas**, so the sum is checkable in the workbook rather
@@ -160,8 +164,10 @@ chance to round one number a fourth way (`ARTIFACT-SCHEMAS.md §4.7`).
 - **Tab 2 Rollups** — `by_phase`, `by_category` (with the **non-build share** as an explicit percentage),
   `by_k_category`. §11.2's three questions, answered without summing the line table.
 - **Tab 3 Line items** — one row per `L-`, with REQ/component/QA citations, K-category, category and
-  `scope_tier`. Baseline and optional rows visually separated, **never interleaved**, each subtotalling to
-  its Tab 1 row.
+  `scope_tier`, `k_sanity_check`, and best/likely/PERT. Baseline and optional rows visually separated,
+  **never interleaved**, each subtotalling to its Tab 1 row.
+- **`worst` is written to no tab and no hidden column** unless `estimation.json.basis.render_worst` is
+  `true` — a hidden column is one unhide away from the anchoring §11.5 exists to prevent.
 - **Tab 4 Assumptions & exclusions** · **Tab 5 Coverage matrix** (REQ × component × line).
 
 A `traditional` comparison figure, if one exists, sits in its own column labelled "comparison — not the
@@ -193,8 +199,9 @@ unexpected extra section is that someone notices; the cost of a silently dropped
 `package.md`'s **Effort** section reproduces the estimate's own summary block verbatim — same rows, same
 order (`ESTIMATION-METHOD.md §11.1`), read straight from `estimation.json.rollup` and never recomputed:
 Baseline → + Contingency (% and amount) → + Buffer → **= Committed** → Optional (*not included above*) →
-= If all options taken (**reference only, not a quote**) → Not estimated (`—`, never `0`). Then the three
-sub-rollups from `by_phase`, `by_category` (with the non-build share as a percentage) and `by_k_category`.
+= If all options taken (**reference only, not a quote**) → Not estimated (`—`, never `0`) — one figure per
+row, the stored rollup `pert`, and `worst` nowhere unless `basis.render_worst` is `true` (§11.5). Then the
+three sub-rollups from `by_phase`, `by_category` (with the non-build share as a percentage) and `by_k_category`.
 
 **Lead with Committed, not Baseline.** It is the figure an offer quotes, and an internal document that
 leads with the smaller number trains the reader to quote the wrong one.
@@ -245,6 +252,11 @@ never hand over a "one-pager" that is two pages.
   answer "what does this cost?" (`ESTIMATION-METHOD.md §11`). Every rollup is three-point and is **stored**
   in `estimation.json.rollup`, so the offer, the XLSX, `doc` and the one-pager all read the same figures
   rather than each recomputing them.
+- **Rendered, the spread is PERT-first and `worst` is internal** (`ESTIMATION-METHOD.md §11.5`): summaries
+  show one stored PERT per row, detail shows best/likely/PERT, and `worst` — always stored and checked —
+  appears in no `.md` and no deliverable unless `basis.render_worst` is `true`.
+- **No re-estimate-after language** (`ESTIMATION-METHOD.md §4`). The gate closes before the priced offer;
+  under real uncertainty, Discovery is sold on its own and the delivery offer follows it firm.
 - **Internal vs client-facing are different documents.** `doc` → `package.md` is for your team; `onepager`
   is for the meeting; the client path is `offer` → `audit` + `slop-check` → `package`. Never send
   `package.md` to a client.

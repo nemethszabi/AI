@@ -333,7 +333,8 @@ as an exclusion in `offer.json`.
     "rate_card": null,
     "rate_card_note": "No rate card found — effort-only output.",
     "calibration_source": "Netrisk CM v2 (2026-08-10)",
-    "commitment_gate": "2-week calibration sprint before any figure is committed."
+    "commitment_gate": "2-week calibration sprint before any figure is committed.",
+    "render_worst": false
   },
   "lines": [
     {
@@ -345,6 +346,7 @@ as an exclusion in `offer.json`.
       "scope_tier": "baseline",
       "ai_assisted": { "best": 6, "likely": 9, "worst": 14, "pert": 9.3 },
       "traditional": null,
+      "k_sanity_check": "Form renderer generated from the existing field schema; validation rules hand-written.",
       "uncertainty": "medium",
       "assumptions": ["A-002"],
       "notes": "Single-column layout only; multi-column configurability was kept out — see A-002."
@@ -352,7 +354,7 @@ as an exclusion in `offer.json`.
   ],
   "rollup": {
     "baseline": {
-      "ai_assisted": { "best": 148, "likely": 179, "worst": 232 },
+      "ai_assisted": { "best": 148, "likely": 179, "worst": 232, "pert": 182.7 },
       "traditional": null,
       "line_count": 34
     },
@@ -360,24 +362,29 @@ as an exclusion in `offer.json`.
       "percent": 15,
       "rationale": "3 high + 1 critical risk; ESTIMATION-METHOD.md §3 band.",
       "source_risks": ["R-001", "R-004", "R-007"],
-      "amount": { "best": 22, "likely": 27, "worst": 35 }
+      "decomposition": [
+        { "risk": "R-001", "exposure_likely": 14, "covers": "Billing API contract unconfirmed — rework of the adapter." },
+        { "risk": "R-004", "exposure_likely": 8,  "covers": "Legacy import data quality unknown." },
+        { "risk": "R-007", "exposure_likely": 5,  "covers": "Second UAT cycle if acceptance criteria shift." }
+      ],
+      "amount": { "best": 22, "likely": 27, "worst": 35, "pert": 27.5 }
     },
     "buffer": { "percent": 0, "rationale": null, "amount": null },
     "committed": {
-      "ai_assisted": { "best": 170, "likely": 206, "worst": 267 },
+      "ai_assisted": { "best": 170, "likely": 206, "worst": 267, "pert": 210.2 },
       "traditional": null,
       "formula": "baseline + contingency + buffer",
       "note": "The figure an offer quotes. Uncommitted until the calibration gate closes."
     },
     "optional": {
-      "ai_assisted": { "best": 38, "likely": 45, "worst": 61 },
+      "ai_assisted": { "best": 38, "likely": 45, "worst": 61, "pert": 46.5 },
       "traditional": null,
       "line_count": 9,
       "items": ["L-031", "L-032"],
       "note": "should/could-priority scope. Not included in committed totals or contingency; priced independently for the client to add."
     },
     "all_options": {
-      "ai_assisted": { "best": 208, "likely": 251, "worst": 328 },
+      "ai_assisted": { "best": 208, "likely": 251, "worst": 328, "pert": 256.7 },
       "formula": "committed + optional",
       "note": "Reference only — what it would cost if every optional item were taken. NEVER the quoted figure unless the client has explicitly asked for all of them."
     },
@@ -407,7 +414,10 @@ as an exclusion in `offer.json`.
 | `lines[].ai_assisted` | **Required on every line**, estimated directly per `ESTIMATION-METHOD.md §2` — not derived by dividing a `traditional` figure. |
 | `lines[].traditional` | `null` unless `basis.model` is `traditional`/`both`. Present only for the rare, explicitly-requested comparison case. |
 | `k_category` | `K1`–`K6` per `ESTIMATION-METHOD.md §2`; `null` for zero-effort lines. |
-| `pert` | **Computed**, never typed by hand: `(best + 4×likely + worst) / 6`. |
+| `pert` | **Computed**, never typed by hand: `(best + 4×likely + worst) / 6`. Also stored on every three-point rollup (`baseline`, `contingency.amount`, `committed`, `optional`, `all_options`) — PERT is linear, so a rollup's `pert` equals both the formula on its own best/likely/worst and the sum of its lines' `pert`. It is the one figure the rendered summary block shows (`ESTIMATION-METHOD.md §11.5`), so it is stored rather than left for each renderer to derive. |
+| `lines[].k_sanity_check` | **Required on every line when `basis.model` is `ai-assisted` or `both`** (`ESTIMATION-METHOD.md §9.3(a)`). One sentence naming the concrete AI-assisted route to this line — generated from a schema, scaffolded from an existing contract, a conventional CRUD surface — or stating that no leverage applies and why. Empty is a defect. |
+| `basis.render_worst` | `false` by default. `worst` is always stored and always checked, but rendered nowhere — no `.md`, no deliverable — unless this is `true`, which records that the engagement owner explicitly asked to see it (`ESTIMATION-METHOD.md §11.5`). |
+| `rollup.contingency.decomposition` | **Required whenever `percent > 0`** (`ESTIMATION-METHOD.md §9.3(e)`). One entry per named risk: its `R-ID`, the `exposure_likely` effort it represents, and what it `covers`. The exposures must account for `amount.likely`; a percentage that does not decompose into named risks is not a derivation. |
 | `rollup.baseline` | Sum of `must`-priority (`scope_tier: baseline`) lines only. Three-point, never a single figure. |
 | `rollup.contingency` | Derived per `ESTIMATION-METHOD.md §3` and applied to `baseline` **only**, never to `optional`. `source_risks` names the actual `R-ID`s behind the percentage — a rationale citing none is a defect even when the number is right. `amount` is stored, not left to each consumer to recompute. |
 | `rollup.buffer` | Separate figure, separate justification (§3). `percent: 0` with `amount: null` is the normal state; a non-zero buffer sharing contingency's rationale is a defect. |
@@ -822,7 +832,13 @@ command may describe a cross-model pass as "independently verified".
 
 ---
 
-**Last revised**: 2026-09-07 (v1.5 / **schema_version 1.1** — §4.7 `estimation.json`'s `rollup`
+**Last revised**: 2026-09-15 (v1.6 / schema_version 1.1, additive only — §4.7 gains the fields
+`ESTIMATION-METHOD.md` v1.5 already referenced but this schema never defined: `lines[].k_sanity_check`
+(§9.3(a)), `rollup.contingency.decomposition` (§9.3(e)), `basis.render_worst` and a stored `pert` on every
+three-point rollup (§11.5, which renders one PERT figure per summary row). No existing field changed meaning,
+so `schema_version` stays 1.1; an `estimation.json` without these fields is readable and gains them on the
+next `/sa:estimate` run.
+v1.5, 2026-09-07 — **schema_version 1.1** — §4.7 `estimation.json`'s `rollup`
 restructured so every related figure sums in one place: `contingency` and `buffer` moved out of `baseline`
 into their own objects with the derived `amount` **stored** rather than recomputed by each consumer;
 `totals_with_contingency` became `committed` and gained a three-point range (it was a scalar, which threw

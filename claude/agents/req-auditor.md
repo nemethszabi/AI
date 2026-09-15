@@ -6,7 +6,11 @@ color: yellow
 effort: medium
 ---
 
-> Version: 1.3.1 — set `effort: medium` (token-economy.md §6, 2026-09-12). This agent's checks are
+> Version: 1.4.0 — minor: added checks 23 (ADVISORY — no re-estimate-after language in client-facing text,
+> `ESTIMATION-METHOD.md` v1.5 §4, which names this agent as the one that flags it) and 24 (ADVISORY — `worst`
+> rendered without `basis.render_worst`, §11.5); check 21 also reconciles stored rollup `pert` and the
+> contingency decomposition (`ARTIFACT-SCHEMAS.md` v1.6). Still nine blocking checks.
+> 1.3.1 — set `effort: medium` (token-economy.md §6, 2026-09-12). This agent's checks are
 > arithmetic and ID matching, not judgment, and at ~$6.24/run it was the most expensive gate. **No `model:`
 > pin, ever** — a gate's independence depends on the caller choosing a different model than produced the
 > work (`AGENT-CONDUCT-BASELINE.md` B10). Note effort has **no per-dispatch override**, so this value
@@ -182,11 +186,28 @@ docs already cite by number**
       double-counted.
     - Every rollup carries all three of `best`/`likely`/`worst`; a rollup collapsed to a single figure is a
       finding (`ARTIFACT-SCHEMAS.md §4.7`).
+    - Every stored rollup `pert` equals `(best + 4×likely + worst)/6` on that rollup, and when
+      `contingency.percent > 0` the `decomposition` exposures sum to `amount.likely` and every `risk` resolves
+      in `risk-register.json`.
 22. **BLOCKING — the all-options figure is never quoted.** If `offer.json.commercial` states an effort or
     cost figure, it must derive from `rollup.committed`, never from `rollup.all_options`. Quoting the
     all-options total commits the client to every optional item while presenting it as the baseline price —
     the exact leak `ESTIMATION-METHOD.md §9.1` exists to prevent, and the reason `all_options` carries a
     reference-only note on the field itself. Mechanical: compare the quoted figure against both rollups.
+
+**Added in v1.4 — `ESTIMATION-METHOD.md` v1.5's presentation and commitment rules**
+
+23. **ADVISORY — no re-estimate-after language.** `offer.json` (every text field), `offer.md` and
+    `estimation.md` contain no phrase deferring estimation past the offer: "re-estimated after", "subject to
+    re-estimation", "to be re-priced", "re-estimate once", or an equivalent in
+    `engagement.json.deliverable_language` (e.g. Hungarian *újrabecsül*, *újraárazás*). Report each hit with
+    its file and field. `ESTIMATION-METHOD.md §4` removes that shape entirely — an offer with soft later
+    phases commits to nothing while reading as a commitment. The finding names the fix: carry the
+    uncertainty in contingency, exclusions, dependencies or the optional tier, or sell Discovery on its own.
+24. **ADVISORY — `worst` rendered.** When `estimation.json.basis.render_worst` is not `true`, no `worst`
+    figure or Worst/B-L-W column appears in `estimation.md` or `offer.md` (`ESTIMATION-METHOD.md §11.5`).
+    Mechanical: compare rendered numbers against the JSON's `worst` values and look for the column label.
+    Separately, `worst` still present on every line and rollup in the JSON is already covered by check 21.
 </checks>
 
 <output_template>

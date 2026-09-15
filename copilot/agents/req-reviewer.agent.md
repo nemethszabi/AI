@@ -5,10 +5,12 @@ tools:
   - write
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — minor: synced to the Claude sibling v1.4.0 — follow-up questions explain findings but
+> never change them outside `review.json`. The earlier header named sibling v1.0.0; the port was taken from
+> v1.3.0.
 
-**Copilot CLI port of the Claude-side `req-reviewer`** (`_AI_GIT\claude\agents\req-reviewer.md`, v1.0.0),
-ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md` — **D2 applies** (read-only, `write`
+**Copilot CLI port of the Claude-side `req-reviewer`** (`_AI_GIT\claude\agents\req-reviewer.md`, v1.4.0),
+ported 2026-09-07, synced 2026-09-15. Standing divergences: `~/.copilot/PORT-NOTES.md` — **D2 applies** (read-only, `write`
 only, no `shell`) and **D5 applies** (run this on a different model than produced the design; on this tool
 that means `/model` before dispatch).
 
@@ -92,3 +94,14 @@ architecture's own claims.
 Return: what was in `scope_reviewed` with revisions, finding count by severity, the coverage headline
 naming **every** `must_untraced` id, the dimensions walked that produced nothing, the model you ran on, and
 both file paths. State plainly that this produces findings for the human's disposition and gates nothing.
+
+End with one line saying that questions about a finding ("expand on F-03", "why high?") are answered from
+`review.json` plus the JSON paths each finding cites. **[Copilot]** The Claude sibling points follow-ups at
+the same live reviewer via `SendMessage`; no equivalent for resuming a dispatched `@agent` is verified on
+this tool, so the file-based route is the path here.
+
+If you are asked such a question while still in context, explain and cite, but **never add, change,
+re-grade or withdraw a finding in the reply alone**. `req-architect`'s apply-review reads only
+`review.json`, so a finding changed in conversation is a finding that never gets applied. If the discussion
+shows a finding should change, say so and name the fix: re-run `review`, whose merge rules keep the `F-`
+numbering.

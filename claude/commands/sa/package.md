@@ -13,7 +13,9 @@ allowed-tools:
 argument-hint: "<slug> [offer|estimation-pack|hld|lld|pitch|all] [--mode=auto|regenerate|patch]"
 ---
 
-> Version: 2.0.0 — major: the gate now requires **two** verdicts (`sa-audit` and the new `sa-slop`), and
+> Version: 2.1.0 — minor: the estimation workbook follows `ESTIMATION-METHOD.md` v1.5 §11.5 — Tab 1 shows
+> one PERT figure per row, Tab 3 shows best/likely/PERT, and `worst` is written nowhere unless
+> `basis.render_worst` is `true`. 2.0.0 — major: the gate now requires **two** verdicts (`sa-audit` and the new `sa-slop`), and
 > builds into a branded template when a document profile resolves (`ARTIFACT-SCHEMAS.md §5, §8`).
 
 <objective>
@@ -172,7 +174,8 @@ helpers' styling only to content the template has no style for**, per `resolve-t
   chance to round one number a fourth way.
 
   **Tab 1 Summary** — the estimate's own summary block, same rows in the same order
-  (`ESTIMATION-METHOD.md §11.1`), each as best/likely/worst: Baseline → + Contingency (% and amount) →
+  (`ESTIMATION-METHOD.md §11.1`), each as its stored PERT expected value only (§11.5): Baseline → +
+  Contingency (% and amount) →
   + Buffer → **= Committed total** (visually distinct, labelled *the figure quoted*) → Optional (labelled
   *not included above*) → = If all options taken (labelled **reference only — not a quote**) → Not
   estimated (`—` with a count, never `0`). Arithmetic rows carry real cell formulas, so the sum is
@@ -180,8 +183,11 @@ helpers' styling only to content the template has no style for**, per `resolve-t
   **Tab 2 Rollups** — by delivery phase, by work type (with the **non-build share** as an explicit
   percentage), by K-category. §11.2's three questions, answered without summing the line table.
   **Tab 3 Line items** — one row per `L-`, with REQ/component/QA citations, K-category, category and
-  `scope_tier`. Baseline and optional rows visually separated, **never interleaved**, each subtotalling to
-  its Tab 1 row.
+  `scope_tier`, `k_sanity_check`, and best/likely/PERT. Baseline and optional rows visually separated,
+  **never interleaved**, each subtotalling to its Tab 1 row.
+  **`worst` is written to no tab and no hidden column** unless `estimation.json.basis.render_worst` is
+  `true` — a hidden column is one unhide away from the anchoring §11.5 exists to prevent. Formulas that
+  need it reference the stored `pert` instead of recomputing from worst.
   **Tab 4 Assumptions & exclusions** · **Tab 5 Coverage matrix** (REQ × component × line).
 
   If a `traditional` comparison figure exists (opt-in only, per `ESTIMATION-METHOD.md §2`), show it

@@ -348,10 +348,13 @@ unattended.
 ### What good looks like on a vague TSD
 
 An inbound TSD with no API specifications and a page of unresolved decisions should *not* produce one
-confident number. It should produce a fixed-price Discovery phase, a re-estimate after it, a risk register
-naming every unspecified interface, and an offer whose exclusions and client dependencies are explicit.
-That's not hedging — it's the more defensible commercial position, and it's what
-`ESTIMATION-METHOD.md §5` steers the pipeline toward.
+confident number. It should produce a risk register naming every unspecified interface, and then one of
+two firm shapes: a Discovery engagement contracted and priced **on its own**, with the delivery offer issued
+only after it completes, or a delivery offer whose uncertainty is carried by contingency, exclusions,
+client dependencies and the optional tier. Never one offer with later phases "re-estimated after
+Discovery" — since `ESTIMATION-METHOD.md` v1.5 (§4, §5) that shape is removed from the method, because it
+reads as a commitment while committing to nothing. Sequential contracting is the more defensible position,
+not hedging.
 
 ---
 

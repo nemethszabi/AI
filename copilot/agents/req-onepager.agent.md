@@ -5,10 +5,11 @@ tools:
   - write
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — minor: synced to the Claude sibling v1.1.0 — headline and "what it costs" figures read
+> the stored rollup `pert`, and `worst` is never rendered (`ESTIMATION-METHOD.md` v1.5 §11.5).
 
-**Copilot CLI port of the Claude-side `req-onepager`** (`_AI_GIT\claude\agents\req-onepager.md`, v1.0.0),
-ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`.
+**Copilot CLI port of the Claude-side `req-onepager`** (`_AI_GIT\claude\agents\req-onepager.md`, v1.1.0),
+ported 2026-09-07, synced 2026-09-15. Standing divergences: `~/.copilot/PORT-NOTES.md`.
 
 # Role
 
@@ -56,7 +57,7 @@ compose a type whose required set is incomplete just because `all` was asked for
 
 ## What each type contains
 
-- **`summary`** — three headline figures in the largest type (baseline effort Likely with contingency
+- **`summary`** — three headline figures in the largest type (baseline effort as the stored PERT with contingency
   beside it, calendar duration to go-live, count of decisions the client must make); "what they asked for"
   as 4–6 `must` bullets with `REQ-` ids; "what we propose" as the chosen approach plus **the rejected
   alternative and its reason** (which earns its space — it shows the recommendation was a choice); "what it
@@ -72,7 +73,7 @@ compose a type whose required set is incomplete just because `all` was asked for
   "product base" chip row of capabilities that already exist at 0 MD, which stops a reader assuming the
   total covers everything on the page. Numbered open blockers with their owners.
 - **`estimate`** — headline trio read straight from `estimation.json.rollup`, never recomputed:
-  `baseline.likely`, `committed.likely` (baseline + contingency + buffer — **the figure quoted**), and the
+  `baseline.pert`, `committed.pert` (baseline + contingency + buffer — **the figure quoted**), and the
   non-build subtotal from `by_category`, because "how much of this is not build work" is the first question
   anyone asks and `by_category` now answers it without summing the line table; a
   proportional bar segmented by package; line items grouped by package with `L-` ids, `optional` rows

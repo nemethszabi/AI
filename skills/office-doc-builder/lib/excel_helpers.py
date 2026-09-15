@@ -16,6 +16,7 @@ from openpyxl.utils import get_column_letter
 # Reusable named colors (ARGB hex) - not exhaustive, add more here as new needs come up rather than
 # inlining a fresh color per script.
 COLOR_HEADER_BLUE = "FF4472C4"
+COLOR_HEADER_NAVY = "FF1F3864"
 COLOR_TOTAL_YELLOW = "FFFFFF00"
 COLOR_HIGHLIGHT_GREEN = "FF92D050"
 COLOR_BORDER_GRAY = "FFB0B0B0"

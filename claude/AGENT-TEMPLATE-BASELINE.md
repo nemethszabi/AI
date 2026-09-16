@@ -27,7 +27,7 @@ what a minimal command looks like).
 | `name` | kebab-case, no project prefix if generic | kebab-case; may include namespace (`sa:help`) | See `README.md`'s generic-vs-project rule |
 | `description` | One paragraph: what it does + when to use it. Add `Use PROACTIVELY when...` if it should be auto-invoked without being asked by name. | One line: what running it produces | This is the *only* thing the orchestrator sees before deciding to invoke it — write for that, not for a human skimming |
 | `tools:` | comma list, agents only | — | Minimum the role needs — see `AGENT-CONDUCT-BASELINE.md` A6. **Never grant `AskUserQuestion` to an agent** — see the note below the table |
-| `allowed-tools:` | — | YAML list, commands only | Different key name from `tools:` — confirmed distinct, not a typo |
+| `allowed-tools:` | — | YAML list, commands only | Different key name from `tools:` — confirmed distinct, not a typo. **Pre-approves only — it never restricts**: every tool stays callable and permission settings govern the rest (verified 2026-09-16, <https://code.claude.com/docs/en/slash-commands>). To remove tools while the command runs use `disallowed-tools:`; for a guarantee that also covers dispatched agents, use a `permissions.deny` rule or a `PreToolUse` hook (§1a). Never describe an omission from `allowed-tools` as enforcement |
 | `argument-hint` | — | optional, commands only | e.g. `[path, optional]` |
 | `color` | optional | — | Cosmetic only; doesn't gate behavior |
 | `model` | optional | — | **Pin by tier, and never pin a reviewer** (rule revised 2026-09-12, replacing the older blanket "don't pin a model by default"). Mechanical → Sonnet; Worker/author with a gate behind it → Sonnet; Judgment (design, estimation, planning) → leave inheriting. **Gates and reviewers must never carry a `model:` pin at all** — independence requires the *caller* to pick a different model than wrote the work (`AGENT-CONDUCT-BASELINE.md` B10), and a pin can silently make reviewer and author the same model. That is a correctness bug, not a cost decision. Per-agent table and measured $/run: `d:\WORK\AI\knowledge-base\token-economy.md` §6 |
@@ -39,12 +39,14 @@ what a minimal command looks like).
 | `mcpServers` | optional | — | Server names or inline definitions, scoped to this agent. Prefer this over hardcoding a wall of `mcp__<server>__*` tool names in `tools:` |
 | `hooks` | optional | — | Lifecycle hooks scoped to this one agent — the per-agent form of the guard hook in §1a |
 | `background` | optional | — | `true`/`false`. Fits long read-only reviews whose output the caller doesn't need inline |
-| `effort` | optional | — | `low` \| `medium` \| `high` \| `xhigh` \| `max`. Set low on mechanical scanners — this moves cost and quality more than `model` does, and it is the only tier dial a gate or reviewer may carry. **Unset already means `high`**, and effort has **no per-dispatch override** (the dispatch tool takes `model`, not `effort` — verified 2026-09-12), so writing `high` explicitly buys nothing while permanently removing your only lever. Set a value only when you want something *other* than the default. Not supported on Haiku 4.5 |
+| `effort` | optional | — | `low` \| `medium` \| `high` \| `xhigh` \| `max`. Set low on mechanical scanners — this moves cost and quality more than `model` does, and it is the only tier dial a gate or reviewer may carry. **Unset inherits the session's effort** ("Overrides the session effort level. Default: inherits from session" — <https://code.claude.com/docs/en/sub-agents>, verified 2026-09-16), and on this machine every root sets `modelSettings.claude-opus-5.effortLevel: medium`. Effort has **no per-dispatch override** (the dispatch tool takes `model`, not `effort` — verified 2026-09-12), so an agent that must run at `high` regardless of the session has to say `effort: high` explicitly; leave it unset only when following the session is what you want. Not supported on Haiku 4.5 |
+| `omitClaudeMd` | optional | — | `true` launches the agent without user/project/local `CLAUDE.md` (managed policy still loads). Could trim context for cold reviewers — but every generic agent reads `CONSTITUTION.md` explicitly anyway, so adopt only deliberately (field added v2.1.271, verified 2026-09-16) |
 | `isolation` | optional | — | `worktree` — runs the agent in its own git worktree. For editing agents whose diff you want quarantined |
 | `initialPrompt` | optional | — | Auto-submitted as the first user turn when the agent runs as a *main session*. Irrelevant for dispatch-only agents |
 | `experimental` | optional | — | Map with `cacheTtl`: `5m` or `1h`. Worth setting only on an agent re-invoked repeatedly in one session via `SendMessage` |
 
-Field list verified against <https://code.claude.com/docs/en/sub-agents>, 2026-09-05. Before adding a field
+Field list verified against <https://code.claude.com/docs/en/sub-agents>, 2026-09-05; revised 2026-09-16
+(`allowed-tools` semantics, `effort` inheritance, `omitClaudeMd` — `framework-review-20260916` F-01/F-04). Before adding a field
 here, check it there — this table was 11 fields stale for long enough that every agent in the roster was
 drafted without them.
 
@@ -81,6 +83,7 @@ When drafting, ask which of the agent's `<rules>` are actually *promises* and mo
 | "never runs git state-changing commands" | `disallowedTools: Bash`, or a `PreToolUse` hook if `Bash` is genuinely needed |
 | "never promotes/installs anything to a live root" | `disallowedTools` on the writing tool, since a path rule can't be expressed in `tools:` |
 | "always confirms before a destructive action" (Article II) | a `PreToolUse` hook at the root — see `_scripts\hooks\` |
+| "this command never edits/commits/touches X" | `permissions.deny` in the project's committed `.claude/settings.json` (e.g. `Edit(//d/other-repo/**)`, `Bash(git commit *)`, `PowerShell(git commit *)`) or a `PreToolUse` hook — **not** `allowed-tools`, which only pre-approves. Bash/PowerShell argument patterns are fragile (docs), so test the deny once |
 | "no agent spawns another agent" (Article VI.2) | `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH: "1"` in `settings.json` `env` — the platform default is **3** |
 
 An agent whose `<rules>` block concedes its own rules are "instruction-enforced, not tool-enforced" is

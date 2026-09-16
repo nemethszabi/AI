@@ -10,7 +10,7 @@ allowed-tools:
 argument-hint: "[project path, optional - defaults to current directory] <task description>"
 ---
 
-> Version: 1.0.0
+> Version: 1.0.1 — 2026-09-16: stale `net8-migration` pointer → `development`
 
 <objective>
 `/dev:quick <task>` executes one concrete implementation task by dispatching to the generic `dev-backend`
@@ -20,7 +20,7 @@ different process to enforce — classify the area, inject context, dispatch, re
 
 If a project's process is *not* generic (version-bump discipline, a specific issue-tracker integration,
 a mandatory approval gate before implementing), that project should have its own command instead of this
-one — see `/scm:fix`/`/scm:req` in net8-migration for the pattern.
+one — see `/scm:fix`/`/scm:req` in `d:\_SCM_GIT\development` for the pattern.
 </objective>
 
 <process>

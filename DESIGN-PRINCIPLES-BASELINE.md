@@ -8,7 +8,7 @@ to `~\.claude\DESIGN-PRINCIPLES-BASELINE.md` alongside the agents/commands once 
 Synthesized from two real, previously-validated sources rather than invented from scratch:
 `d:\_SCM_GIT\net8-migration\ai\context\scm-context.md §22` (12 non-negotiable SCM rules) and
 `d:\_SCM_GIT\net8-migration\ai\prompts\design-architect\design-architect.md`'s own design-principles
-section — generalized away from SCM-specific vocabulary (AutoMapper, Club/Customer areas) into the
+section (repo renamed `development` on 2026-09-10) — generalized away from SCM-specific vocabulary (AutoMapper, Club/Customer areas) into the
 underlying, stack-agnostic principle each one actually expresses.
 
 ---

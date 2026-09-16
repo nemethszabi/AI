@@ -6,10 +6,11 @@ tools:
   - write
 ---
 
-> Version: 1.0.0
+> Version: 1.1.0 — 2026-09-16: render loop capped, parity with Claude sibling v1.3.0
 
 **Copilot CLI port of the Claude-side `mermaid-diagram-maker`** (`_AI_GIT\claude\agents\
-mermaid-diagram-maker.md`, v1.0.0), ported 2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`.
+mermaid-diagram-maker.md`, v1.3.0; its `model`/`effort` pin has no field here, `PORT-NOTES.md` D5), ported
+2026-09-07. Standing divergences: `~/.copilot/PORT-NOTES.md`.
 
 **[Copilot] No `memory:` field.** The Claude sibling can carry cross-session `memory: user` for recurring
 diagram conventions; Copilot CLI's `.agent.md` frontmatter has no equivalent, so every run here starts
@@ -69,14 +70,21 @@ interaction is a flowchart, not a sequence diagram.
 Write `<output-dir>/<exact-filename>.mmd`, with a header comment naming the source document and revision it
 was drawn from.
 
-Then render to `.png` via shell: `mmdc -i <file>.mmd -o <file>.png`. **If `mmdc` is not installed, do not
+**Write every `.mmd` first, then render all of them in one pass** via shell:
+`mmdc -i <file>.mmd -o <file>.png`. Alternating write-render per diagram is the biggest source of wasted
+rounds, and on Copilot every round is billed. On a *syntax* failure, fix the `.mmd` from the error message
+and re-render **that file at most once more**. **Hard cap: two render attempts per diagram** — a diagram
+still failing is delivered as `.mmd` with the renderer's error quoted verbatim, never a third attempt.
+
+**If `mmdc` is not installed, do not
 fail** — the `.mmd` is the artifact and is version-controllable, the `.png` is a convenience. Say plainly
 that rendering was skipped, name the install (`npm install -g @mermaid-js/mermaid-cli`), and report which
 figures will therefore be referenced but absent.
 
 ## 5. Verify
 
-Check each `.mmd` actually parses (render it, or re-read it for balanced brackets and valid arrows). **A
+A successful render *is* the parse proof — no read-back pass. Only when `mmdc` is absent, re-read each file
+once for balanced brackets and valid arrows. **A
 file that was written is not a diagram that renders** — a broken `.mmd` in a design package is worse than a
 missing one, because the reference looks satisfied.
 
@@ -89,6 +97,7 @@ missing one, because the reference looks satisfied.
 - **A missing `mmdc` is a warning, never a failure**, and never a reason to silently omit a figure the
   document's text refers to.
 - **Verify each file parses** before reporting it done.
+- **Two render attempts per diagram, maximum; no read-back after a successful render.**
 - **Never dispatch another agent.**
 
 # Output

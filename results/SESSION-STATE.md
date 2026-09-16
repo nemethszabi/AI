@@ -1,7 +1,10 @@
 # Session State — hand-off for a fresh session
 
+> **Historical snapshot, 2026-08-07 — superseded.** Do not use as a map; read `README.md` and
+> `D:\WORK\AI\results\framework-status-20260907.md` instead. (Marked 2026-09-16, `framework-review-20260916` C-21.)
+
 Written 2026-08-07 to bring a new Claude Code session up to speed on this repo without replaying the
-conversation that built it. Read this first if picking up work here cold.
+conversation that built it. (Originally: "read this first if picking up work here cold" — no longer true.)
 
 ---
 

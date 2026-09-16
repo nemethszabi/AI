@@ -4,7 +4,8 @@ description: Static reference for the dev: command namespace. No live analysis, 
 allowed-tools: []
 ---
 
-> Version: 1.1.0 — added `/dev:new`, `/dev:deconstruct`, `/dev:build` and the greenfield/rebuild routes
+> Version: 1.1.1 — 2026-09-16: stale `net8-migration` pointer → `development`.
+> 1.1.0 — added `/dev:new`, `/dev:deconstruct`, `/dev:build` and the greenfield/rebuild routes
 > (2026-09-07)
 
 <reference>
@@ -50,7 +51,8 @@ lighter than a full wave/gate pipeline, and `~/.claude/docs/USAGE.md` for the fu
   one lists it under "needs a human" instead of executing it.
 - If a project's process genuinely differs from generic dispatch (approval gates, an issue-tracker
   integration, a release discipline), it gets its own project-specific command instead of using
-  `/dev:quick` — see `net8-migration`'s `/scm:*` namespace for the pattern.
+  `/dev:quick` — see `d:\_SCM_GIT\development`'s `/scm:*` namespace for the pattern (`/svm:*` in
+  `d:\_SVM_GIT\dev` is a minimal variant).
 
 This command performs no live analysis — it only prints the reference above.
 </reference>

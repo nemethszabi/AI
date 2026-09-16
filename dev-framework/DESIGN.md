@@ -207,7 +207,7 @@ for no user-visible gain. And `/dev:build` in particular must be **explicitly in
 auto-triggering on description match is an anti-feature for a command that dispatches agents to write code
 across dozens of files. Prefer a skill for the next genuinely standalone thing; the namespace-coherence
 argument does not generalise beyond `dev:`.
-| `/scm:fix`, `/scm:req`, `/scm:review`, `/scm:devops-ask`, `/scm:devops-change`, `/scm:test` | Project (net8-migration) | Own SCM-specific mechanics (Azure DevOps org rule, version-bump, never-commit) on top of the same generic agents. |
+| `/scm:fix`, `/scm:req`, `/scm:review`, `/scm:devops-ask`, `/scm:devops-change`, `/scm:test` | Project (`development`, formerly `net8-migration`) | Own SCM-specific mechanics (Azure DevOps org rule, version-bump, never-commit) on top of the same generic agents. |
 
 `/cm:dev` (CampaignManager) was retired 2026-08-07 in favor of `/dev:quick` once it became clear it carried
 no CampaignManager-specific mechanics at all — a case where a project-specific command had been built where

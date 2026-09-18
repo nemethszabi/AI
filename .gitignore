@@ -15,3 +15,12 @@ framework-data/scope.yaml
 # sa-framework/ARTIFACT-SCHEMAS.md §8 records why this lives outside sa-framework/.
 document-data/templates.yaml
 document-data/templates/
+
+# Client-specific render profiles — a named account's document preferences, and the fact that they
+# are an account, are commercially identifying rather than framework content. Same reasoning as
+# templates.yaml above. render-profiles/standard.yaml and client-example.yaml ARE staged: one is
+# the framework default, the other the anonymised reference for writing a real one.
+# sa-framework/RENDERING-CONTRACT.md §4 records the mechanism.
+document-data/render-profiles/*.yaml
+!document-data/render-profiles/standard.yaml
+!document-data/render-profiles/client-example.yaml

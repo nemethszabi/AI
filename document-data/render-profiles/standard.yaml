@@ -1,0 +1,109 @@
+# Render profile — standard
+#
+# Contract: sa-framework\RENDERING-CONTRACT.md. A render profile says WHAT goes in a deliverable
+# and IN WHAT ORDER. It never says what it looks like — typography, colour and heading numbering
+# come from the branded DOCX template resolved through templates.yaml, and a render profile that
+# starts carrying fonts has become a second, competing brand definition.
+#
+# This is the default. Every engagement uses it unless engagement.json names another
+# `render_profile`. Client-specific variants inherit from it via `extends:` and override only the
+# keys they genuinely need — see vfro.yaml.
+
+name: standard
+description: "Default offer and estimation-pack structure. Industry-standard bid document shape."
+
+docx:
+  # A real Word TOC field. Word populates it when the field is refreshed; the builder says so in
+  # its report rather than implying the entries are already there.
+  toc: true
+  toc_note: true
+
+  # Figures and tables are numbered and captioned. A document whose text says "see the diagram"
+  # without a figure number is a document nobody can discuss over a phone call.
+  caption_figures: true
+  caption_tables: true
+
+  # Prose budget. The DOCX is the summary; the XLSX is the detail. These are enforced by the
+  # builder: an over-long section is reported, not silently truncated.
+  max_paragraph_words: 90
+  max_section_paragraphs: 6
+
+  sections:
+    - id: executive_summary
+      title: "Executive summary"
+      required: true
+      max_paragraphs: 3
+
+    - id: understanding
+      title: "Our understanding"
+      required: true
+      max_paragraphs: 4
+
+    - id: solution
+      title: "Solution"
+      required: true
+      blocks:
+        - principle        # 1-2 paragraphs: how the solution works, in plain language
+        - diagram          # Figure 1 — component view, white background
+        - components       # table: component | what it does
+        - data_protection  # only when the engagement carries compliance flags
+
+    - id: scope
+      title: "Scope"
+      required: true
+      blocks:
+        - in_scope         # table: work package | content
+        - coverage         # requirement/gap coverage table, when the client supplied a list
+        - not_in_figure    # table: item | reason  — named, and deliberately not priced
+        - optional         # table: item | effort  — priced, never in the committed total
+        - out_of_scope     # bullets
+
+    - id: delivery
+      title: "Delivery approach"
+      required: true
+      blocks:
+        - phases           # table: phase | weeks | start | end | deliverable
+        - timeline         # bar chart figure + the end-to-end duration sentence
+
+    - id: effort
+      title: "Effort"
+      required: true
+      blocks:
+        - headline         # ONE figure, the committed PERT total
+        - by_phase         # 4-6 rows, phase subtotals — never the line-item table
+        - optional_effort
+        - support
+
+    - id: assumptions_dependencies
+      title: "Assumptions, dependencies and risks"
+      required: true
+      blocks:
+        - assumptions
+        - client_dependencies
+        - risks            # table: risk | impact | how it is managed
+
+    - id: open_questions
+      title: "Questions to confirm before start"
+      required: false      # rendered only when the engagement has open decisions
+
+    - id: commercial
+      title: "Commercial terms"
+      required: true
+
+xlsx:
+  tabs:
+    - summary          # management view — headline figures and the MD breakdown
+    - how_to_read      # K-categories, PERT, scope tiers, what each column means
+    - rollups          # by phase, by work type (with non-build share), by K-category
+    - line_items       # every line, checkable one by one — best / likely / PERT
+    - timeline
+    - assumptions      # assumptions and exclusions
+    - risks
+    - not_estimated
+    - coverage         # requirement × component × line
+
+  # The offer quotes one number; the workbook is where the spread lives (ESTIMATION-METHOD §11.5).
+  summary_points: [pert]
+  line_item_points: [best, likely, pert]
+  freeze_headers: true
+  formulas: true       # arithmetic rows carry real cell formulas, so a reader can check the sum

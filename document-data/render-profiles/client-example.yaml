@@ -1,0 +1,77 @@
+# Render profile — worked example of a client-specific variant.
+#
+# Contract: sa-framework\RENDERING-CONTRACT.md §4. This file is the staged, anonymised reference for
+# how a named-account profile is written. Real client profiles are NOT staged in the framework repo,
+# for the same reason templates.yaml is not: a client's document preferences and the fact that they
+# are a client are commercially identifying, not framework content.
+#
+# Copy this to <client-slug>.yaml at a live config root, fill it in, and leave this file alone.
+
+name: client-example
+extends: standard
+description: "Worked example: a named account whose sales side asks for a specific offer shape."
+
+# Which engagements resolve to this profile automatically. An explicit `render_profile` in
+# engagement.json always wins over a match here. Patterns are matched case-insensitively against
+# the engagement's `client` field, so list every spelling the account is written under — a client
+# recorded two ways is a client whose profile fires half the time.
+matches:
+  client_patterns:
+    - "Example Telecom"
+    - "Example Telecom Group"
+
+docx:
+  # A fixed subtitle, so consecutive offers to the same buyer read as one series.
+  artifact_title: "Technical and effort offer"
+
+  # Sections merge structurally onto the inherited list: an id that already exists is replaced in
+  # place, a new id is inserted where `position` says (first, last, before:<id>, after:<id>).
+  # Never restate the inherited sections here — a copied list is what stops tracking the base.
+  sections:
+    - id: introduction
+      title: "Introduction"
+      required: true
+      position: first
+      blocks:
+        - basis        # the named source documents and decisions this offer rests on
+        - structure    # one paragraph: what each section contains
+
+    # For an account that supplies its own numbered requirement register and reads every offer
+    # against it, coverage is promoted out of the scope section into its own section.
+    - id: gap_coverage
+      title: "Objectives"
+      required: true
+      position: after:executive_summary
+      blocks:
+        - objectives
+        - cluster_table
+
+  # Carry the client's own identifiers on scope, effort and exclusion rows, so the buyer can
+  # reconcile the offer against their own register line by line.
+  show_client_cluster_refs: true
+
+commercial:
+  # Stricter than the framework default, which permits a priced offer where a rate card resolves.
+  # Under a frame agreement the rates are already agreed, so the offer carries man-days only and
+  # the build refuses outright if offer.json sets a currency.
+  effort_only: true
+  forbid_currency: true
+  standard_terms:
+    - "Effort is stated in man-days and is the only commercial basis in this document. Rates are agreed under the frame agreement."
+    - "Changes to the agreed scope, including answers that change the design, are handled through change control."
+
+xlsx:
+  # One extra sheet, mapping every row of the client's own requirement workbook to the estimate
+  # line that covers it. Rendered only when the artifacts actually carry a `client_rows` map;
+  # otherwise the sheet is skipped and the build says so.
+  tabs:
+    - summary
+    - how_to_read
+    - rollups
+    - line_items
+    - timeline
+    - client_row_coverage
+    - assumptions
+    - risks
+    - not_estimated
+    - coverage

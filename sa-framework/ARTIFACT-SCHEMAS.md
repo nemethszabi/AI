@@ -121,6 +121,8 @@ The only artifact a command writes directly rather than an agent. Everything dow
   "currency": "EUR",
   "vendor_org": "geomant",
   "document_profile": "geomant-eng",
+  "render_profile": null,
+  "document_ref": "GEO-2026-Northwind-004",
   "template_path": "C:/Users/<user>/.claude/document-data/templates/template_ENG.docx",
   "file_naming": "<ORG>-<YYYY>-<CLIENT>-<NNN>-<artifact>-v<NN>.<ext>",
   "delivery_model_intent": "both",
@@ -473,26 +475,49 @@ nothing**.
   "executive_summary": "",
   "understanding": "Our reading of the client's need, in their language.",
   "scope": {
-    "in_scope": [ { "text": "", "traces_to": ["REQ-001"] } ],
-    "optional": [ { "text": "", "traces_to": ["REQ-009"], "indicative_effort": "estimation.json L-014, ai_assisted.likely" } ],
+    "in_scope": [ { "work_package": "Dashboard", "text": "", "traces_to": ["REQ-001"] } ],
+    "not_in_figure": [ { "text": "Production high availability", "reason": "Offered separately once recovery objectives are confirmed." } ],
+    "optional": [ { "text": "", "traces_to": ["REQ-009"], "effort_md": 4.2 } ],
     "out_of_scope": [ { "text": "", "traces_to": ["X-001"] } ]
   },
-  "solution_summary": { "text": "", "traces_to": ["C-001"] },
-  "delivery_plan": [ { "phase": "PH-000", "name": "Discovery", "duration": "2-3 weeks", "deliverables": [], "commercial_basis": "fixed-price" } ],
+  "solution_summary": {
+    "principle": "How it works in plain language: what stays, what is added, what happens if the new parts are unavailable.",
+    "figure_caption": "Solution architecture — component view",
+    "figure_note": "The paragraph that walks the reader along the main flow.",
+    "data_protection": "Only where engagement.json.compliance_flags carries something.",
+    "traces_to": ["C-001"]
+  },
+  "delivery_plan": [ { "phase": "PH-000", "name": "Discovery", "duration": "2-3 weeks", "start_week": 1, "end_week": 3, "weeks": 3, "effort_md": 11.3, "deliverables": [], "commercial_basis": "fixed-price" } ],
+  "timeline": { "total_weeks": 21, "note": "Indicative; a firm plan is agreed at kick-off." },
   "commercial": {
     "basis": "effort-only",
     "currency": null,
     "figures": {},
+    "support_md_per_year": 15,
     "note": "No rate card configured; pricing is a management decision — see ESTIMATION-METHOD.md §5.",
-    "validity_days": 30
+    "validity_days": 30,
+    "terms": []
   },
   "assumptions": [ { "id": "A-001", "text": "", "consequence_if_wrong": "" } ],
   "exclusions": [ { "id": "X-001", "text": "" } ],
   "client_dependencies": [ { "id": "D-001", "text": "", "needed_by": "before Phase 2 pricing" } ],
+  "open_questions": [ { "id": "Q-001", "text": "", "affects": "What in this offer changes depending on the answer." } ],
+  "client_clusters": [ { "ref": "D01", "gap": "", "client_priority": "", "coverage": "" } ],
   "risks_disclosed": ["R-001"],
   "sign_off": { "prepared_by": "", "date": "", "valid_until": "" }
 }
 ```
+
+| Field | Rule |
+|---|---|
+| `scope.in_scope[].work_package` | Optional but preferred. Where every entry carries one, the deliverable renders a work-package table rather than a bullet list — the shape a buyer can check off. |
+| `scope.not_in_figure[]` | **Distinct from `out_of_scope`.** Out of scope says *we are not doing it*; this says *we discussed it, it is real, and it is not priced here*. Collapsing the two is how a client comes to believe something was included, because the item they remember agreeing to is the one that was named in a meeting and appears nowhere in the document. Sourced from `estimation.json.not_estimated[]` and from anything deferred to its own proposal. |
+| `solution_summary.principle` | Replaces the old flat `text`, which stays readable as a fallback. The figure itself is drawn at packaging from `architecture.json`; this field supplies the words around it. |
+| `delivery_plan[].start_week`, `end_week` | Relative to project start — week 1, never a calendar date, because a date implies a start nobody has agreed. Their absence means no timeline chart can be drawn. Overlapping phases are stated as overlapping week ranges; a table that silently serialises them overstates the duration. |
+| `timeline.total_weeks` | The end-to-end indicative duration, stated once, so no reader has to add up phase durations that overlap. |
+| `commercial.support_md_per_year` | Quoted separately and never folded into the committed build total. |
+| `open_questions[]` | Only questions whose answer would change the design, the scope or the figure. A list padded with questions that merely reflect unread material teaches the client to skim the ones that matter. |
+| `client_clusters[]` | Present only where the client supplied their own grouping of requirements — a gap-cluster workbook, a numbered register — and expects the offer to be read against it. A render profile may promote it to a section of its own; where the array is absent that section renders without the table, and the build says so rather than inventing one. |
 
 **Every `in_scope` entry carries a non-empty `traces_to`.** An offer line with nothing behind it is a
 scope commitment nobody estimated — the single most expensive defect this pipeline exists to prevent.
@@ -696,6 +721,16 @@ framework's `/dev:auto` is exactly the pattern this one declines to copy.
 A client deliverable that arrives in default Word styling has already told the client how much attention it
 got. `/sa:package` therefore builds **into a branded template** whenever one applies, rather than generating
 a document from scratch and styling it inline.
+
+> **Two profile axes, not one.** A *document profile* (this section) is the **brand shell**, selected by
+> language: which template, which placeholders, which sections are approved boilerplate. A *render profile*
+> (`RENDERING-CONTRACT.md §2`, `document-data/render-profiles/*.yaml`) is the **content structure**,
+> selected by client: which sections in which order, which workbook tabs, which commercial constraints.
+>
+> They vary independently — a Hungarian-language offer to a Romanian client is a real combination that one
+> collapsed profile cannot express — so `engagement.json` carries both `document_profile` and
+> `render_profile`, and either may be left unset to be resolved by language and by client name
+> respectively.
 
 ### The indirection, and why
 

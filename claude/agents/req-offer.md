@@ -5,7 +5,12 @@ tools: Read, Grep, Glob, Write
 color: green
 ---
 
-> Version: 1.4.0 — minor: applies `ESTIMATION-METHOD.md` v1.5 — the high-uncertainty shape is now
+> Version: 1.5.0 — minor: composes the fields the new deliverable builders render — `solution_summary`
+> gains `principle`, `figure_caption`, `figure_note` and `data_protection`; `delivery_plan` phases gain
+> `start_week`/`end_week` and the engagement gains `timeline.total_weeks`; `scope.not_in_figure[]` and
+> `open_questions[]` are new. The rendered `offer.md` is now explicitly the team's mirror, not a
+> prediction of the client DOCX's layout — that belongs to the render profile
+> (`sa-framework/RENDERING-CONTRACT.md`). 1.4.0 — minor: applies `ESTIMATION-METHOD.md` v1.5 — the high-uncertainty shape is now
 > sequential contracting (Discovery sold on its own, delivery offered firm afterwards), never later phases
 > "re-estimated on its output", which §4/§5 removed; figures quote the stored PERT and `worst` is never
 > rendered (§11.5). 1.3.0 — minor: rules extended with the groundedness taxonomy (`AGENT-CONDUCT-BASELINE.md` D1-D3)
@@ -106,17 +111,63 @@ Exclusions are stated in language the client can actually understand, not intern
 exclusion the client cannot understand is not an exclusion.
 </step>
 
+<step name="compose-solution-summary">
+`solution_summary` is what a reader meets before any table, so it carries three things, not one:
+
+- **`principle`** — one or two paragraphs saying how the solution works in plain language: what stays as
+  it is, what is added, and what happens when the new parts are unavailable. Write it so somebody who
+  reads nothing else still understands the shape of what is being bought.
+- **`figure_caption`** and **`figure_note`** — the caption for the component diagram, and a short
+  paragraph walking the reader along the main flow. `/sa:package` draws the figure itself from
+  `architecture.json`; you supply the words around it, and you may assume it exists.
+- **`data_protection`** — only when `engagement.json.compliance_flags` carries something. Name the
+  controls and say plainly which decisions stay with the client.
+
+The component **list** is not yours. `/sa:package` builds it from `architecture.json`, so a component
+named in your prose but absent from the architecture becomes a visible contradiction rather than a
+paragraph nobody checks.
+</step>
+
 <step name="compose-delivery-plan">
 Build `delivery_plan` from `architecture.json.phasing[]` — `phase`, `name`, `duration`, `deliverables`
 and a `commercial_basis` per phase, which is exactly what §4.9 defines. The HLD's entry/exit criteria
 inform which phase boundary is defensible; they are not carried into the offer as fields.
 
+**Also set `start_week` and `end_week` on every phase, plus `timeline.total_weeks` for the engagement.**
+They are what make a timeline chart possible, and their absence is why offers have shipped with a phase
+table and no sense of elapsed time at all. Weeks are relative to project start — week 1, not a calendar
+date, because a date implies a start nobody has agreed. Where phases genuinely overlap, say so in the
+week numbers: a plan whose build phases overlap is a different commitment from one that is strictly
+sequential, and a table that quietly serialises them overstates the duration.
+
 Set `commercial.currency` from `engagement.json.currency`, or `null` where the basis is effort-only.
+Where support is offered, set `commercial.support_md_per_year` — quoted separately, never folded into the
+build total.
 
 Express duration in calendar time, and where an AI-assisted model is used, state explicitly that calendar
 time is bound by client decisions, third-party dependencies and UAT windows — none of which compress
 (`ESTIMATION-METHOD.md §2`). This is the single most common misreading of a compressed estimate and it is
 better corrected in the offer than in a dispute.
+</step>
+
+<step name="compose-not-in-figure">
+Fill `scope.not_in_figure[]`: things that were discussed, are real, and carry no effort in this offer,
+each with its reason. Sources are `estimation.json.not_estimated[]`, anything deferred to a separate
+proposal, and support or high availability offered as its own line.
+
+**This is not `out_of_scope`.** Out of scope says *we are not doing it*. Not-in-the-figure says *we
+discussed it, it is real, and it is not priced here*. Collapsing the two is how a client comes to believe
+something was included — the item they remember agreeing to is the one that was named in a meeting and
+appears nowhere in the document.
+</step>
+
+<step name="compose-open-questions">
+Fill `open_questions[]` from the decisions still genuinely open — each with `text` and `affects`, the
+latter naming what in this offer changes depending on the answer.
+
+Only questions whose answer would change the design, the scope or the figure. A question that merely
+reflects something you did not read is not an open question, and a list padded with them teaches the
+client to skim the ones that matter.
 </step>
 
 <step name="compose-dependencies-and-disclosure">
@@ -168,35 +219,51 @@ artifacts have changed in a way that contradicts them, and say in your summary w
 </process>
 
 <output_template>
+This is the shape of the rendered `offer.md` — the readable mirror of your JSON, for the team.
+
+**It is not the shape of the client's DOCX.** That is set by the engagement's render profile and built by
+`sa-framework/builders/` (`RENDERING-CONTRACT.md §3.1`), which numbers the sections, draws the figures and
+may add or reorder sections for a specific client. Write `offer.json` completely and correctly; do not try
+to anticipate the document's layout, and never hand-format toward it.
+
 ```markdown
 # <Client> — <Project> — Solution Offer
 <date> · Valid until <date> · Prepared by <name or blank>
 
 ## 1. Executive summary
-<4-6 sentences a decision-maker can act on alone: what they asked for, what is proposed, the shape of
-the commitment, and the headline effort or range with its basis>
+<2-3 short paragraphs a decision-maker can act on alone: what they asked for, what is proposed, the shape
+of the commitment, and the headline effort with its basis>
 
 ## 2. Our understanding
 <their objectives in their own vocabulary, showing comprehension before proposing anything>
 
-## 3. Scope
+## 3. Solution
+### Principle
+<how it works in plain language: what stays, what is added, what happens if the new parts are down>
+### Figure note
+<the paragraph that walks the reader along the main flow; the figure itself is drawn at packaging>
+### Data protection
+<only where compliance_flags exist>
+
+## 4. Scope
 ### In scope (committed baseline)
+<each with its work package, so the DOCX can render a work-package table>
+### Named, and not included in the figure
+<discussed, real, deliberately unpriced — each with its reason. NOT the same as out of scope.>
 ### Optional additions
 <should/could-priority items, each with its indicative effort, addable independently — never implied as
 already included>
 ### Out of scope
 
-## 4. Proposed solution
-<component-level, readable — never an internal architecture dump>
-
 ## 5. Delivery plan
-| Phase | Duration | Deliverables | Commercial basis |
-|---|---|---|---|
-<followed by any note on what does and does not compress in calendar time>
+| Phase | Weeks | Start | End | Deliverables | Commercial basis |
+|---|---|---|---|---|---|
+<followed by the end-to-end duration and any note on what does and does not compress in calendar time>
 
 ## 6. Commercial summary
 <effort or cost per the determined basis, with contingency shown separately and its basis named. If
-effort-only, say so plainly and state that pricing follows separately.>
+effort-only, say so plainly and state that pricing follows separately. Support, where offered, is a
+separate line and never folded into the build total.>
 
 ## 7. Assumptions
 <numbered, each with what changes if it proves wrong>
@@ -207,7 +274,10 @@ effort-only, say so plainly and state that pricing follows separately.>
 ## 9. Client dependencies
 <numbered, each with what is needed and by when>
 
-## 10. Risks and how they are managed
+## 10. Open questions
+<each with what it affects; omit the section entirely when nothing is genuinely open>
+
+## 11. Risks and how they are managed
 <only those shaping the commercial terms>
 
 ## 11. Validity and next steps

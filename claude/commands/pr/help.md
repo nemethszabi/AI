@@ -4,22 +4,23 @@ description: Static reference for the pr: command namespace. No live analysis, n
 allowed-tools: []
 ---
 
-> Version: 1.0.0 — 2026-09-18. Initial.
+> Version: 1.0.0 — 2026-09-18. Initial (revised after agent-review round 2).
 
 <reference>
 # `pr:` commands — generic pull-request review and fix
 
 Global — works in any project that has `ai/pr/config.json`. Contract and rationale:
-`~/.claude/dev-framework/PR-WORKFLOW.md`.
+`~/.claude/dev-framework/PR-WORKFLOW.md`. **Provider: Azure DevOps is the only one implemented**;
+`config.json` can name another, but the commands' provider calls exist only for Azure DevOps.
 
 | Command | Purpose |
 |---|---|
-| `/pr:init [path]` | Scaffold `ai/pr/` — provider connection (`config.json`) + skeleton review/fix guidelines. Create-only. |
+| `/pr:init [path]` | Scaffold `ai/pr/` — provider connection (`config.json`), skeleton review/fix guidelines, `mcp.example.json`. Create-only, per file. |
 | `/pr:review <PR>` | Fetch PR + threads → PR-head checkout → `pr-reviewer` (cold) → report + proposed line comments → **you approve** → post. |
-| `/pr:fix <PR>` | Fetch open threads → `pr-fixer` fixes on the source branch, builds, tests → **you approve** commit / push / replies, each separately. |
+| `/pr:fix <PR>` | Fetch open threads → `pr-fixer` fixes on the source branch, builds, tests → **you approve** commit / push / replies / thread statuses, each separately. |
 | `/pr:help` | This reference. |
 
-`<PR>` is a number (`28548`), `#28548`, or the PR's URL. Run from inside the repo, or give the repo path
+`<PR>` is a number (`123`), `#123`, or the PR's URL. Run from inside the repo, or give the repo path
 as the first argument.
 
 ## `/pr:review` options
@@ -27,8 +28,8 @@ as the first argument.
 |---|---|
 | `--req=<file.md>` / `--req="text"` | The requirement to review against. Without it: PR description + linked work items only — the report says that this confirms code-matches-description, not description-matches-need. |
 | `--model=<name>` | Model for the reviewer. Use a different one than wrote the code. |
-| `--no-post` | Produce files, never offer posting. |
-| `--only-report` | Report only; no comment list. |
+| `--no-post` | Write the report and the comment list, check and print the list — never offer posting. |
+| `--only-report` | Report only; no comment list is written or shown. |
 
 ## `/pr:fix` options
 | Option | Effect |
@@ -44,24 +45,33 @@ as the first argument.
 | `ai/pr/config.json` | Provider, MCP server **name**, org/project/repo, context files, related repos, build/test commands. Never a credential. |
 | `ai/pr/review-guidelines.md` | Project-specific: what to check, comment voice, severity tags. |
 | `ai/pr/fix-guidelines.md` | Project-specific: build/test, commit message, reply + thread-status etiquette. |
-| `ai/pr/results/PR-<id>/` | Every run's files: `pr-`, `threads-`, `requirement-`, `review-`, `comments-`, `fix-`, `replies-`, `posted-<ts>`. |
-| `ai/context/*.md` | Project context both agents read first. |
+| `ai/pr/mcp.example.json` | The per-user MCP server shape, token as an environment variable. Template only — never loaded. |
+| `ai/pr/results/PR-<id>/` | Every run's files: `pr-`, `threads-`, `requirement-`, `review-`, `comments-`, `fix-`, `replies-`, `posted-<ts>`. Review prose about colleagues' code — add `ai/pr/results/` to the project's `.gitignore` (the tooling never edits it). |
+| `ai/context/…` | Project context both agents read first — **only the files listed** in `config.json` → `context_files` (and `related_repositories[].context_files`, via sibling clones). Add a new context file to that list. |
+
+## Setup, once per developer
+The MCP server is per user, never committed: put the token in a user environment variable (without
+typing it on a command line), then `claude mcp add-json --scope user <server-name> '<the
+mcpServers.<server-name> object from ai/pr/mcp.example.json>'` — single quotes, so the shell leaves
+`${…}` alone — then `/mcp` to check it is connected. `config.json` names the server; it never holds a
+token. `/pr:init` prints the exact lines.
 
 ## Safety model
 - The agents hold **no** PR-provider tool. Only the command posts, and only what you approved in that run.
 - `/pr:review` never touches your working tree: it reviews a throwaway detached worktree of the PR head.
-- `/pr:fix` refuses to start unless the tree is clean and on the PR's source branch. It never stashes,
-  switches, force-pushes or skips hooks.
+- `/pr:fix` refuses to start unless the tree is clean — no tracked changes and no untracked files outside
+  `ai/` — and on the PR's source branch at its pushed head. It never stashes, switches, force-pushes or
+  skips hooks.
 - The tooling never votes on a PR. The verdict is advice to you.
 - Severity: `blocker` · `major` · `minor` · `nit` · `question`. Verdict is derived from the counts.
 
 ## Typical loops
 | Situation | Do |
 |---|---|
-| Asked to review a colleague's PR | `/pr:review 28548 --req=<spec.md> --model=<other>` → read report → approve comments |
-| Author pushed fixes | `/pr:review 28548` again — existing threads are not re-raised; "still present at head" is reported |
-| Your own PR got comments | `/pr:fix 28548` → approve commit/push → approve replies → `/pr:review 28548 --no-post --model=<other>` |
-| Before opening your PR for review | `/pr:review <id> --no-post` → `/pr:fix <id> --from-review` |
+| Asked to review a colleague's PR | `/pr:review 123 --req=<spec.md> --model=<other>` → read report → approve comments |
+| Author pushed fixes | `/pr:review 123` again — existing threads are not re-raised; "still present at head" is reported |
+| Your own PR got comments | `/pr:fix 123` → approve commit, push, replies, statuses → `/pr:review 123 --no-post --model=<other>` |
+| Your PR is open, before adding reviewers | `/pr:review 123 --no-post` → `/pr:fix 123 --from-review` |
 
 This command performs no live analysis — it only prints the reference above.
 </reference>

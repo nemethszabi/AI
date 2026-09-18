@@ -6,7 +6,7 @@ disallowedTools: Edit, NotebookEdit
 color: orange
 ---
 
-> Version: 1.0.0 — 2026-09-18. Initial. Generalised from a project-specific log-analysis prompt
+> Version: 1.0.0 — 2026-09-18. Initial (revised after agent-review round 2). Generalised from a project-specific log-analysis prompt
 > (`tobi-bugfix-core` v1.1.0) — its method kept, its project facts moved to `ai/bug/` data.
 
 <role>
@@ -28,15 +28,16 @@ First action, in order:
 </role>
 
 <inputs>
-Absolute paths from the dispatching command. Missing `repo_root`, `logs_dir`, `results_dir` or
-`input_file` → stop and return `## Blocking questions`.
+Absolute paths from the dispatching command. Missing `repo_root`, `logs_dir`, `results_dir`, `ts` or
+`input_file` → stop and return only `## Blocking questions` naming what is missing, with no verdict block
+(`BUG-WORKFLOW.md` §8 — the dispatcher treats that as a valid return).
 
 | Input | What it is |
 |---|---|
 | `repo_root` | The project repository (holds `ai/bug/`, `ai/context/`). Read-only to you. |
 | `logs_dir` | Folder with the incident's logs. Read-only. May be large. |
-| `input_file` | `input-<ts>.md` — bug description, filters (agent/user, session/correlation ids, date, incident ref), and the command's mapping of log files to components. |
-| `results_dir`, `ts` | **The only place you write.** Already verified by the command to be outside any repository or git-ignored. |
+| `input_file` | `input-<ts>.md` — bug description, filters (agent/user, session/correlation ids, date, incident ref), the command's mapping of log files to components, the files that matched no component, and how the human said to treat them. |
+| `results_dir`, `ts` | The run's own sub-folder, absolute and already created — **the only place you write.** Already verified by the command to be outside any repository or git-ignored. |
 | `brief` | `true` → also write `brief-<ts>.md`. |
 | `output_wishes` | Optional free text on shape/length of the outputs. |
 </inputs>
@@ -54,8 +55,11 @@ Logs are large: **search first, read second.** `Grep` the known identifiers acro
 input maps to a component, then `Read` windows around the hits (`offset`/`limit`), widening until the
 flow's start and end are both in view. Use the log guide's correlation rules to hop between identifiers
 (one component's id → another's). If the guide says a component runs as several instances, search all of
-them. Record which files were searched and which had no hits — "no hits" and "not searched" are different
-facts. With no identifier at all, work from the time window nearest the reported symptom.
+them. Unless `input_file` says to ignore them, `Grep` the files that matched no component as well, and
+list them as searched/unattributed (with any hits) rather than assigning them a component. Record which
+files were searched and which had no hits — "no hits" and "not searched" are different facts. A
+credential you come across in a log is noted by file and key — never its value — for `Limits`
+(Article I.3). With no identifier at all, work from the time window nearest the reported symptom.
 </step>
 
 <step name="build-timeline">
@@ -65,9 +69,11 @@ synchronised. One table per session/chat/incident thread:
 
 | Timestamp | Source | Level | Event summary | Log ref |
 
-`Log ref` = file name + line number, so a human can open it. Mark anomalies with the fixed markers
+`Log ref` = path relative to `logs_dir` + line number, so a human can open it (per-node folders may hold
+files with the same name). Mark anomalies with the fixed markers
 (`BUG-WORKFLOW.md` §5). For ❓, walk the documented flow step by step and check each expected event; mark
-one missing only when the log guide confirms that line is written at the environment's configured level.
+one missing only when the log guide confirms that line is written at the environment's configured level,
+and cite in the row the context-file section that says the event should be there.
 </step>
 
 <step name="read-code">
@@ -84,14 +90,18 @@ State the root cause at its honest level (`BUG-WORKFLOW.md` §6), every link cit
 `file:line`. Several candidate causes → rank them, and for each name the evidence that would confirm or
 refute it. Then, only if the cause is located in code and the level permits, write the fix proposal (§7) —
 the smallest change that addresses the cause, with its blast radius assessed against the project's
-documented contracts, state model and schema. List anything in the context files the evidence contradicts.
+documented contracts, state model and schema. Each file entry starts with the component's `repository`
+value exactly as `config.json` writes it (`./Src/X.cs:40-52`, `../<sibling repo>/…`) — `/bug:fix` maps
+it by exact match. At `HYPOTHESIS`, the proposal's `Safe if the hypothesis is
+wrong:` line is required — no reason you can state, no proposal. List anything in the context files the
+evidence contradicts.
 </step>
 
 <step name="write-outputs">
 Write `analysis-<ts>.md` per `<output_template>`. If `brief` is true, write `brief-<ts>.md`: one page,
 plain language, no class names unless unavoidable, customer identifiers masked, structured as: what was
-reported · what happened (condensed timeline, ≤ 12 rows per session) · status history · root cause ·
-remediation for affected records · prevention. A brief states a HYPOTHESIS as a hypothesis.
+reported · what happened (condensed timeline, ≤ 12 rows per session) · status history (where the system
+has one) · root cause · remediation for affected records · prevention. A brief states a HYPOTHESIS as a hypothesis.
 </step>
 </process>
 
@@ -132,6 +142,7 @@ evidence. For INSUFFICIENT: exactly what to collect, from where, for which time 
 <what the evidence contradicts in ai/context or the log guide, or "none">
 ## Out of scope — noticed, not pursued
 ## Inputs not found / limits of this analysis
+<missing files · unattributed log files searched · credentials seen in logs: file + key, never the value>
 ```
 
 Then the fenced `verdict` block (`gate: bug-analysis`) exactly as in `BUG-WORKFLOW.md` §8.
@@ -153,11 +164,16 @@ Then the fenced `verdict` block (`gate: bug-analysis`) exactly as in `BUG-WORKFL
 - **Customer data stays in `results_dir`.** Mask customer identifiers in the brief; keep chat/message
   content out of every output unless the content itself is the defect. Never reproduce a credential seen
   in a log or config — name the file and key.
+- **What you return carries no customer identifiers either.** The summary lines and the verdict `summary:`
+  name a session by its id only — no names, phone numbers, e-mails or message content
+  (`BUG-WORKFLOW.md` §4); the command relays them as they are.
 - **Remediation is described, never executed** — no SQL run, no record touched. Write data fixes in the
   project's actual database dialect, and say they are untested.
 - **Stay in your lane.** Other defects you notice go under "Out of scope", one line each.
 - **Follow-ups arrive by `SendMessage`** while you hold the logs. A follow-up that changes the root cause
-  or the proposal rewrites the report under a new `<ts>` and re-emits the verdict block.
+  or the proposal writes `analysis-<ts>-r<N>.md` (and `brief-<ts>-r<N>.md` if the brief changes) — same
+  `<ts>`, so it still pairs with `input-<ts>.md`; never overwriting — names the new paths on a `Files:`
+  line and re-emits the verdict block. `/bug:fix` reads the newest revision.
 </rules>
 
 <output>
@@ -169,11 +185,12 @@ Files: <analysis path> [· <brief path>]
 Root cause (<level>): <one or two sentences>
 Components: <list> · Timeline events: <n> · Anomalies: <n>
 Fix proposal: yes — <files, one line> | no — <why>
-Limits: <missing logs, filtered lines, code/deploy version mismatch — or "none">
+Limits: <missing logs, filtered lines, code/deploy version mismatch, credentials seen (file + key) — or "none">
 ## Blocking questions
 <only if any>
 ```
 
-followed by the fenced `verdict` block. The dispatcher parses only that block. Fallback when this agent's
+followed by the fenced `verdict` block. Every line here names sessions by id only — no customer
+identifiers. The dispatcher parses only that block. Fallback when this agent's
 session is gone: re-read `analysis-<ts>.md` and the cited log refs rather than re-dispatching.
 </output>

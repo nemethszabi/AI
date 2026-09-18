@@ -103,6 +103,14 @@ now *handled*, not solved.
    by stating the rest as rules. `req-auditor` is the sharpest case: its Claude sibling holds a shell grant
    scoped to hashing; here it holds full `shell` and a written narrowing. (`PORT-NOTES.md` D2.)
 
+**A third, not yet closed: packaging still renders by prose, not code.** 2026-09-18, the Claude side moved
+`/sa:package`'s deliverable rendering into `sa-framework\builders\` — deterministic Python instead of the
+model rewriting the build script every run. That rewrite is exactly what was fixing here: a shipped
+workbook that dropped a tab, a shipped offer whose cover and Document Information table disagreed on
+version number. Copilot's packaging step still model-authors its output each run and carries the same
+variance risk. Not assessed for a port yet — unlike the table above, this is a real gap, not a deliberate
+one. `/sa:revise` (also 2026-09-18) is likewise not yet ported.
+
 A third divergence is milder but bites daily: **model selection is session-level**, so the cross-model
 review rule (`ARTIFACT-SCHEMAS.md §9`) is satisfied by `/model` *before* dispatching, not by a per-dispatch
 parameter. (`PORT-NOTES.md` D5 — which since v1.0.83 also records the per-agent `subagents.agents.<name>`

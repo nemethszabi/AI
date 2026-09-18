@@ -54,7 +54,7 @@ Each project namespace also has its own `:help` (`/scm:help`, `/merge:help`) onc
 couple of commands — static reference, no live analysis. `/sa:help` and `/dev:help` cover the two global
 namespaces.
 
-**The `/sa:*` namespace is now 19 commands across three lanes** — too much for one table row. Its full
+**The `/sa:*` namespace is now 20 commands across three lanes** — too much for one table row. Its full
 walkthrough, design rationale, and a worked "inbound TSD → offer" example live in **`SA-WORKFLOW.md`**.
 Start there rather than here for any presales/bid work.
 
@@ -125,12 +125,14 @@ not a reusable role.
   `/sa:estimate-review`, `/sa:audit` and `/sa:slop-check` all take `--model=`. A reviewer on the author's
   model shares the author's blind spots. Worth it most on `/sa:slop-check` and `/sa:estimate-review`, least
   on `/sa:audit`. It reduces correlated error; it isn't real independence — you still are.
-- **The `sa:` pipeline runs on both tools, and engagements are portable between them.** Claude Code has 19
-  slash commands; Copilot CLI has the same 19 steps in one `sa-pipeline` skill plus 17 `@`-dispatchable
+- **The `sa:` pipeline runs on both tools, and engagements are portable between them.** Claude Code has 20
+  slash commands; Copilot CLI has the earlier 19 steps in one `sa-pipeline` skill plus 17 `@`-dispatchable
   agents. `ai/sa/<slug>/` is project-scoped and conforms to one shared schema, so an engagement triaged in
-  one can be continued in the other. **Two things differ**: Copilot's packaging step cannot *refuse* (it
-  checks and reports, so run binding deliverables in Claude Code), and its model selection is session-level
-  (`/model` before dispatching a checking agent). `copilot\PORT-NOTES.md` has all six divergences.
+  one can be continued in the other. **Three things differ**: Copilot's packaging step cannot *refuse* (it
+  checks and reports, so run binding deliverables in Claude Code); its model selection is session-level
+  (`/model` before dispatching a checking agent); and Copilot's `/sa:package` equivalent still has the
+  model author the build each run, rather than the deterministic `sa-framework\builders\` route and
+  `/sa:revise` command Claude gained 2026-09-18 — not yet ported. `copilot\PORT-NOTES.md` has the rest.
 - **Session handoffs work across both tools too.** `/handoff` in Claude Code and the `handoff` skill in
   Copilot CLI implement one contract (`dev-framework\HANDOFF.md`), so you can stop in one tool and
   `/handoff resume` in the other. `/doc-sync`, the context guard and the status line stay Claude-only.

@@ -123,7 +123,8 @@ small bid costs a few hours; under-delivering on a large one costs the bid.
 | `/sa:offer` | `offer.json` — the client-facing content | `req-offer` |
 | `/sa:audit` | `audit/audit-<ts>.md` — **gate input 1**: do the JSON artifacts agree with each other, by ID? | `req-auditor` |
 | `/sa:slop-check` | `audit/slop-<ts>.md` — **gate input 2**: is the prose a human will read grounded, consistent and free of machine-tells? | `req-slop-detector` |
-| `/sa:package` | `deliverables/*.docx`, `*.xlsx`, `*.pptx`, built into the branded template | — |
+| `/sa:package` | `deliverables/*.docx`, `*.xlsx`, `*.pptx`, built into the branded template via `sa-framework\builders\` — deterministic, not model-rewritten each run (2026-09-18, `RENDERING-CONTRACT.md`) | — |
+| `/sa:revise` | Applies a change to an engagement with existing artifacts — works out what it invalidates, re-runs only that (dispatching the owning agent, never hand-editing JSON), archives what it supersedes to `history/`, records why in `CHANGELOG.md`. Any lane, any point after the first artifact exists. Added 2026-09-18. | the owning `req-*` agent per step re-run |
 | `/sa:status` | Where you are and the single next command | — |
 | `/sa:doc` | `package.md` — **internal** consolidation | — |
 | `/sa:onepager` | `onepager/<type>-v<NN>.html` + `.pdf` — a dense single page for management *(advisory)* | `req-onepager` |
@@ -369,10 +370,11 @@ What differs is only the mechanics:
 
 | | Claude Code | Copilot CLI |
 |---|---|---|
-| Command layer | 19 slash commands (`/sa:*`) | one `sa-pipeline` skill — `~/.copilot/commands/` has no documented discovery behaviour, so 19 files there would silently not exist |
+| Command layer | 20 slash commands (`/sa:*`) | one `sa-pipeline` skill, still 19 steps — `/sa:revise` (2026-09-18) is not yet ported, so a Copilot engagement is amended by hand-dispatching the owning agent |
 | Agents | 22 in `~/.claude/agents/` | 17 `.agent.md` siblings, dispatched `@req-estimator` |
 | Model for a checking step | `--model=` per dispatch | `/model` **before** dispatching — session-level, so switch back after |
 | Packaging gate | **refuses** | checks, reports, prints STOP — **advisory, never a gate** |
+| Packaging mechanics | `sa-framework\builders\` — deterministic Python, not model-rewritten each run (2026-09-18) | still model-authored per run; the variance that motivated the Claude-side rewrite is still live here |
 | Read-only agents | `disallowedTools` enforces it | `write` without `shell`; the rest is a written rule |
 
 **Engagements are portable.** `ai/sa/<slug>/` lives in the project, not in a tool's config, and conforms to
@@ -413,8 +415,13 @@ Same reasoning as the rate card: the brand templates and the profile map are org
 machine-specific paths, so both are gitignored and live only at the config roots. Without them `/sa:package`
 still works — it just builds unbranded, and says so.
 
-For diagram rendering, `mmdc` (`@mermaid-js/mermaid-cli`) must be on `PATH`, otherwise `/sa:package`
-reports figures as unrendered rather than silently omitting them.
+For diagram rendering, `mmdc` (`@mermaid-js/mermaid-cli`) must be on `PATH` for `/sa:design`/
+`/sa:design-detail`'s HLD/LLD diagrams (`mermaid-diagram-maker`), otherwise they report unrendered rather
+than silently omitting them. **`/sa:package`'s offer and estimation-pack builds no longer need it**
+(2026-09-18): the one component diagram every offer carries is drawn by `sa-framework\builders\diagram.py`
+with Pillow — no Node toolchain, no theme-dependent background, no layout drift between `mmdc` versions.
+Mermaid stays the right tool for the varied, exploratory HLD/LLD diagrams; it was the wrong one for a
+figure that must render identically every time. See `sa-framework\RENDERING-CONTRACT.md`.
 
 For one-pager PDFs, `/sa:onepager` uses headless Edge or Chrome — already present on a normal Windows
 machine, no install needed. If neither is found the HTML is still written and you print it yourself
@@ -498,7 +505,15 @@ gate is a safety property, not a speed bump — `CONSTITUTION.md` Articles III a
 
 ---
 
-**Last revised**: 2026-09-03 (v1.4 — decision 4 rewritten and decision 5 added for the estimation-doctrine
+**Last revised**: 2026-09-18 (v1.5 — deliverable rendering moved from prose into `sa-framework\builders\`:
+`/sa:package` now calls deterministic Python (openpyxl/python-docx/Pillow) instead of having the model
+rewrite the build script each run, which is what let a shipped workbook drop a tab and a shipped offer
+disagree with itself on version number. New `/sa:revise` command for amending an engagement that already
+has artifacts. Two profile axes now — document profile (brand shell, by language) and render profile
+(content structure, by client) — vary independently and are both consumed at packaging. `mmdc` is no
+longer needed for the offer/estimation-pack build, only for `/sa:design`/`/sa:design-detail` HLD/LLD
+diagrams. Not yet ported to Copilot CLI. Detail: `sa-framework\RENDERING-CONTRACT.md`.
+v1.4 — decision 4 rewritten and decision 5 added for the estimation-doctrine
 update: AI-assisted is now the only delivery model estimated by default (`traditional`/`both` opt-in,
 never on `rom`), and the baseline is `must`-only and bare-minimum, with `should`/`could` priced separately
 as Optional and `rom` held to a stricter standard (`ESTIMATION-METHOD.md §2, §9, §10`). The blocking-checks

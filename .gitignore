@@ -24,3 +24,8 @@ document-data/templates/
 document-data/render-profiles/*.yaml
 !document-data/render-profiles/standard.yaml
 !document-data/render-profiles/client-example.yaml
+
+# Builder test fixture — generated deterministically by tests/make_fixture.py, which IS staged.
+# Committing both means the generator and its output can disagree, and the output is the copy
+# people would then edit.
+sa-framework/builders/tests/fixture/

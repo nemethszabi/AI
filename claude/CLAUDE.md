@@ -13,6 +13,17 @@ readable every session; never inline the doctrine itself in this file.
 - Every `dev-*` agent follows `~/.claude/dev-framework/PRINCIPLES.md`.
 - Why it's shaped this way, the `ai/dev/` state schema, and non-goals: `~/.claude/dev-framework/DESIGN.md`.
 
+## pr-* agents / `pr:` commands (pull-request review and fix)
+- Contract — who may post/commit/push (only the command, only after approval), the project-side `ai/pr/`
+  files, run artifacts, severity scale, verdict blocks: `~/.claude/dev-framework/PR-WORKFLOW.md`.
+  **Binding** on `pr-reviewer`, `pr-fixer` and `/pr:*`. Quick reference: `/pr:help`.
+
+## bug-* agents / `bug:` commands (incident → timeline → root cause → approved minimal fix)
+- Contract — confidence levels, the written fix proposal and its approval, the project-side `ai/bug/`
+  files, and the rule that results never land in a tracked folder (customer data):
+  `~/.claude/dev-framework/BUG-WORKFLOW.md`. **Binding** on `bug-analyst`, `bug-fixer` and `/bug:*`.
+  Quick reference: `/bug:help`.
+
 ## req-* agent family / `sa:` pipeline (requirement → offer)
 - Artifact data contract (JSON + rendered Markdown, IDs, lanes, the packaging gate):
   `~/.claude/sa-framework/ARTIFACT-SCHEMAS.md`.

@@ -31,6 +31,11 @@ lighter than a full wave/gate system.
 | **Empty folder → a new .NET demo/prototype app** | `/dev:build "<goal>"` (plans first, you approve the task list, then it builds) — or `/dev:new "<description>"` for just the skeleton | Global |
 | **Rebuild an app from its UI** — a running URL, screenshots, or a source tree | `/dev:deconstruct <inputs>` → then `/dev:build --from-spec=<path>` | Global |
 | **Many tasks in one go against an existing repo** | `/dev:build "<goal>" --model=<a different one>` | Global |
+| **Asked to review a colleague's pull request** | `/pr:review <PR number\|#n\|URL> [--req=<file.md>\|--req="text"] --model=<a different one>` — detailed report + short line comments under `ai/pr/results/PR-<id>/`; posts **only** the comments you approve. Project needs `ai/pr/config.json` (`/pr:init`) | Global |
+| **Your PR got review comments** — fix them | `/pr:fix <PR>` — fixes on the source branch, builds, tests; commit / push / thread replies are three separate approvals. `--from-review` fixes your own `/pr:review` findings before anyone has to comment. ⚠ Not yet usable — pending review fixes (`results\handoff-20260918-1542-pr-bug-review-fixes.md`) | Global |
+| A project has no `ai/pr/` yet | `/pr:init [path]` — provider + MCP server **name** into `config.json`, skeleton review/fix guidelines; never a credential | Global |
+| **An incident or bug report landed, with logs** — what happened, and why? | `/bug:analyze --logs=<folder> --desc=<ticket.md\|"text"> [--incident=<ref>] [--brief] --out=<folder outside the repo>` — cross-component timeline, anomalies, root cause at an honest level, fix proposal if located in code. Read-only. Project needs `ai/bug/config.json` (+ `log-guide.md`) — template in `/bug:help` | Global |
+| **The analysis proposed a fix** | `/bug:fix <analysis file\|incident ref\|latest>` — you approve or amend the written proposal; minimal change, build, tests; pattern entry and local commit are separate questions; never pushes. Then open a PR and `/pr:review` it on a different model. ⚠ `/bug:*` not yet usable — pending review fixes (same handoff) | Global |
 | Draft a new agent/skill/legacy-command | `/agent-builder` | Global |
 | Draft a new one-time/occasional-use prompt | `prompt-builder` skill | Global |
 | Independent check on a drafted agent/skill/command before trusting/copying it | `review-agent` skill (dispatches `agent-reviewer`) | Global |
@@ -51,8 +56,8 @@ lighter than a full wave/gate system.
 | scm-stm-merge: re-run one phase only | `/merge:requirements` / `db` / `functional` / `code` | scm-stm-merge |
 
 Each project namespace also has its own `:help` (`/scm:help`, `/merge:help`) once it has more than a
-couple of commands — static reference, no live analysis. `/sa:help` and `/dev:help` cover the two global
-namespaces.
+couple of commands — static reference, no live analysis. `/sa:help`, `/dev:help`, `/pr:help` and `/bug:help` cover
+the four global namespaces.
 
 **The `/sa:*` namespace is now 20 commands across three lanes** — too much for one table row. Its full
 walkthrough, design rationale, and a worked "inbound TSD → offer" example live in **`SA-WORKFLOW.md`**.
